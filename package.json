@@ -35,6 +35,7 @@
     "eslint-plugin-react": "^7.34.2",
     "globals": "^15.3.0",
     "gulp": "^5.0.0",
+    "gulp-shell": "^0.8.0",
     "typescript-eslint": "^7.11.0"
   }
 }
