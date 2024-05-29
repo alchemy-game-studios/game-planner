@@ -1,8 +1,12 @@
-const {task, series} = require('gulp')
-const shell = require('gulp-shell')
+import {task, series} from "gulp"
+import shell from "gulp-shell"
 
-task('lint', shell.task(['eslint *.js']))
-task('test', shell.task(['npm test']))
-task('server-start', shell.task(['node index.js']))
+task('lint', shell.task(['npx eslint ./src']))
+task('test', shell.task(['npm run test']))
+task('build', shell.task([
+    'npm run build',
+    'cp -r ./src/server/* ./build'
+]))
+task('server-start', shell.task(['node ./build/app.js']))
 
-exports.default = series('lint', 'test', 'server-start')
+export default series('lint','build', 'server-start')
