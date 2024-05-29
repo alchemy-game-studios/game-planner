@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import fetch from 'isomorphic-fetch';
+
 
 type AppState = {
     apiResponse: string;

@@ -9,4 +9,4 @@ task('build', shell.task([
 ]))
 task('server-start', shell.task(['node ./build/app.js']))
 
-export default series('lint','build', 'server-start')
+export default series('lint','test','build', 'server-start')
