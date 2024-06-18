@@ -10,7 +10,7 @@ export default {
         rules: [
             {
                 test: /.(js|jsx|ts|tsx)$/,
-                exclude: /(node_modules|.ejs)/,
+                exclude: /(node_modules|.ejs|.*\.graphql$|.*\.gql$)/,
                 use: {
                     loader: "babel-loader",
                     options: {
@@ -21,11 +21,14 @@ export default {
             {
                 test: /\.css$/,
                 use: ['style-loader', 'css-loader']
+            },
+            {
+                exclude: [/\.(js|mjs|jsx|ts|tsx|gql|graphql)$/, /\.html$/, /\.json$/]
             }
         ],
     },
     resolve : {
-        extensions: ['.js', '.jsx', '.ts', '.tsx']
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.css']
     },
     plugins: [
         new HtmlWebpackPlugin({

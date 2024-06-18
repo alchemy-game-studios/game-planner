@@ -1,0 +1,51 @@
+export default 
+schema {
+  query: Query
+  mutation: Mutation
+  hello: Hello
+}
+
+type Hello {
+  message: String!
+}
+
+# Query type for fetching data
+type Query {
+  user(id: ID!): User
+  worldsByUser(userId: ID!): [World!]!
+}
+
+# Mutation type for modifying data
+type Mutation {
+  createUser(input: CreateUserInput!): User
+  createWorld(input: CreateWorldInput!): World
+}
+
+# User type representing a user in the application
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  worlds: [World!]!
+}
+
+# World type representing a world created by a user
+type World {
+  id: ID!
+  name: String!
+  description: String
+  createdBy: User!
+}
+
+# Input type for creating a new user
+input CreateUserInput {
+  username: String!
+  email: String!
+}
+
+# Input type for creating a new world
+input CreateWorldInput {
+  userId: ID!
+  name: String!
+  description: String
+}
