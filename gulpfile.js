@@ -7,6 +7,6 @@ task('build', shell.task([
     'npm run build',
     'cp -r ./src/server/* ./build'
 ]))
-task('server-start', shell.task(['node ./build/app.js']))
+task('server-start', shell.task(['node -r graphql-import-node/register ./build/app.js']))
 
 export default series('lint','test','build', 'server-start')

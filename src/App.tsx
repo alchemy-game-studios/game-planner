@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import fetch from 'isomorphic-fetch';
+import ApolloAppProvider from './apollo/apollo-provider';
+import {Message} from './client-graphql/graphql-components';
 
 
 type AppState = {
@@ -13,7 +15,6 @@ class App extends Component<Record<string, never>, AppState> {
             .then (res => this.setState({apiResponse: res}))
             .catch(err => err);
     }
-
     componentDidMount() {
         this.callAPI();
     }
@@ -22,12 +23,14 @@ class App extends Component<Record<string, never>, AppState> {
         const apiResponse = this.state == null ? "" : this.state.apiResponse;
 
         return (
+            <ApolloAppProvider>
             <div className="app">
                 <header>
                     <h1 className="title">Welcome to React</h1>
                 </header>
-                <p className="app-response">{apiResponse}</p>
+                <Message />
             </div>
+            </ApolloAppProvider>
         );
     }
 }
