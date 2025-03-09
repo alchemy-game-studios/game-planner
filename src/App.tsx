@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import fetch from 'isomorphic-fetch';
+import { Message } from './client-graphql/graphql-components'
 import './App.css';
 
 const App = () => {
@@ -28,8 +29,7 @@ const App = () => {
 
     return (
         <div className="app">
-          
-
+          <Message />
         </div>
     );
     
