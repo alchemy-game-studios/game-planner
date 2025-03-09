@@ -31,6 +31,23 @@
     margin: 10px;
 }
 
+.tag-list button.open-add-tag {
+    background-color: #5E6;
+    width: 40px;
+    font-size: 25px;
+    border-radius: 5px;
+}
+
+.tag-list button.open-add-tag:hover {
+    background-color: #3D4;
+    cursor: pointer;
+}
+
+.tag-list button.open-add-tag:active {
+    background-color: #7F8;
+    cursor: pointer;
+}
+
 .add-tag {
     margin: 10px;
     background-color: #555;
@@ -41,6 +58,8 @@
 }
 
 .add-tag h3 {
+    font-weight: bold;
+    font-size: 25px;
     margin-top:0px;
     text-align: center;
 }
@@ -53,6 +72,31 @@
     width: 100%;
     margin-right: 30px;
 }
+
+.add-tag .close {
+    display: flex;
+    justify-content: flex-end;
+ }
+
+ .add-tag .close button {
+    background-color: #D55;
+    width:30px;
+    height: 30px;
+    border: 1px solid #333;
+    border-radius: 5px;
+ }
+
+ .add-tag .close button:hover {
+    cursor: pointer;
+    background-color: #D55;
+ }
+
+ .add-tag .close button:active {
+    cursor: pointer;
+    background-color: #F99;
+ }
+ 
+ 
 
 .edit button.add {
     background-color: #5E6;
@@ -70,6 +114,7 @@
     cursor:pointer;
     background-color: #7F8;
 }
+
 
 //////////////////
 .tag button:hover {

@@ -32,9 +32,19 @@ const MUTATE_Remove_Tag = gql`
 export function Tags () {
     const {loading, error, data, refetch} = useQuery(QUERY_All_Tags);
 
+    const [isAddingTag, setIsAddingTag] = useState(true);
+
     const onTagUpdate = () => {
         refetch({ fetchPolicy: "network-only" });
 
+    }
+
+    const onAddTagClose = () => {
+        setIsAddingTag(false)
+    }
+
+    const onAddTagOpen = () => {
+        setIsAddingTag(true)
     }
 
     if (loading) return <p>Loading...</p>;
@@ -42,19 +52,27 @@ export function Tags () {
     return (
         <>
         <ol className="tag-list">
+        <button class="open-add-tag" onClick={onAddTagOpen}>+</button>
         {data.tags.map((tag)=> (
             <TagItem key={tag.id} initTag={tag} onChange={onTagUpdate}/>
         ))}
+        
         </ol>
-        <div className="add-tag">
-        <h3>
-            Add New Tag
-        </h3>
-        <TagEditItem initTag={{
-            name: '',
-            description: ''
-        }} onChange={onTagUpdate} />
-         </div>
+        {isAddingTag && (
+            <div className="add-tag">
+                <div className="close">
+                    <button onClick={onAddTagClose}>X</button>
+                </div>
+                <h3>
+                    Add New Tag
+                </h3>
+            
+                <TagEditItem initTag={{
+                    name: '',
+                    description: ''
+                }} onChange={onTagUpdate} />
+             </div>
+        )}
        </>
       
     );
