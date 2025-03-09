@@ -46,6 +46,7 @@ export function Tags () {
             <TagItem key={tag.id} initTag={tag} onChange={onTagUpdate}/>
         ))}
         </ol>
+        <div className="add-tag">
         <h3>
             Add New Tag
         </h3>
@@ -53,7 +54,9 @@ export function Tags () {
             name: '',
             description: ''
         }} onChange={onTagUpdate} />
+         </div>
        </>
+      
     );
 }
 
@@ -141,7 +144,7 @@ export function TagEditItem ({initTag, onChange}) {
                 <h5>Tag Description</h5>
                 <textarea id="text-input-description" type="text" value={tag.description} onChange={(event) => onInputChange(event, "description")} placeholder={initTag.description} />
             </div>
-            <button onClick={handleSubmit}>Add Tag</button>
+            <button className="add" onClick={handleSubmit}>Add Tag</button>
             <p>{resultText}</p>
         </div>
     );
