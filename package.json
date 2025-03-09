@@ -1,0 +1,104 @@
+{
+  "name": "game-planner",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "An application to assist developers while planning game development.",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "webpack",
+    "test": "jest",
+    "eject": "react-scripts eject"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alchemy-game-studios/game-planner.git"
+  },
+  "keywords": [
+    "game",
+    "development",
+    "planning"
+  ],
+  "author": "Steve Hollinger",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alchemy-game-studios/game-planner/issues"
+  },
+  "homepage": "https://github.com/alchemy-game-studios/game-planner#readme",
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/node": "^16.18.97",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "apollo-server-express": "^3.13.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "eslint-plugin-dependencies": "^2.5.0",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "graphql": "^16.9.0",
+    "graphql-http": "^1.22.1",
+    "graphql-import-node": "^0.0.5",
+    "graphql-passport": "^0.6.8",
+    "graphql-tools": "^9.0.1",
+    "isomorphic-fetch": "^3.0.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "passport": "^0.7.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "web-vitals": "^2.1.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/plugin-syntax-jsx": "^7.24.6",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.26.3",
+    "@babel/preset-typescript": "^7.26.0",
+    "@eslint/compat": "^1.0.1",
+    "@eslint/js": "^9.3.0",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
+    "@types/eslint__js": "^8.42.3",
+    "@types/isomorphic-fetch": "^0.0.39",
+    "@types/jest": "^29.5.12",
+    "babel-jest": "^29.7.0",
+    "babel-loader": "^9.2.1",
+    "concurrently": "^9.1.0",
+    "css-loader": "^7.1.2",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.2",
+    "globals": "^15.3.0",
+    "gulp": "^5.0.0",
+    "gulp-shell": "^0.8.0",
+    "html-webpack-plugin": "^5.6.3",
+    "jest": "^29.7.0",
+    "react-refresh": "^0.16.0",
+    "react-test-renderer": "^18.3.1",
+    "style-loader": "^4.0.0",
+    "ts-jest": "^29.1.4",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^7.11.0",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.2.0"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

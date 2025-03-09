@@ -1,0 +1,20 @@
+# Query type for fetching data
+type Query {
+  hello: Hello
+}
+
+# Mutation type for modifying data
+type Mutation {
+  submitText(input: SubmitText!) : Response
+}
+
+type Hello {
+  message: String!
+}
+
+type Response {
+  message: String!
+}
+input SubmitText {
+  text: String!
+}
