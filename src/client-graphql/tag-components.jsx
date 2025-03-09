@@ -1,6 +1,7 @@
 import { gql, useQuery, useMutation } from '@apollo/client';
 import { useState } from 'react';
 import './Tags.css'
+import e from 'cors';
 
 const QUERY_All_Tags = gql`
     query {
@@ -32,11 +33,12 @@ const MUTATE_Remove_Tag = gql`
 export function Tags () {
     const {loading, error, data, refetch} = useQuery(QUERY_All_Tags);
 
-    const [isAddingTag, setIsAddingTag] = useState(true);
+    const [isAddingTag, setIsAddingTag] = useState(false);
+    const [isEditingTag, setIsEditingTag] = useState(false);
+    const [editTag, setEditTag] = useState({});
 
     const onTagUpdate = () => {
         refetch({ fetchPolicy: "network-only" });
-
     }
 
     const onAddTagClose = () => {
@@ -44,8 +46,30 @@ export function Tags () {
     }
 
     const onAddTagOpen = () => {
-        setIsAddingTag(true)
+        setIsAddingTag(!isAddingTag)
+        setIsEditingTag(false)
     }
+
+    const onEditTagOpen = (tag) => {
+        setIsAddingTag(false); // Ensure add mode is off
+        setIsEditingTag(true); // Ensure edit mode is on
+    
+        setEditTag((prevTag) => {
+            // If the same tag is clicked again, close editing
+            if (prevTag.id === tag.id) {
+                setIsEditingTag(false);
+                return {}; // Reset editTag
+            }
+            return tag; // Otherwise, set new tag
+        });
+    };
+    
+
+    const onEditTagClose = () => {
+        setIsEditingTag(false)
+    }
+
+
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error :</p>;
@@ -54,12 +78,14 @@ export function Tags () {
         <ol className="tag-list">
         <button class="open-add-tag" onClick={onAddTagOpen}>+</button>
         {data.tags.map((tag)=> (
-            <TagItem key={tag.id} initTag={tag} onChange={onTagUpdate}/>
+            <button key={tag.id} onClick={() => onEditTagOpen(tag)}>
+            <TagItem initTag={tag} onChange={onTagUpdate}/>
+            </button>
         ))}
         
         </ol>
-        {isAddingTag && (
-            <div className="add-tag">
+        {isAddingTag && !isEditingTag && (
+            <div className="add-tag" >
                 <div className="close">
                     <button onClick={onAddTagClose}>X</button>
                 </div>
@@ -70,6 +96,22 @@ export function Tags () {
                 <TagEditItem initTag={{
                     name: '',
                     description: ''
+                }} onChange={onTagUpdate} />
+             </div>
+        )}
+        {!isAddingTag && isEditingTag && (
+            <div className="add-tag" key={editTag.id}>
+                <div className="close">
+                    <button onClick={onEditTagClose}>X</button>
+                </div>
+                <h3>
+                    Edit Tag
+                </h3>
+            
+                <TagEditItem key={editTag.id} initTag={{
+                    name: editTag.name,
+                    description: editTag.description,
+                    type: editTag.type
                 }} onChange={onTagUpdate} />
              </div>
         )}
