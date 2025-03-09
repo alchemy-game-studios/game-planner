@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import fetch from 'isomorphic-fetch';
 import { Message, Places } from './client-graphql/graphql-components'
+import { Tags } from './client-graphql/tag-components'
 import './App.css';
 
 const App = () => {
@@ -29,7 +30,7 @@ const App = () => {
 
     return (
         <div className="app">
-          <Places />
+          <Tags />
         </div>
     );
     

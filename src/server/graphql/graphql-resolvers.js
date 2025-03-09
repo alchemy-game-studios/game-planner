@@ -1,4 +1,5 @@
 import neo4j from "neo4j-driver";
+import tagRepo from "../repository/tag.js"
 
 // Configure the Neo4j driver
 const driver = neo4j.driver(
@@ -7,6 +8,9 @@ const driver = neo4j.driver(
 );
 
 const neo4JSession = () => {return driver.session()};
+
+const tagRepository = tagRepo(driver)
+
 export default {
   Query: {
       hello: () => {
@@ -28,6 +32,9 @@ export default {
         } finally {
           session.close();
         }
+      },
+      tags: async () => {
+        return await tagRepository.readAll()
       }
   },
   Mutation: {
@@ -39,6 +46,22 @@ export default {
       // Example: return a response with a message
       return {
         message: `Received text: ${input.text}`,
+      };
+    },
+    addTag: async (parent, { tag }) => {
+      console.log('Received input:', tag);
+
+      console.log('Repo', tagRepository);
+
+      await tagRepository.create(tag)
+      return {
+        message: `Tag updated: ${tag.id}`,
+      };
+    },
+    removeTag: async (parent, { tag }) => {
+      await tagRepository.delete(tag)
+      return {
+        message: `Tag Removed: ${tag.id}`,
       };
     },
   }

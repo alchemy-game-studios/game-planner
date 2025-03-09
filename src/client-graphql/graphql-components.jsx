@@ -75,6 +75,7 @@ export function Places () {
         <>
         {data.places.map((place)=> (
             <div>
+            <p>{place.id}</p>
             <p>{place.name}</p>
             <p>{place.description}</p>
             </div>

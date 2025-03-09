@@ -2,11 +2,14 @@
 type Query {
   hello: Hello
   places: [Place!]!
+  tags: [Tag]
 }
 
 # Mutation type for modifying data
 type Mutation {
   submitText(input: SubmitText!) : Response
+  addTag(tag: TagInput!) : Response
+  removeTag(tag: TagInput!) : Response
 }
 
 type Hello {
@@ -20,10 +23,38 @@ input SubmitText {
   text: String!
 }
 
+input TagInput {
+  id: String!
+  name: String!
+  description: String!
+}
+
 ##############################################################
 ## Place
 type Place {
   id: String!
   name: String!
   description: String!
+  tags: Tags
+}
+
+
+
+
+##############################################################
+## Tags
+type Tags {
+  feelingTags: [Tag]
+  descriptorTags: [Tag]
+}
+type Tag {
+  id: ID!
+  name: String!
+  description: String
+  type: String
+}
+
+type LocalizedText {
+  locale: String!
+  text: String!
 }
