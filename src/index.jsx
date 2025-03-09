@@ -3,13 +3,24 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import ApolloAppProvider from "./apollo/apollo-provider";
+
+import { ApolloProvider, InMemoryCache, ApolloClient } from '@apollo/client';
+
+// Create an Apollo Client instance
+const client = new ApolloClient({
+  uri: 'http://localhost:3000/graphql', // Replace with your GraphQL API endpoint
+  cache: new InMemoryCache(), // Enables caching for performance
+});
 
 const root = ReactDOM.createRoot(
   document.getElementById('root')
 );
 root.render(
   <React.StrictMode>
+    <ApolloProvider client={client}>
     <App />
+    </ApolloProvider>
   </React.StrictMode>
 );
 

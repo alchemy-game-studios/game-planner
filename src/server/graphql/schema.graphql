@@ -1,6 +1,7 @@
 # Query type for fetching data
 type Query {
   hello: Hello
+  places: [Place!]!
 }
 
 # Mutation type for modifying data
@@ -17,4 +18,12 @@ type Response {
 }
 input SubmitText {
   text: String!
+}
+
+##############################################################
+## Place
+type Place {
+  id: String!
+  name: String!
+  description: String!
 }

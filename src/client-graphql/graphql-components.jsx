@@ -17,6 +17,16 @@ const SUBMIT_TEXT = gql`
     }
 `;
 
+const QUERY_Places = gql`
+    query {
+        places {
+           id
+           name
+           description
+        }
+    }
+`;
+
 
 export function TextSubmitter () {
     const [submitText, { data, loading, error }] = useMutation(SUBMIT_TEXT);
@@ -53,5 +63,22 @@ export function Message () {
     if (error) return <p>Error :</p>;
     return (
        <p>{data.hello.message}</p>
+    );
+}
+
+export function Places () {
+    const {loading, error, data} = useQuery(QUERY_Places);
+
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p>Error : {error.message} </p>;
+    return (
+        <>
+        {data.places.map((place)=> (
+            <div>
+            <p>{place.name}</p>
+            <p>{place.description}</p>
+            </div>
+        ))}
+       </>
     );
 }
