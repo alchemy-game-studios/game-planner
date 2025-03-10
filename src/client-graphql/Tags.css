@@ -98,19 +98,21 @@
  
  
 
-.edit button.add {
+.edit button.add, .edit button.edit {
     background-color: #5E6;
     padding: 10px;
     border: 1px solid #444;
     border-radius: 8px;
 }
 
-.edit button.add:hover {
+
+
+.edit button.add:hover,.edit button.edit:hover {
     cursor:pointer;
     background-color: #3C4;
 }
 
-.edit button.add:active {
+.edit button.add:active, .edit button.edit:active {
     cursor:pointer;
     background-color: #7F8;
 }

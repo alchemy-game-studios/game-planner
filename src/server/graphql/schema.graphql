@@ -10,6 +10,7 @@ type Mutation {
   submitText(input: SubmitText!) : Response
   addTag(tag: TagInput!) : Response
   removeTag(tag: TagInput!) : Response
+  editTag(tag: TagInput!) : Response
 }
 
 type Hello {

@@ -51,9 +51,16 @@ export default {
     addTag: async (parent, { tag }) => {
       console.log('Received input:', tag);
 
-      console.log('Repo', tagRepository);
+      await tagRepository.create(tag);
 
-      await tagRepository.create(tag)
+      return {
+        message: `Tag added: ${tag.id}`,
+      };
+    },
+    editTag: async (parent, { tag }) => {
+      console.log('Received input:', tag);
+
+      await tagRepository.update(tag)
       return {
         message: `Tag updated: ${tag.id}`,
       };

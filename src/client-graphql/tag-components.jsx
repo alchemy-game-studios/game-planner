@@ -1,5 +1,5 @@
 import { gql, useQuery, useMutation } from '@apollo/client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Tags.css'
 import e from 'cors';
 
@@ -22,6 +22,14 @@ const MUTATE_Add_Tag = gql`
     }
 `;
 
+const MUTATE_Edit_Tag = gql`
+    mutation EditTag($tag: TagInput!) {
+        editTag(tag: $tag) {
+           message
+        }
+    }
+`;
+
 const MUTATE_Remove_Tag = gql`
     mutation RemoveTag($tag: TagInput!) {
         removeTag(tag: $tag) {
@@ -36,9 +44,15 @@ export function Tags () {
     const [isAddingTag, setIsAddingTag] = useState(false);
     const [isEditingTag, setIsEditingTag] = useState(false);
     const [editTag, setEditTag] = useState({});
+    const [, forceUpdate] = useState(0);
 
-    const onTagUpdate = () => {
-        refetch({ fetchPolicy: "network-only" });
+    const onTagUpdate = async  (updated) => {
+        console.log("refetching")
+        await refetch();
+        forceUpdate(Math.random());
+
+        setIsEditingTag(false)
+        setIsAddingTag(false)
     }
 
     const onAddTagClose = () => {
@@ -56,7 +70,7 @@ export function Tags () {
     
         setEditTag((prevTag) => {
             // If the same tag is clicked again, close editing
-            if (prevTag.id === tag.id) {
+            if (tag && prevTag && prevTag.id === tag.id) {
                 setIsEditingTag(false);
                 return {}; // Reset editTag
             }
@@ -73,13 +87,14 @@ export function Tags () {
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error :</p>;
+    
     return (
         <>
         <ol className="tag-list">
         <button class="open-add-tag" onClick={onAddTagOpen}>+</button>
         {data.tags.map((tag)=> (
-            <button key={tag.id} onClick={() => onEditTagOpen(tag)}>
-            <TagItem initTag={tag} onChange={onTagUpdate}/>
+            <button key={Math.random()} onClick={() => onEditTagOpen(tag)}>
+            <TagItem key={tag.id} initTag={tag} onChange={onTagUpdate}/>
             </button>
         ))}
         
@@ -93,14 +108,14 @@ export function Tags () {
                     Add New Tag
                 </h3>
             
-                <TagEditItem initTag={{
+                <TagEditItem key={Math.random()} initTag={{
                     name: '',
                     description: ''
                 }} onChange={onTagUpdate} />
              </div>
         )}
         {!isAddingTag && isEditingTag && (
-            <div className="add-tag" key={editTag.id}>
+            <div className="add-tag">
                 <div className="close">
                     <button onClick={onEditTagClose}>X</button>
                 </div>
@@ -109,6 +124,7 @@ export function Tags () {
                 </h3>
             
                 <TagEditItem key={editTag.id} initTag={{
+                    id: editTag.id,
                     name: editTag.name,
                     description: editTag.description,
                     type: editTag.type
@@ -121,11 +137,16 @@ export function Tags () {
 }
 
 export function TagItem ({initTag, onChange}) {
+    useEffect(() => {
+        console.log("TagItem updated:", initTag);
+    }, [initTag]);
+
     const [RemoveTag, { data, loading, error }] = useMutation(MUTATE_Remove_Tag);
 
     const [tag] = useState(initTag);
 
     const handleDelete = async (event) => {
+        event.stopPropagation();
         try{
             const sentTag = {
                 id: tag.id,
@@ -136,7 +157,8 @@ export function TagItem ({initTag, onChange}) {
 
             await RemoveTag({ variables: { tag: sentTag } });
 
-            onChange()
+            onChange(sentTag)
+            
         } catch (err) {
             console.log(err);
         }
@@ -154,12 +176,18 @@ export function TagItem ({initTag, onChange}) {
 }
 
 export function TagEditItem ({initTag, onChange}) {
-    const [AddTag, { data, loading, error }] = useMutation(MUTATE_Add_Tag);
+    const [AddTag] = useMutation(MUTATE_Add_Tag);
+    const [EditTag] = useMutation(MUTATE_Edit_Tag);
+
 
     const [tag, setTag] = useState(initTag);
     const [resultText] = useState('');
 
-    const handleSubmit = async (event) => {
+    useEffect(() => {
+        setTag(initTag);  // Sync state when initTag changes
+    }, [initTag]);  // Runs whenever initTag updates
+
+    const handleAdd = async (event) => {
         try{
             const sentTag = {
                 id: '',
@@ -183,6 +211,24 @@ export function TagEditItem ({initTag, onChange}) {
         }
     };
 
+    const handleEdit = async (event) => {
+        try{
+            const sentTag = {
+                id: tag.id,
+                name: tag.name,
+                description: tag.description,
+                type: tag.type
+            }
+
+            await EditTag({ variables: { tag: sentTag } });
+            console.log("calling on change " + sentTag)
+            onChange(sentTag)
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+
     const onInputChange = (event, field) => {
         setTag((prevTag) => ({
             ...prevTag, // Spread previous state
@@ -204,8 +250,23 @@ export function TagEditItem ({initTag, onChange}) {
                 <h5>Tag Description</h5>
                 <textarea id="text-input-description" type="text" value={tag.description} onChange={(event) => onInputChange(event, "description")} placeholder={initTag.description} />
             </div>
-            <button className="add" onClick={handleSubmit}>Add Tag</button>
-            <p>{resultText}</p>
+
+            <p>TAG ID: {tag.id} </p>
+            
+            {(tag.id != null && tag.id != '') && (
+                <>
+                <button className="edit" onClick={handleEdit}>Edit Tag</button>
+                <p>{resultText}</p>
+                </>
+            )}
+
+            {(tag.id == null || tag.id == '') && (
+                <>
+                <button className="add" onClick={handleAdd}>Add Tag</button>
+                <p>{resultText}</p>
+                </>
+            )}  
+            
         </div>
     );
 
