@@ -93,7 +93,7 @@ export function Tags () {
         <ol className="tag-list">
         <button class="open-add-tag" onClick={onAddTagOpen}>+</button>
         {data.tags.map((tag)=> (
-            <button key={Math.random()} onClick={() => onEditTagOpen(tag)}>
+            <button class="tag-open" key={Math.random()} onClick={() => onEditTagOpen(tag)}>
             <TagItem key={tag.id} initTag={tag} onChange={onTagUpdate}/>
             </button>
         ))}
@@ -251,7 +251,7 @@ export function TagEditItem ({initTag, onChange}) {
                 <textarea id="text-input-description" type="text" value={tag.description} onChange={(event) => onInputChange(event, "description")} placeholder={initTag.description} />
             </div>
 
-            <p>TAG ID: {tag.id} </p>
+            <p>Tag ID: {tag.id} </p>
             
             {(tag.id != null && tag.id != '') && (
                 <>

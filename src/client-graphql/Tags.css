@@ -14,12 +14,44 @@
     display: inline-flex;
 }
 
+.tag:hover {
+    background-color: #555;
+    cursor: pointer;
+}
+
+.tag:active {
+    background-color: #999;
+    cursor: pointer;
+}
+
+
 .tag.feeling {
     background-color: #737;
 }
 
 .tag.descriptor {
     background-color: #337;
+}
+
+.tag.feeling:hover {
+    background-color: #515;
+}
+
+.tag.descriptor:hover {
+    background-color: #115;
+}
+
+.tag.feeling:active {
+    background-color: #959;
+}
+
+.tag.descriptor:active {
+    background-color: #559;
+}
+
+button.tag-open {
+    background: none;
+    border: none;
 }
 
 .tag-list {
