@@ -1,6 +1,8 @@
 import neo4j from "neo4j-driver";
 import tagResolverFactory from "./tag-resolver.js"
 import tagRepo from "../repository/tag.js"
+import commonResolverFactory from "./common.js"
+import common from "./common.js";
 
 // Configure the Neo4j driver
 const driver = neo4j.driver(
@@ -11,45 +13,39 @@ const driver = neo4j.driver(
 const neo4JSession = () => {return driver.session()};
 
 const tagResolver = tagResolverFactory(driver);
+const commonResolver = commonResolverFactory(driver);
+
+const NODE_UNIVERSE= "Universe"
+const NODE_PLACE= "Place"
+const NODE_CHARACTER= "Character"
+const NODE_TAG= "Tag"
 
 
 export default {
   Query: {
-      hello: () => {
-        return {
-          message: "Hello, world!"
-        };
-      },
-      places: async () => {
-        console.log("STARTING PLACES QUERY")
-        const session = neo4JSession();
-       
-        try {
-          const result = await session.run("MATCH (p:Place) RETURN p");
-          console.log(result.records[0].get("p"))
-          return result.records.map(record => record.get("p").properties);
-        } catch (error) {
-          console.error("Error fetching entities:", error);
-          throw new Error("Failed to fetch entities");
-        } finally {
-          session.close();
-        }
-      },
-      tags: tagResolver.Query.tags
+      universes: commonResolver.all(NODE_UNIVERSE),
+      places: commonResolver.all(NODE_PLACE),
+      characters: commonResolver.all(NODE_CHARACTER),
+      tags: commonResolver.all(NODE_TAG)
   },
   Mutation: {
-    submitText: (parent, { input }) => {
-      // `input` contains the data sent from the client
-      console.log('Received input:', input);
+    addUniverse: async (obj) => {await commonResolver.create(NODE_UNIVERSE, obj)},
+    editUniverse: async (obj) => {await commonResolver.update(obj)},
+    removeUniverse: async (obj) => {await commonResolver.delete(obj)},
 
-      // Process the data (e.g., save to database, perform business logic)
-      // Example: return a response with a message
-      return {
-        message: `Received text: ${input.text}`,
-      };
-    },
-    addTag: tagResolver.Mutation.addTag,
-    editTag: tagResolver.Mutation.editTag,
-    removeTag: tagResolver.removeTag,
+    addPlace: async (obj) => {await commonResolver.create(NODE_PLACE, obj)},
+    editPlace: async (obj) => {await commonResolver.update(obj)},
+    removePlace: async (obj) => {await commonResolver.delete(obj)},
+
+    addCharacter: async (obj) => {await commonResolver.create(NODE_CHARACTER, obj)},
+    editCharacter: async (obj) => {await commonResolver.update(obj)},
+    removeCharacter: async (obj) => {await commonResolver.delete(obj)},
+
+    addTag: async (obj) => {await commonResolver.create(NODE_TAG, obj)},
+    editTag: async (obj) => {await commonResolver.update(obj)},
+    removeTag: async (obj) => {await commonResolver.delete(obj)},
+
+    relateContains: commonResolver.relateContains,
+    relateTagged: commonResolver.relateTagged
   }
 }

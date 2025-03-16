@@ -1,7 +1,7 @@
-import tagRepo from "../repository/tag.js"
+import repo from "../repository/common.js"
 
 export default (driver) => {
-    const tagRepository = tagRepo(driver)
+    const tagRepository = repo(driver)
 
     return {
         Query: {

@@ -1,4 +1,4 @@
-import repo from "../repository/character.js"
+import repo from "../repository/common.js"
 
 export default (driver) => {
     const characterRepository = repo(driver)

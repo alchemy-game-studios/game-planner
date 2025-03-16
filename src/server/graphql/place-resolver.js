@@ -1,7 +1,7 @@
-import placeRepo from "../repository/place.js"
+import repo from "../repository/common.js"
 
 export default (driver) => {
-    const placeRepository = placeRepo(driver)
+    const placeRepository = repo(driver)
 
     return {
         Query: {

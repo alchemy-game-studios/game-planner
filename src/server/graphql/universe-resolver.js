@@ -1,4 +1,4 @@
-import repo from "../repository/universe.js"
+import repo from "../repository/common.js"
 
 export default (driver) => {
     const universeRepository = repo(driver)
