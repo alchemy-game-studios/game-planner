@@ -10,9 +10,6 @@ const driver = neo4j.driver(
   neo4j.auth.basic("neo4j", "password") // Use your credentials
 );
 
-const neo4JSession = () => {return driver.session()};
-
-const tagResolver = tagResolverFactory(driver);
 const commonResolver = commonResolverFactory(driver);
 
 const NODE_UNIVERSE= "Universe"

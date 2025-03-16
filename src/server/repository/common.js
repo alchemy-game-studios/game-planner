@@ -41,7 +41,7 @@ const NewobjRepository = function(driver) {
             RETURN {
             id: o1.id,
             properties: properties(o1), 
-            tags: [tag IN tags | tag.name], 
+            tags: [tag IN tags | properties(tag)], 
             contents: 
                 REDUCE(result = {}, entry IN groupedByType | 
                 result + { [entry.label]: entry.nodes }) 
