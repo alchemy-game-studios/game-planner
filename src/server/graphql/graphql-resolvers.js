@@ -3,7 +3,7 @@ import tagRepo from "../repository/tag.js"
 
 // Configure the Neo4j driver
 const driver = neo4j.driver(
-  "bolt://localhost:7687", // Change if using a remote database
+  "bolt://localhost:7474", // Change if using a remote database
   neo4j.auth.basic("neo4j", "password") // Use your credentials
 );
 

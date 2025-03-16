@@ -250,8 +250,6 @@ export function TagEditItem ({initTag, onChange}) {
                 <h5>Tag Description</h5>
                 <textarea id="text-input-description" type="text" value={tag.description} onChange={(event) => onInputChange(event, "description")} placeholder={initTag.description} />
             </div>
-
-            <p>Tag ID: {tag.id} </p>
             
             {(tag.id != null && tag.id != '') && (
                 <>
@@ -262,7 +260,7 @@ export function TagEditItem ({initTag, onChange}) {
 
             {(tag.id == null || tag.id == '') && (
                 <>
-                <button className="add" onClick={handleAdd}>Add Tag</button>
+                <button className="add" onClick={handleAdd}>Add New Tag</button>
                 <p>{resultText}</p>
                 </>
             )}  
