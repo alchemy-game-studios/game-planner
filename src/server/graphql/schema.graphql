@@ -32,11 +32,28 @@ input TagInput {
 }
 
 ##############################################################
-## Place
+## Main entities
+type Universe {
+  id: String!
+  name: String!
+  description: String!
+  places: [Place]
+  characters: [Character]
+  tags: Tags
+}
+
 type Place {
   id: String!
   name: String!
   description: String!
+  tags: Tags
+}
+
+type Character {
+  id: String!
+  name: String!
+  description: String!
+  originPlace: Place
   tags: Tags
 }
 
