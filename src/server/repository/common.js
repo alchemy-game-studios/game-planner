@@ -18,10 +18,10 @@ const NewobjRepository = function(driver) {
   return {
     create: async (type, obj) => {
         return dbCall(async (session) => {
-            const command = `CREATE(o:${nodeType} $obj);`
+            const command = `CREATE(o:${type} $obj);`
             obj.id = uuidv4()
 
-            await session.run(command, {obj: obj, nodeType: type});
+            await session.run(command, {obj: obj});
         })
     },
     read: async (obj) => {
@@ -53,28 +53,28 @@ const NewobjRepository = function(driver) {
     },
     readAll: async (type) => {
         const command = `
-            MATCH (o1:${nodeType})-[:CONTAINS]->(o2)
-            WITH o1, o2, labels(o2) AS o2Labels
-            UNWIND o2Labels AS label
-            WITH o1, label, collect(o2) AS groupedNodes
+           MATCH (o1:${type})
+            OPTIONAL MATCH (o1)-[:CONTAINS]->(o2)
+            WITH o1, collect(o2) AS groupedNodes, collect(distinct labels(o2)) AS o2Labels
+            UNWIND (CASE WHEN size(o2Labels) > 0 THEN o2Labels ELSE [null] END) AS label
 
+            WITH o1, label, groupedNodes
             OPTIONAL MATCH (o1)-[:TAGGED]->(tag)
+
             WITH o1, 
-                collect({label: label, nodes: groupedNodes}) AS groupedByType,
-                collect(tag) AS tags
+                collect(DISTINCT {label: label, nodes: groupedNodes}) AS groupedByType,
+                collect(DISTINCT tag.id) AS tags
 
             RETURN {
-            id: o1.id,
-            properties: properties(o1),
-            tags: [tag IN tags | tag.name],
-            contents: 
-                REDUCE(result = {}, entry IN groupedByType | 
-                result + { [entry.label]: entry.nodes }) 
-            } AS o1
+                id: o1.id,
+                properties: properties(o1),
+                tags: tags,
+                contents: groupedByType
+            } AS o1;
 
         `
         return dbCall(async(session) => {
-            const result = await session.run(command, {nodeType: type});
+            const result = await session.run(command);
             return result.records.map(record => record.get("o1").properties);
         })
     },
@@ -94,20 +94,20 @@ const NewobjRepository = function(driver) {
             await session.run(command, {id: obj.id});
         })
     },
-    relateContains: async(obj1, obj2) => {
+    relateContains: async(id1, id2) => {
         return dbCall(async (session) => {
-            const command = `MATCH (x:X {id: $obj1Id}), (y:Y {id: $obj2Id})
+            const command = `MATCH (x {id: $obj1Id}), (y {id: $obj2Id})
                     CREATE (x)-[:CONTAINS]->(y)`
 
-            await session.run(command, {obj1Id: obj1.id}, {obj2Id: obj2.id});
+            await session.run(command, {obj1Id: id1, obj2Id: id2});
         })
     },
-    relateTagged: async(obj, tag) => {
+    relateTagged: async(id1, id2) => {
         return dbCall(async (session) => {
-            const command = `MATCH (x:X {id: $objId}), (y:Y {id: $tagId})
+            const command = `MATCH (x {id: $objId}), (y {id: $tagId})
                     CREATE (x)-[:TAGGED]->(y)`
 
-            await session.run(command, {objId: obj.id}, {tagId: tag.id});
+            await session.run(command, {objId: id1, tagId: id2});
         })
     },
   }
