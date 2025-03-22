@@ -35,3 +35,8 @@
     background-color: #999;
     cursor: pointer;
 }
+
+hr {
+    margin-top: 75px;
+    margin-bottom:10px
+}

@@ -107,9 +107,9 @@ export function EditEntityComponent({id, type}) {
 
     return (
         <>
-        <h1>
+        <h2>
             {entity.properties.name}
-        </h1>
+        </h2>
         <div className="edit">
             <div className="field">
                 <h5>{nodeType} Name</h5>
@@ -146,7 +146,9 @@ export function EditEntityComponent({id, type}) {
                 type={type}
                 initContents={items}
                 />
+               
             ))}
+             <hr />
             </> 
         </div>
         </>

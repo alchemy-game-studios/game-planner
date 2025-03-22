@@ -31,9 +31,13 @@ const App = () => {
     return (
         <div className="app">
             <div className="panel">
+               <h1>Universes</h1>
                <EditEntityComponent id="9919e21f-d9e9-4449-9068-329ba5d2b50b" type="universe" />
-               {/* <EditEntityComponent id="7198a74d-8939-4262-a69d-00192db9c9ff" type="place" />
-               <EditEntityComponent id="db421343-1ce6-41e4-972c-b13b6dd06877" type="character" /> */}
+               <h1>Places</h1>
+               <EditEntityComponent id="7198a74d-8939-4262-a69d-00192db9c9ff" type="place" />
+
+               <h1>Characters</h1>
+               <EditEntityComponent id="db421343-1ce6-41e4-972c-b13b6dd06877" type="character" />
             </div>
         </div>
     );

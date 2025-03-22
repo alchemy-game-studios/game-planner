@@ -30,7 +30,7 @@ export function EditContainsComponent({id, type, initContents}) {
 
     return (
         <div className="relation-list">
-            <h2>{capitalizeFirst(type)}s</h2>
+            <h3>{capitalizeFirst(type)}s</h3>
             <ol>
                 {contents.filter((content) => {
                     return content._nodeType == type

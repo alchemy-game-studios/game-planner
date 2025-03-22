@@ -1,10 +1,12 @@
+html, #root, .app {
+  height: 3000px;
+}
 .App {
   text-align: center;
 }
 
 .app {
   width: 100vw;
-  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
