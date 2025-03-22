@@ -27,25 +27,32 @@ const NewobjRepository = function(driver) {
     read: async (obj) => {
         return dbCall(async(session) => {
             const command = `
-             MATCH (o1)-[:CONTAINS]->(o2)
-             WHERE o1.id = $id
-             WITH o1, o2, toLower(labels(o2)[0]) AS label
-             
-             WITH o1, 
-              collect({
-                  _nodeType: label, 
-                  properties: properties(o2)
-              }) AS contents
-             
-             OPTIONAL MATCH (o1)-[:TAGGED]->(tag)
-             WITH o1, contents, collect(tag) AS tags
-             
-             RETURN {
-               id: o1.id,
-               properties: properties(o1),
-               tags: [tag IN tags | properties(tag)],
-               contents: contents
-             } AS o1;
+            MATCH (o1)
+    WHERE o1.id = $id
+
+    OPTIONAL MATCH (o1)-[:CONTAINS*]->(o2)
+    WITH o1, o2, 
+     CASE 
+       WHEN o2 IS NOT NULL 
+       THEN {
+         _nodeType: toLower(labels(o2)[0]),
+         properties: properties(o2)
+       }
+       ELSE NULL
+     END AS contentItem
+
+    WITH o1, collect(contentItem) AS rawContents
+    WITH o1, [item IN rawContents WHERE item IS NOT NULL] AS contents
+
+    OPTIONAL MATCH (o1)-[:TAGGED]->(tag)
+    WITH o1, contents, collect(tag) AS tags
+
+    RETURN {
+      id: o1.id,
+      properties: properties(o1),
+      tags: [tag IN tags | properties(tag)],
+      contents: contents
+    } AS o1
             `
             console.log(obj);
             const result = await session.run(command, {id: obj.id});
@@ -55,27 +62,33 @@ const NewobjRepository = function(driver) {
     },
     readAll: async (type) => {
         const command = `
-           MATCH (o1:${type})-[:CONTAINS]->(o2)
-            WITH o1, o2, toLower(labels(o2)[0]) AS label
-             
-             WITH o1, 
-              collect({
-                  _nodeType: label, 
-                  properties: properties(o2)
-              }) AS contents
-             
-             OPTIONAL MATCH (o1)-[:TAGGED]->(tag)
-             WITH o1, contents, collect(tag) AS tags
-             
-            WITH {
-              id: o1.id,
-              properties: properties(o1),
-              tags: [tag IN tags | properties(tag)],
-              contents: contents
-            } AS object
+    MATCH (o1:${type})
 
-            RETURN collect(object) AS results;
+    OPTIONAL MATCH (o1)-[:CONTAINS*]->(o2)
+    WITH o1, o2, 
+     CASE 
+       WHEN o2 IS NOT NULL 
+       THEN {
+         _nodeType: toLower(labels(o2)[0]),
+         properties: properties(o2)
+       }
+       ELSE NULL
+     END AS contentItem
 
+    WITH o1, collect(contentItem) AS rawContents
+    WITH o1, [item IN rawContents WHERE item IS NOT NULL] AS contents
+
+    OPTIONAL MATCH (o1)-[:TAGGED]->(tag)
+    WITH o1, contents, collect(tag) AS tags
+
+    WITH {
+      id: o1.id,
+      properties: properties(o1),
+      tags: [tag IN tags | properties(tag)],
+      contents: contents
+    } AS object
+
+     RETURN collect(object) AS results;
         `
         return dbCall(async(session) => {
             const result = await session.run(command);
