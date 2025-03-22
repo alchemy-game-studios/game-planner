@@ -4,6 +4,20 @@ import { useState, useEffect } from 'react';
 //import './edit-contains.css'
 import { capitalizeFirst } from '../util.js'
 
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+  } from "../../components/ui/drawer"
+
+import { Button } from "../../components/ui/button"
+
+  
 
 
 export function EditContainsComponent({id, type, initContents}) {
@@ -29,6 +43,7 @@ export function EditContainsComponent({id, type, initContents}) {
     // };
 
     return (
+        <>
         <div className="relation-list m-5">
             <h3 class="text-xl font-bold text-gray-400 leading-tight tracking-tight">{capitalizeFirst(type)}s</h3>
             <ol>
@@ -43,6 +58,24 @@ export function EditContainsComponent({id, type, initContents}) {
                 ))}
             </ol>
         </div>
+
+        <Drawer>
+  <DrawerTrigger>Open</DrawerTrigger>
+  <DrawerContent>
+    <DrawerHeader>
+      <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+      <DrawerDescription>This action cannot be undone.</DrawerDescription>
+    </DrawerHeader>
+    <DrawerFooter>
+      <Button>Submit</Button>
+      <DrawerClose>
+        <Button variant="outline">Cancel</Button>
+      </DrawerClose>
+    </DrawerFooter>
+  </DrawerContent>
+</Drawer>
+
+        </>
     );
 }
 
