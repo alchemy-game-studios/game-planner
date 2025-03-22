@@ -4,6 +4,11 @@ type Query {
   places: [EnityResponse]
   characters:[EnityResponse]
   tags: [EntityProperties]
+
+  universe(obj: IdInput): EnityResponse
+  place(obj: IdInput): EnityResponse
+  character(obj: IdInput):EnityResponse
+  tag(obj: IdInput): EntityProperties
 }
 
 # Mutation type for modifying data
@@ -28,7 +33,9 @@ type Mutation {
   relateTagged(relation: TaggableInput!) : Response
 }
 
-
+input IdInput {
+  id: String!
+}
 
 input RelatableInput {
   id: String!

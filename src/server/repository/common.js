@@ -28,11 +28,14 @@ const NewobjRepository = function(driver) {
         return dbCall(async(session) => {
             const command = `
              MATCH (o1)-[:CONTAINS]->(o2)
-             WHERE o1.id = "$id"
+             WHERE o1.id = $id
              WITH o1, o2, toLower(labels(o2)[0]) AS label
              
              WITH o1, 
-                  collect(apoc.map.merge(properties(o2), {_nodeType: label})) AS contents
+              collect({
+                  _nodeType: label, 
+                  properties: properties(o2)
+              }) AS contents
              
              OPTIONAL MATCH (o1)-[:TAGGED]->(tag)
              WITH o1, contents, collect(tag) AS tags
@@ -44,8 +47,10 @@ const NewobjRepository = function(driver) {
                contents: contents
              } AS o1;
             `
+            console.log(obj);
             const result = await session.run(command, {id: obj.id});
-            return result;
+            console.log(result.records[0].get("o1"));
+            return result.records[0].get("o1");
         })
     },
     readAll: async (type) => {
