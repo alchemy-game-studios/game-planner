@@ -30,6 +30,10 @@ export default {
         },
       },
       {
+        test: /\.scss$/,
+        use: ['style-loader', 'css-loader', 'sass-loader'],
+      },
+      {
         test: /\.css$/,
         use: ['style-loader', 'css-loader'],
       },
@@ -43,7 +47,7 @@ export default {
     ],
   },
   resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx', '.css'],
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.css', '.scss'],
   },
   plugins: [
     new HtmlWebpackPlugin({
