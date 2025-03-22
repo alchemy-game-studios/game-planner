@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import fetch from 'isomorphic-fetch';
 import { Message, Places } from './client-graphql/graphql-components'
-import { Tags } from './client-graphql/tag-components'
+import { EditEntityComponent } from './client-graphql/edit-entity-component'
 import './App.css';
 
 const App = () => {
@@ -25,13 +25,14 @@ const App = () => {
     //     .then (res => setApiResponse(res))
     //     .catch(err => err);
     // }
-
+    
   
 
     return (
         <div className="app">
             <div className="panel">
-                <Tags />
+               <EditEntityComponent id="9919e21f-d9e9-4449-9068-329ba5d2b50b" type="universe" />
+               <EditEntityComponent id="7198a74d-8939-4262-a69d-00192db9c9ff" type="place" />
             </div>
         </div>
     );
