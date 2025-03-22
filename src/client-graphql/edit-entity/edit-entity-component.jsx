@@ -1,6 +1,6 @@
 import { gql, useLazyQuery, useMutation } from '@apollo/client';
 import { useState, useEffect } from 'react';
-import './edit-entity.css'
+//import './edit-entity.css'
 import { EditContainsComponent } from './edit-contains'
 import { capitalizeFirst, grouped } from '../util.js'
 
@@ -107,26 +107,26 @@ export function EditEntityComponent({id, type}) {
 
     return (
         <>
-        <h2>
+        <h2 className="text-3xl font-bold text-gray-200 leading-tight tracking-tight">
             {entity.properties.name}
         </h2>
-        <div className="edit">
-            <div className="field">
-                <h5>{nodeType} Name</h5>
-                <input id="text-input-name" type="text" value={entity.properties.name} onChange={(event) => onInputChange(event, "name")} placeholder={initEntity.properties.name} />
+        <div className="edit m-5">
+            <div className="field m-3">
+                <h5 className="text-xl font-bold text-gray-200 leading-tight tracking-tight">{nodeType} Name</h5>
+                <input id="text-input-name" type="text" className="bg-gray-700 text-gray-100 rounded p-4 w-100" value={entity.properties.name} onChange={(event) => onInputChange(event, "name")} placeholder={initEntity.properties.name} />
             </div>
-            <div className="field">
-                <h5>{nodeType} Type</h5>
-                <input id="text-input-type" type="text" value={entity.properties.type} onChange={(event) => onInputChange(event, "type")} placeholder={initEntity.properties.type} />
+            <div className=" m-3">
+                <h5 className="text-xl font-bold text-gray-200 leading-tight tracking-tight">{nodeType} Type</h5>
+                <input id="text-input-type" type="text" className="bg-gray-700 text-gray-100 rounded p-4 w-100" value={entity.properties.type} onChange={(event) => onInputChange(event, "type")} placeholder={initEntity.properties.type} />
             </div>
-            <div className="field">
-                <h5>{nodeType} Description</h5>
-                <textarea id="text-input-description" type="text" value={entity.properties.description} onChange={(event) => onInputChange(event, "description")} placeholder={initEntity.properties.description} />
+            <div className="field  m-3">
+                <h5 className="text-xl font-bold text-gray-200 leading-tight tracking-tight">{nodeType} Description</h5>
+                <textarea id="text-input-description" type="text" className="bg-gray-700 resize-y w-100 min-h-[100px] p-4 border rounded" value={entity.properties.description} onChange={(event) => onInputChange(event, "description")} placeholder={initEntity.properties.description} />
             </div>
             
             {(entity.id != null && entity.id != '') && (
                 <>
-                <button className="edit" onClick={handleEdit}>Edit {nodeType}</button>
+                <button className="edit bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer m-5" onClick={handleEdit}>Edit {nodeType}</button>
                 <p>{resultText}</p>
                 </>
             )}

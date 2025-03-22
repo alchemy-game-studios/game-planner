@@ -1,94 +1,96 @@
-@use './styles/themes';
+@use "tailwindcss";
 
-html, #root, .app {
-  height: 3000px;
-}
-.App {
-  text-align: center;
-}
 
-.app {
-  width: 100vw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-color);
-}
 
-.app .panel {
-  background-color: var(--background-color);
-  width: 100%;
-  height: 100%;
-}
+// html, #root, .app {
+//   height: 3000px;
+// }
+// .App {
+//   text-align: center;
+// }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
+// .app {
+//   width: 100vw;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   color: var(--text-color);
+// }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
+// .app .panel {
+//   background-color: var(--background-color);
+//   width: 100%;
+//   height: 100%;
+// }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
+// .App-logo {
+//   height: 40vmin;
+//   pointer-events: none;
+// }
 
-.App-link {
-  color: #61dafb;
-}
+// @media (prefers-reduced-motion: no-preference) {
+//   .App-logo {
+//     animation: App-logo-spin infinite 20s linear;
+//   }
+// }
 
-.api-status {
-  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-  color: #444444;
-}
+// .App-header {
+//   background-color: #282c34;
+//   min-height: 100vh;
+//   display: flex;
+//   flex-direction: column;
+//   align-items: center;
+//   justify-content: center;
+//   font-size: calc(10px + 2vmin);
+//   color: white;
+// }
 
-.api-module {  
-  border: 1px solid #444444;
-  border-radius: 5px;
-  width: 40%;
-  display: grid;
-  place-items: center;
-  margin: 10px;
-  padding: 10px;
-}
+// .App-link {
+//   color: #61dafb;
+// }
 
-.api-module div {
-  padding: 5px;
-}
+// .api-status {
+//   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+//   color: #444444;
+// }
 
-.api-module .input-container {
-  width: 75%;
-}
+// .api-module {  
+//   border: 1px solid #444444;
+//   border-radius: 5px;
+//   width: 40%;
+//   display: grid;
+//   place-items: center;
+//   margin: 10px;
+//   padding: 10px;
+// }
 
-.api-module .title {
-  font-size:50px;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  color: #B50;
-  margin: 0;
-}
+// .api-module div {
+//   padding: 5px;
+// }
 
-.api-module input {
-  border-radius: 10px;
-  border-color: #999999;
-  height: 30px;
-  width: 95%;
-}
+// .api-module .input-container {
+//   width: 75%;
+// }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+// .api-module .title {
+//   font-size:50px;
+//   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+//   color: #B50;
+//   margin: 0;
+// }
+
+// .api-module input {
+//   border-radius: 10px;
+//   border-color: #999999;
+//   height: 30px;
+//   width: 95%;
+// }
+
+// @keyframes App-logo-spin {
+//   from {
+//     transform: rotate(0deg);
+//   }
+//   to {
+//     transform: rotate(360deg);
+//   }
+// }

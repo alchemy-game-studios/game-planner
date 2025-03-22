@@ -1,7 +1,7 @@
 import { gql, useLazyQuery, useMutation } from '@apollo/client';
 import { useState, useEffect } from 'react';
 
-import './edit-contains.css'
+//import './edit-contains.css'
 import { capitalizeFirst } from '../util.js'
 
 
@@ -29,14 +29,14 @@ export function EditContainsComponent({id, type, initContents}) {
     // };
 
     return (
-        <div className="relation-list">
-            <h3>{capitalizeFirst(type)}s</h3>
+        <div className="relation-list m-5">
+            <h3 class="text-xl font-bold text-gray-400 leading-tight tracking-tight">{capitalizeFirst(type)}s</h3>
             <ol>
                 {contents.filter((content) => {
                     return content._nodeType == type
                 }).map((content)=> (
-                   <li key={content.id} className="content-item">
-                        <div>
+                   <li key={content.id} className="flex gap-4 p-4">
+                        <div className="bg-blue-200 p-4 rounded w-auto">
                             <h5>{content.properties.name}</h5>
                         </div>
                    </li>
