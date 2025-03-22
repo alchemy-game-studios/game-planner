@@ -1,9 +1,9 @@
 # Query type for fetching data
 type Query {
-  universes: [Universe]
-  places: [Place]
-  characters:[Character]
-  tags: [Tag]
+  universes: [EnityResponse]
+  places: [EnityResponse]
+  characters:[EnityResponse]
+  tags: [EntityProperties]
 }
 
 # Mutation type for modifying data
@@ -27,6 +27,8 @@ type Mutation {
   relateContains(relation: RelatableInput!) : Response
   relateTagged(relation: TaggableInput!) : Response
 }
+
+
 
 input RelatableInput {
   id: String!
@@ -73,47 +75,70 @@ input TagInput {
 
 ##############################################################
 ## Main entities
-type Universe {
+type EnityResponse {
   id: String!
-  name: String!
-  description: String!
-  places: [Place]
-  characters: [Character]
-  tags: [String]
+  contents:[EntityContents]
+  tags: [EntityProperties]
+  properties: EntityProperties
 }
 
-type Place {
-  id: String!
-  name: String!
-  description: String!
-  tags: [String]
+type EntityContents {
+  _nodeType: String
+  properties: EntityProperties
 }
 
-type Character {
+type EntityProperties {
   id: String!
-  name: String!
-  description: String!
-  originPlace: Place
-  tags: [String]
+  name: String
+  description: String
+  type: String
+
 }
+
+
+
+
+# type Universe {
+#   id: String!
+#   name: String!
+#   description: String!
+#   places: [Place]
+#   characters: [Character]
+#   tags: [String]
+# }
+
+# type Place {
+#   id: String!
+#   name: String!
+#   description: String!
+#   tags: [String]
+# }
+
+# type Character {
+#   id: String!
+#   name: String!
+#   description: String!
+#   originPlace: Place
+#   tags: [String]
+# }
 
 
 
 
 ##############################################################
 ## Tags
-type Tags {
-  feelingTags: [Tag]
-  descriptorTags: [Tag]
-}
-type Tag {
-  id: ID!
-  name: String!
-  description: String
-  type: String
-}
+# type Tags {
+#   feelingTags: [Tag]
+#   descriptorTags: [Tag]
+# }
+# type Tag {
+#   id: ID!
+#   name: String!
+#   description: String
+#   type: String
+# }
 
-type LocalizedText {
-  locale: String!
-  text: String!
-}
+# type LocalizedText {
+#   locale: String!
+#   text: String!
+# }

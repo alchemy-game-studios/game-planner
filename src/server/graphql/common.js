@@ -4,7 +4,7 @@ export default (driver) => {
     const repository = repo(driver)
 
     return {
-        all: async (type) => {let results = await repository.readAll(type); console.log(type); console.log(results); return results;},
+        all: async (type) => {return await repository.readAll(type)},
         one: async (obj) => {return await repository.read(obj)},
         create: async (type, obj) => {await repository.create(type, obj)},
         update: async (obj) => {await repository.update(obj)},

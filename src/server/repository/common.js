@@ -27,55 +27,54 @@ const NewobjRepository = function(driver) {
     read: async (obj) => {
         return dbCall(async(session) => {
             const command = `
-           MATCH (o1)-[:CONTAINS]->(o2)
-            WHERE o1.id = $o1Id
-            WITH o1, o2, labels(o2) AS o2Labels
-            UNWIND o2Labels AS label
-            WITH o1, label, collect(o2) AS groupedNodes
-
-            OPTIONAL MATCH (o1)-[:TAGGED]->(tag)
-            WITH o1, 
-                collect({label: label, nodes: groupedNodes}) AS groupedByType,
-                collect(tag) AS tags
-
-            RETURN {
-            id: o1.id,
-            properties: properties(o1), 
-            tags: [tag IN tags | properties(tag)], 
-            contents: 
-                REDUCE(result = {}, entry IN groupedByType | 
-                result + { [entry.label]: entry.nodes }) 
-            } AS o1
+             MATCH (o1)-[:CONTAINS]->(o2)
+             WHERE o1.id = "$id"
+             WITH o1, o2, toLower(labels(o2)[0]) AS label
+             
+             WITH o1, 
+                  collect(apoc.map.merge(properties(o2), {_nodeType: label})) AS contents
+             
+             OPTIONAL MATCH (o1)-[:TAGGED]->(tag)
+             WITH o1, contents, collect(tag) AS tags
+             
+             RETURN {
+               id: o1.id,
+               properties: properties(o1),
+               tags: [tag IN tags | properties(tag)],
+               contents: contents
+             } AS o1;
             `
             const result = await session.run(command, {id: obj.id});
-            return result.records[0].get("o1").properties;
+            return result;
         })
     },
     readAll: async (type) => {
         const command = `
-           MATCH (o1:${type})
-            OPTIONAL MATCH (o1)-[:CONTAINS]->(o2)
-            WITH o1, collect(o2) AS groupedNodes, collect(distinct labels(o2)) AS o2Labels
-            UNWIND (CASE WHEN size(o2Labels) > 0 THEN o2Labels ELSE [null] END) AS label
+           MATCH (o1:${type})-[:CONTAINS]->(o2)
+            WITH o1, o2, toLower(labels(o2)[0]) AS label
+             
+             WITH o1, 
+              collect({
+                  _nodeType: label, 
+                  properties: properties(o2)
+              }) AS contents
+             
+             OPTIONAL MATCH (o1)-[:TAGGED]->(tag)
+             WITH o1, contents, collect(tag) AS tags
+             
+            WITH {
+              id: o1.id,
+              properties: properties(o1),
+              tags: [tag IN tags | properties(tag)],
+              contents: contents
+            } AS object
 
-            WITH o1, label, groupedNodes
-            OPTIONAL MATCH (o1)-[:TAGGED]->(tag)
-
-            WITH o1, 
-                collect(DISTINCT {label: label, nodes: groupedNodes}) AS groupedByType,
-                collect(DISTINCT tag.id) AS tags
-
-            RETURN {
-                id: o1.id,
-                properties: properties(o1),
-                tags: tags,
-                contents: groupedByType
-            } AS o1;
+            RETURN collect(object) AS results;
 
         `
         return dbCall(async(session) => {
             const result = await session.run(command);
-            return result.records.map(record => record.get("o1").properties);
+            return result.records[0].get("results");
         })
     },
     update: async (updated)=> {

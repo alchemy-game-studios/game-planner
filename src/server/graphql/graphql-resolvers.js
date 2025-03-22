@@ -17,10 +17,10 @@ const NODE_TAG= "Tag"
 
 export default {
   Query: {
-      universes: async () => {return commonResolver.all(NODE_UNIVERSE)},
-      places: async () => {return commonResolver.all(NODE_PLACE)},
-      characters: async () => {return commonResolver.all(NODE_CHARACTER)},
-      tags: async () => {return commonResolver.all(NODE_TAG)}
+      universes: async () => {const result = await commonResolver.all(NODE_UNIVERSE); console.log(result[0].contents); return result;},
+      places: async () => {return await commonResolver.all(NODE_PLACE)},
+      characters: async () => {return await commonResolver.all(NODE_CHARACTER)},
+      tags: async () => {return await commonResolver.all(NODE_TAG)}
   },
   Mutation: {
     addUniverse: async (_parent, { universe } ) => {await commonResolver.create(NODE_UNIVERSE, universe)},
