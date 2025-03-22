@@ -54,9 +54,7 @@ const NewobjRepository = function(driver) {
       contents: contents
     } AS o1
             `
-            console.log(obj);
             const result = await session.run(command, {id: obj.id});
-            console.log(result.records[0].get("o1"));
             return result.records[0].get("o1");
         })
     },

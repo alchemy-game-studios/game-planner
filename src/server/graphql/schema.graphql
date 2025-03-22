@@ -3,12 +3,12 @@ type Query {
   universes: [EnityResponse]
   places: [EnityResponse]
   characters:[EnityResponse]
-  tags: [EntityProperties]
+  tags: [EnityResponse]
 
   universe(obj: IdInput): EnityResponse
   place(obj: IdInput): EnityResponse
   character(obj: IdInput):EnityResponse
-  tag(obj: IdInput): EntityProperties
+  tag(obj: IdInput): EnityResponse
 }
 
 # Mutation type for modifying data
