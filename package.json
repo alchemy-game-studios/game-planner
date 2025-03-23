@@ -4,10 +4,9 @@
   "type": "module",
   "description": "An application to assist developers while planning game development.",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "webpack",
-    "test": "jest",
-    "eject": "react-scripts eject"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "repository": {
     "type": "git",
@@ -72,6 +71,7 @@
     "@types/eslint__js": "^8.42.3",
     "@types/isomorphic-fetch": "^0.0.39",
     "@types/jest": "^29.5.12",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
     "babel-jest": "^29.7.0",
     "babel-loader": "^9.2.1",
@@ -96,8 +96,9 @@
     "tailwindcss-cli": "^0.1.2",
     "ts-jest": "^29.1.4",
     "ts-loader": "^9.5.1",
-    "typescript": "^5.4.5",
+    "typescript": "^5.8.2",
     "typescript-eslint": "^7.11.0",
+    "vite": "^6.2.2",
     "webpack": "^5.97.1",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.2.0"
