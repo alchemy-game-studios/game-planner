@@ -107,7 +107,7 @@ export function EditEntityComponent({id, type}) {
 
     return (
         <>
-        <h2 className="text-3xl font-bold text-gray-200 leading-tight tracking-tight">
+        {/* <h2 className="text-3xl font-bold text-gray-200 leading-tight tracking-tight">
             {entity.properties.name}
         </h2>
         <div className="edit m-5">
@@ -136,21 +136,24 @@ export function EditEntityComponent({id, type}) {
                 <button className="add" onClick={handleAdd}>Add New {nodeType}</button>
                 <p>{resultText}</p>
                 </>
-            )}
+            )} */}
 
             <>
-            {Object.entries(grouped(entity.contents)).map(([type, items]) => (
+            {
+            
+            Object.entries(grouped(entity.contents)).map(([_type, items]) => (
+                
                 <EditContainsComponent
-                key={type}
+                key={_type}
                 id={id}
-                type={type}
+                type={_type}
                 initContents={items}
                 />
                
             ))}
              <hr />
             </> 
-        </div>
+        {/* </div> */}
         </>
     );
 }
