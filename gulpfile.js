@@ -8,7 +8,7 @@ task('build', shell.task([
     'cp -r ./src/server/* ./build'
 ]))
 task('server-start', shell.task(['node -r graphql-import-node/register ./build/app.js']))
-task('client-developement', shell.task(["webpack serve --mode development"]))
+task('client-developement', shell.task(["vite dev"]))
 
 task('start', shell.task(['concurrently \"gulp server-start\" \"gulp client-developement\"']))
 
