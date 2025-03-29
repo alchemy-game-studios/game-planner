@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { NodeList } from './node-list.jsx';
 import { Textarea } from "@/components/ui/textarea"
 import { removeTypeName } from '../util.js'
+import { HoverEditableText } from './hover-editable-text.jsx';
+
 
 function useDebounce(value, delay = 500) {
     const [debounced, setDebounced] = useState(value);
@@ -78,6 +80,9 @@ export function EditEntityComponent({id, type, isEdit}) {
     const [description, setDescription] = useState('');
     const deboucedDescription = useDebounce(description);
 
+    const [name, setName] = useState('');
+    const deboucedName = useDebounce(name);
+
 
     useEffect(() => {
         const fetchData = async() => {
@@ -86,7 +91,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                 const groupedResult = grouped(result.data[type].contents)
                 setEntity(result.data[type])
                 setDescription(result.data[type].properties.description || '');
-
+                setName(result.data[type].properties.name)
                 setRelationGroups(groupedResult)
 
                 const typeListItems = Object.keys(groupedResult).map((key) => {
@@ -123,6 +128,18 @@ export function EditEntityComponent({id, type, isEdit}) {
             }));
         }
     }, [deboucedDescription]);
+
+    useEffect(() => {
+        if (deboucedName !== '') {
+            setEntity(prev => ({
+                ...prev,
+                properties: {
+                    ...prev.properties,
+                    name: deboucedName
+                }
+            }));
+        }
+    }, [deboucedName]);
     
     useEffect(() => {
         if (!hasHydrated.current) return;
@@ -151,11 +168,17 @@ export function EditEntityComponent({id, type, isEdit}) {
         <div className="flex">
             <Avatar className="size-15 ml-5 mb-3.5 mr-7">
                 <AvatarImage src="https://cdn.midjourney.com/eaa04c2b-2d11-45ba-85c3-347c41c8c896/0_2.jpeg" />
-                <AvatarFallback>CN</AvatarFallback>
+                <AvatarFallback>{entity.properties.name}</AvatarFallback>
             </Avatar>
-            <h2 className="w-full text-5xl font-heading text-color-secondary leading-tight tracking-tight ">
-                    {entity.properties.name}
-            </h2>
+            
+            <div className="w-full">
+                    <HoverEditableText
+                        value={name}
+                        onChange={setName}
+                        className="font-heading text-color-secondary !md:text-5xl !text-5xl"
+                    />
+                    
+            </div>
             <Badge className=" bg-yellow-700 font-heading text-2xl size-14 pl-20 pr-20 pt-3 pb-3 justify-center text-center m-auto mb-4 mr-8">{capitalizeFirst(type)}</Badge>
         </div>
             <Separator />
@@ -171,12 +194,10 @@ export function EditEntityComponent({id, type, isEdit}) {
                 </div>
                 {editMode && (
                     <>
-                        <Textarea
-                        className="mt-5 min-h-30 w-full p-4 font-book md:text-lg resize-none overflow-auto"
-                        placeholder="Enter a description here..."
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        onBlur={handleBlur}
+                       <HoverEditableText
+                            value={description}
+                            onChange={setDescription}
+                            multiline
                         />
                     </>
                     )}
