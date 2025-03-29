@@ -22,3 +22,18 @@ export function grouped(contents) {
         return acc;
       }, {});
 }
+
+export function removeTypeName(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(removeTypename);
+  } else if (obj !== null && typeof obj === 'object') {
+    const newObj = {};
+    for (const key in obj) {
+      if (key !== '__typename') {
+        newObj[key] = removeTypeName(obj[key]);
+      }
+    }
+    return newObj;
+  }
+  return obj;
+}

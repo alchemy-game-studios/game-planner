@@ -1,26 +1,31 @@
 import { gql, useLazyQuery, useMutation } from '@apollo/client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef} from 'react';
 //import './edit-entity.css'
 import { EditContainsComponent } from './edit-contains'
 import { capitalizeFirst, grouped } from '../util.js'
+import { Separator } from "@/components/ui/separator"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from '@/components/ui/badge';
+import { NodeList } from './node-list.jsx';
+import { Textarea } from "@/components/ui/textarea"
+import { removeTypeName } from '../util.js'
 
+function useDebounce(value, delay = 500) {
+    const [debounced, setDebounced] = useState(value);
+  
+    useEffect(() => {
+      const timeout = setTimeout(() => setDebounced(value), delay);
+      return () => clearTimeout(timeout);
+    }, [value, delay]);
+  
+    return debounced;
+}
 
-
-
-export function EditEntityComponent({id, type}) {
+export function EditEntityComponent({id, type, isEdit}) {
     let nodeType = capitalizeFirst(type)
 
-    const queries = {
-        all: allQuery(type),
-        one: oneQuery(type),
-        add:  mutationQuery(type, "add"),
-        remove:  mutationQuery(type, "remove"),
-        edit: mutationQuery(type, "edit")
-    }
-
-    const [Add] = useMutation(queries.add);
-    const [Edit] = useMutation(queries.edit);
-    const [Get] = useLazyQuery(queries.one);
+    const hasHydrated = useRef(false);
+    const initialEntity = useRef(null);
 
     const initEntity = {
         properties: {
@@ -32,16 +37,70 @@ export function EditEntityComponent({id, type}) {
         contents: []
        
     }
-
     const [entity, setEntity] = useState(initEntity);
+
+    const queries = {
+        all: allQuery(type),
+        one: oneQuery(type),
+        add:  mutationQuery(type, "add"),
+        remove:  mutationQuery(type, "remove"),
+        edit: mutationQuery(type, "edit")
+    }
+
+    const networkObj = { variables: { } }
+    networkObj.variables[type] = entity
+
+    const [Add] = useMutation(queries.add);
+    const [EditMutation] = useMutation(queries.edit);
+    const [Get] = useLazyQuery(queries.one);
+
+    const HandleEdit = async () => {
+        const networkObj = {
+          variables: {}
+        };
+        networkObj.variables[type] = removeTypeName(entity.properties);
+      
+        try {
+            await EditMutation(networkObj);
+        } catch (e) {
+            console.log(e);
+        }
+      };
+
+   
+
+   
+    const [relationGroups, setRelationGroups] = useState([]);
+    const [relationTypes, setRelationTypes] = useState([]);
+
     const [resultText] = useState('');
+    const [editMode, setEditMode] = useState(isEdit);
+    const [description, setDescription] = useState('');
+    const deboucedDescription = useDebounce(description);
+
 
     useEffect(() => {
         const fetchData = async() => {
             if (id) {
                 const result = await Get({ variables: { obj: { id } } });
-                console.log(result.data[type])
+                const groupedResult = grouped(result.data[type].contents)
                 setEntity(result.data[type])
+                setDescription(result.data[type].properties.description || '');
+
+                setRelationGroups(groupedResult)
+
+                const typeListItems = Object.keys(groupedResult).map((key) => {
+                    return {
+                        id: key,
+                        properties: {
+                            name: capitalizeFirst(key) + "s"
+                        }
+                    };
+                });
+                setRelationTypes(typeListItems);
+
+                initialEntity.current = result.data[type];
+                hasHydrated.current = true;
             }
         }
 
@@ -49,114 +108,111 @@ export function EditEntityComponent({id, type}) {
       
     }, [id, Get]);
 
+    useEffect(() => {
+      setEditMode(isEdit);
+    }, [isEdit]);
+
+    useEffect(() => {
+        if (deboucedDescription !== '') {
+            setEntity(prev => ({
+                ...prev,
+                properties: {
+                    ...prev.properties,
+                    description: deboucedDescription
+                }
+            }));
+        }
+    }, [deboucedDescription]);
+    
+    useEffect(() => {
+        if (!hasHydrated.current) return;
        
-        
+        const changed =
+            JSON.stringify(entity) !== JSON.stringify(initialEntity.current);
 
-
-    const handleAdd = async (event) => {
-        try{
-            const sentEntity = {
-                name: entity.name,
-                description: entity.description,
-                type: entity.type
-            }
-
-            params = { variables: { } }
-            params.variables[type] = sentEntity
-
-            await Add(params);
-            onChange()
-
-            setEntity({
-                id: '',
-                name: '',
-                description: '',
-                type: ''
-            })
-        } catch (err) {
-            console.log(err);
+        if (changed) {
+            console.log("edit called")
+            HandleEdit();
         }
-    };
-
-    const handleEdit = async (event) => {
-        try{
-            const sentEntity = {
-                id: entity.id,
-                name: entity.name,
-                description: entity.description,
-                type: entity.type
-            }
-
-            params = { variables: { } }
-            params.variables[type] = sentEntity
-
-            await Edit(params);
-            onChange(sentEntity)
-        } catch (err) {
-            console.log(err);
-        }
-    };
-
-
-    const onInputChange = (event, field) => {
-        setEntity((prevEntity) => ({
-            ...prevEntity, // Spread previous state
-            [field]: event.target.value, // Update the specific field dynamically
-        }));
+            
+    }, [entity]);
+    
+    const handleBlur = () => {
+        HandleEdit(); // save when the user clicks away or presses tab
     };
 
     return (
         <>
-        {/* <h2 className="text-3xl font-bold text-gray-200 leading-tight tracking-tight">
-            {entity.properties.name}
-        </h2>
-        <div className="edit m-5">
-            <div className="field m-3">
-                <h5 className="text-xl font-bold text-gray-200 leading-tight tracking-tight">{nodeType} Name</h5>
-                <input id="text-input-name" type="text" className="bg-gray-700 text-gray-100 rounded p-4 w-100" value={entity.properties.name} onChange={(event) => onInputChange(event, "name")} placeholder={initEntity.properties.name} />
-            </div>
-            <div className=" m-3">
-                <h5 className="text-xl font-bold text-gray-200 leading-tight tracking-tight">{nodeType} Type</h5>
-                <input id="text-input-type" type="text" className="bg-gray-700 text-gray-100 rounded p-4 w-100" value={entity.properties.type} onChange={(event) => onInputChange(event, "type")} placeholder={initEntity.properties.type} />
-            </div>
-            <div className="field  m-3">
-                <h5 className="text-xl font-bold text-gray-200 leading-tight tracking-tight">{nodeType} Description</h5>
-                <textarea id="text-input-description" type="text" className="bg-gray-700 resize-y w-100 min-h-[100px] p-4 border rounded" value={entity.properties.description} onChange={(event) => onInputChange(event, "description")} placeholder={initEntity.properties.description} />
-            </div>
-            
-            {(entity.id != null && entity.id != '') && (
-                <>
-                <button className="edit bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer m-5" onClick={handleEdit}>Edit {nodeType}</button>
-                <p>{resultText}</p>
-                </>
-            )}
+        <div
+            className="absolute inset-0 pointer-events-none z-negative bg-cover bg-center opacity-5"
+            style={{ backgroundImage: `url('https://cdn.midjourney.com/eaa04c2b-2d11-45ba-85c3-347c41c8c896/0_2.jpeg')` }}
+        />
+        <div className="z-10">
+        <div className="flex">
+            <Avatar className="size-15 ml-5 mb-3.5 mr-7">
+                <AvatarImage src="https://cdn.midjourney.com/eaa04c2b-2d11-45ba-85c3-347c41c8c896/0_2.jpeg" />
+                <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
+            <h2 className="w-full text-5xl font-heading text-color-secondary leading-tight tracking-tight ">
+                    {entity.properties.name}
+            </h2>
+            <Badge className=" bg-yellow-700 font-heading text-2xl size-14 pl-20 pr-20 pt-3 pb-3 justify-center text-center m-auto mb-4 mr-8">{capitalizeFirst(type)}</Badge>
+        </div>
+            <Separator />
+            <div className="flex">
+            <div className="w-6/8">
+                <div className="rounded mt-5 relative w-full aspect-[3/1] overflow-hidden">
+                        <div
+                            className="absolute inset-0 bg-cover bg-center"
+                            style={{
+                            backgroundImage: "url('https://cdn.midjourney.com/eaa04c2b-2d11-45ba-85c3-347c41c8c896/0_2.jpeg')",
+                            }}
+                        />
+                </div>
+                {editMode && (
+                    <>
+                        <Textarea
+                        className="mt-5 min-h-30 w-full p-4 resize-none overflow-auto"
+                        placeholder="Enter a description here..."
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        onBlur={handleBlur}
+                        />
+                    </>
+                    )}
 
-            {(entity.id == null || entity.id == '') && (
-                <>
-                <button className="add" onClick={handleAdd}>Add New {nodeType}</button>
-                <p>{resultText}</p>
-                </>
-            )} */}
 
+        {!editMode && (
             <>
-            {
-            
-            Object.entries(grouped(entity.contents)).map(([_type, items]) => (
-                
-                <EditContainsComponent
-                key={_type}
-                id={id}
-                type={_type}
-                initContents={items}
-                />
-               
+              <div className="flex w-full mt-9 pr-15">
+                    <p className="text-xl font-book text-gray-200 leading-tight tracking-tight">
+                        {entity.properties.description}
+                    </p>
+                </div>
+            </>
+          )}
+      
+          {/* <div id="related-contains" class="flex justify-end m-auto w-full">
+            {Object.entries(relationGroups).map(([_type, items]) => (
+              <div key={_type}>
+                {_type=="place" && (<EditContainsComponent
+                  id={id}
+                  type={_type}
+                  initContents={items}
+                />)}
+              </div>
             ))}
-             <hr />
-            </> 
-        {/* </div> */}
+          </div> */}
+          </div>
+          
+        <div id="related-contains" class="flex w-2/8 justify-end ml-4 mt-1 mr-0">
+            <NodeList initContents={relationTypes} />
+        </div>
+        </div>
+        </div>
         </>
-    );
-}
+      )};
+      
 
 function allQuery(type) {
     let nodeType = capitalizeFirst(type)
@@ -201,6 +257,7 @@ function oneQuery(type) {
                     }
                 }
                 properties {
+                    id
                     name
                     description
                     type

@@ -6,10 +6,9 @@ const App = () => {
     const [theme, setTheme] = useState('theme-dark');
 
     return (
-        <div className={`app bg-gray-900 text-white p-4 rounded`}>
+        <div className={`app bg-gray-900 text-white p-4 pr-0 rounded`}>
             <div className="panel">
-               <h1 className="text-5xl font-bold text-gray-200 leading-tight tracking-tight">Universes</h1>
-               <EditEntityComponent id="9919e21f-d9e9-4449-9068-329ba5d2b50b" type="universe" />
+               <EditEntityComponent id="9919e21f-d9e9-4449-9068-329ba5d2b50b" type="universe" isEdit={true}/>
                {/* <h1 className="text-5xl font-bold text-gray-200 leading-tight tracking-tight">Places</h1>
                <EditEntityComponent id="7198a74d-8939-4262-a69d-00192db9c9ff" type="place" />
                <h1 className="text-5xl font-bold text-gray-200 leading-tight tracking-tight">Characters</h1>

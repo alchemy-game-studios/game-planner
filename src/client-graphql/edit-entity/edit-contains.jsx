@@ -38,34 +38,27 @@ export function EditContainsComponent({id, type, initContents}) {
 
     const [contents, setContents] = useState(initContents);
 
-
     useEffect(() => {
       const filtered = contents.filter((content) => {
           return content._nodeType == type
       });
 
       setContents(filtered);
-      }, [initContents]);
-
-    // const onInputChange = (event, field) => {
-    //     setEntity((prevEntity) => ({
-    //         ...prevEntity, // Spread previous state
-    //         [field]: event.target.value, // Update the specific field dynamically
-    //     }));
-    // };
+    }, [initContents]);
 
     return (
         <>
         <div className="relation-list m-5 max-w-xs">
           <div className="flex">
-            <h3 className="text-2xl">{capitalizeFirst(type)}s</h3>
+            <h3 className="text-2xl font-heading">{capitalizeFirst(type)}s</h3>
             <div className="grid justify-end ml-auto">
               <Button variant="secondary" className="ml-4 mb-2 cursor-pointer">+</Button>
             </div>
           </div>
+
           <Separator className="mb-4"/>
           <Input type="text" placeholder={`Search ${type}s`} />           
-          <NodeList type={type} initContents={contents} />
+          <NodeList initContents={contents} />
         </div>
 
         {/* <Drawer>

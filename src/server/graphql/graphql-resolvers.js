@@ -29,7 +29,7 @@ export default {
   },
   Mutation: {
     addUniverse: async (_parent, { universe } ) => {await commonResolver.create(NODE_UNIVERSE, universe)},
-    editUniverse: async (_parent, { obj }) => {await commonResolver.update(obj)},
+    editUniverse: async (_parent, { universe }) => {console.log(universe); await commonResolver.update(universe)},
     removeUniverse: async (_parent, { obj }) => {await commonResolver.delete(obj)},
 
     addPlace: async (_parent, { place }) => {await commonResolver.create(NODE_PLACE, place)},
