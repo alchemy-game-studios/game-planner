@@ -172,7 +172,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                 {editMode && (
                     <>
                         <Textarea
-                        className="mt-5 min-h-30 w-full p-4 resize-none overflow-auto"
+                        className="mt-5 min-h-30 w-full p-4 font-book md:text-lg resize-none overflow-auto"
                         placeholder="Enter a description here..."
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
