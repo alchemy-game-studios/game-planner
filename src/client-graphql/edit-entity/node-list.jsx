@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import EntityCard from "@/client-graphql/edit-entity/entity-card.tsx"
 import EditDrawer from "@/client-graphql/edit-entity/edit-drawer.tsx"
 
-export function NodeList({ initContents }) {
+export function NodeList({ initContents, parentType }) {
   const [contents, setContents] = useState(initContents);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
@@ -39,7 +39,7 @@ export function NodeList({ initContents }) {
       {selectedContent && (
         <EditDrawer
           key={drawerKey}
-          label={selectedContent.properties.name}
+          label={`${parentType} -> ${selectedContent.properties.name}`}
           open={drawerOpen}
           setOpen={setDrawerOpen}
           onForceClose={closeDrawer}

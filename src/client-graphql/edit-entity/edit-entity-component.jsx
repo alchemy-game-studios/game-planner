@@ -231,7 +231,7 @@ export function EditEntityComponent({id, type, isEdit}) {
           </div>
           
         <div id="related-contains" class="flex w-2/8 justify-end ml-4 mt-1 mr-0">
-            <NodeList initContents={relationTypes} />
+            <NodeList initContents={relationTypes} parentType={name}/>
            
         </div>
         </div>
