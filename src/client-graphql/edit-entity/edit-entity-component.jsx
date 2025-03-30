@@ -96,10 +96,13 @@ export function EditEntityComponent({id, type, isEdit}) {
                 setRelationGroups(groupedResult)
 
                 const typeListItems = Object.keys(groupedResult).map((key) => {
+                    console.log("Grouped Contents")
+                    console.log(groupedResult[key])
                     return {
                         id: key,
                         properties: {
-                            name: capitalizeFirst(key) + "s"
+                            name: capitalizeFirst(key) + "s",
+                            contents: groupedResult[key]
                         }
                     };
                 });
