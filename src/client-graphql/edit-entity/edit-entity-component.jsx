@@ -170,7 +170,7 @@ export function EditEntityComponent({id, type, isEdit}) {
         />
         <div className="z-10">
         <div className="flex">
-            <Avatar className="size-15 ml-5 mb-3.5 mr-7">
+            <Avatar className="size-15 ml-5 mb-3.5 mr-7 mt-5">
                 <AvatarImage src="https://cdn.midjourney.com/eaa04c2b-2d11-45ba-85c3-347c41c8c896/0_2.jpeg" />
                 <AvatarFallback>{entity.properties.name}</AvatarFallback>
             </Avatar>
@@ -183,7 +183,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                     />
                     
             </div>
-            <Badge className=" bg-yellow-700 font-heading text-2xl size-14 pl-20 pr-20 pt-3 pb-3 justify-center text-center m-auto mb-4 mr-8">{capitalizeFirst(type)}</Badge>
+            <Badge className=" bg-yellow-700 font-heading text-2xl size-14 pl-20 pr-20 pt-3 pb-3 justify-center text-center m-auto mb-9 mr-8">{capitalizeFirst(type)}</Badge>
         </div>
             <Separator />
             <div className="flex">
