@@ -12,6 +12,7 @@ import { removeTypeName } from '../util.js'
 import { HoverEditableText } from './hover-editable-text.jsx';
 
 
+
 function useDebounce(value, delay = 500) {
     const [debounced, setDebounced] = useState(value);
   
@@ -228,9 +229,11 @@ export function EditEntityComponent({id, type, isEdit}) {
           
         <div id="related-contains" class="flex w-2/8 justify-end ml-4 mt-1 mr-0">
             <NodeList initContents={relationTypes} />
+           
         </div>
         </div>
         </div>
+        
         </>
       )};
       

@@ -1,21 +1,32 @@
 import { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import EditDrawer from "@/client-graphql/edit-entity/edit-drawer.tsx"
+
 
 
   
 export function NodeList({initContents}) {
   const [contents, setContents] = useState(initContents);
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerKey, setDrawerKey] = useState(0)
+
+
     useEffect(() => {
       setContents(initContents);
     }, [initContents]);
+
+    const closeDrawer = () => {
+      setDrawerOpen(false)
+      setDrawerKey(prev => prev + 1) // force key change
+    }
 
     return (
         <>
         <ol className="-mr-3">
           {contents.map((content)=> (
            
-              <li key={content.id}>
+              <li key={content.id} onClick={() => setDrawerOpen(true)}>
                 <div className="gap-4 mt-4 w-full">
                   <Badge variant="secondary" className="pl-4 w-full min-h-15 hover:bg-gray-700 hover:text-gray-200 cursor-pointer transition-colors duration-200 p-5">
                     <div className="flex justify-start gap-4 w-full ">
@@ -32,9 +43,22 @@ export function NodeList({initContents}) {
     
                   </Badge>
                 </div>
+                <EditDrawer
+                    label={content.properties.name}
+                    open={drawerOpen}
+                    setOpen={setDrawerOpen}
+                    onForceClose={closeDrawer}
+                >
+                    <ul className="space-y-2">
+                    <li>Aria the Wild</li>
+                    <li>Thorn of the North</li>
+                    <li>Ezren the Archivist</li>
+                    </ul>
+                </EditDrawer>
               </li>
           ))}
           </ol>
+          
       </>
     );
 }
