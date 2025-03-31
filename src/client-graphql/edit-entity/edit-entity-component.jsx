@@ -171,24 +171,26 @@ export function EditEntityComponent({id, type, isEdit}) {
             style={{ backgroundImage: `url(${getEntityImage(id, "hero")})` }}
         />
         <div className="z-10">
-        <div className="flex">
-            <Avatar className="size-15 ml-5 mb-3.5 mr-7 mt-5">
-                <AvatarImage src={getEntityImage(id, "avatar")} />
-                <AvatarFallback>{entity.properties.name}</AvatarFallback>
-            </Avatar>
-            
-            <div className="w-full">
-                    <HoverEditableText
-                        value={name}
-                        onChange={setName}
-                        className="font-heading text-color-secondary !md:text-5xl !text-5xl"
-                    />
+            <div className="fixed top-0 left-0 w-full bg-gray-900 z-50">
+                <div className="flex">
+                    <Avatar className="size-15 ml-9 mb-3.5 mt-6.5">
+                        <AvatarImage src={getEntityImage(id, "avatar")} />
+                        <AvatarFallback>{entity.properties.name}</AvatarFallback>
+                    </Avatar>
                     
+                    <div className="w-full">
+                            <HoverEditableText
+                                value={name}
+                                onChange={setName}
+                                className="font-heading text-color-secondary !md:text-5xl !text-5xl"
+                            />
+                            
+                    </div>
+                    <Badge className=" bg-yellow-700 font-heading text-2xl size-14 pl-20 pr-20 pt-3 pb-3 justify-center text-center m-auto mb-9 mr-8">{capitalizeFirst(type)}</Badge>
+                </div>
+                <Separator />
             </div>
-            <Badge className=" bg-yellow-700 font-heading text-2xl size-14 pl-20 pr-20 pt-3 pb-3 justify-center text-center m-auto mb-9 mr-8">{capitalizeFirst(type)}</Badge>
-        </div>
-            <Separator />
-            <div className="flex">
+            <div className="flex mt-30">
             <div className="w-6/8">
                 <div className="rounded mt-5 relative w-full aspect-[2/1] overflow-hidden">
                         <div
