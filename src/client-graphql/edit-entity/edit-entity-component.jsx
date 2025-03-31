@@ -10,6 +10,8 @@ import { NodeList } from './node-list.jsx';
 import { Textarea } from "@/components/ui/textarea"
 import { removeTypeName } from '../util.js'
 import { HoverEditableText } from './hover-editable-text.jsx';
+import { getEntityImage } from "@/media/util"
+
 
 
 
@@ -166,12 +168,12 @@ export function EditEntityComponent({id, type, isEdit}) {
         <>
         <div
             className="absolute inset-0 pointer-events-none z-negative bg-cover bg-center opacity-5"
-            style={{ backgroundImage: `url('https://cdn.midjourney.com/eaa04c2b-2d11-45ba-85c3-347c41c8c896/0_2.jpeg')` }}
+            style={{ backgroundImage: `url(${getEntityImage(id, "hero")})` }}
         />
         <div className="z-10">
         <div className="flex">
             <Avatar className="size-15 ml-5 mb-3.5 mr-7 mt-5">
-                <AvatarImage src="https://cdn.midjourney.com/eaa04c2b-2d11-45ba-85c3-347c41c8c896/0_2.jpeg" />
+                <AvatarImage src={getEntityImage(id, "avatar")} />
                 <AvatarFallback>{entity.properties.name}</AvatarFallback>
             </Avatar>
             
@@ -188,11 +190,11 @@ export function EditEntityComponent({id, type, isEdit}) {
             <Separator />
             <div className="flex">
             <div className="w-6/8">
-                <div className="rounded mt-5 relative w-full aspect-[3/1] overflow-hidden">
+                <div className="rounded mt-5 relative w-full aspect-[1/1] overflow-hidden">
                         <div
                             className="absolute inset-0 bg-cover bg-center"
                             style={{
-                            backgroundImage: "url('https://cdn.midjourney.com/eaa04c2b-2d11-45ba-85c3-347c41c8c896/0_2.jpeg')",
+                            backgroundImage: `url(${getEntityImage(id, "hero")})`,
                             }}
                         />
                 </div>

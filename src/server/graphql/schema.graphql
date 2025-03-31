@@ -60,18 +60,21 @@ input UniverseInput {
 }
 
 input PlaceInput {
+  id: String!
   name: String!
   description: String!
   type: String
 }
 
 input CharacterInput {
+  id: String!
   name: String!
   description: String!
   type: String
 }
 
 input TagInput {
+  id: String!
   name: String!
   description: String!
   type: String

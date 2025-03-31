@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import EntityCard from "@/client-graphql/edit-entity/entity-card.tsx"
 import EditDrawer from "@/client-graphql/edit-entity/edit-drawer.tsx"
+import { useNavigate } from "react-router-dom"
+import { getEntityImage } from "@/media/util"
+
 
 export function NodeList({ initContents, parentType }) {
   const [contents, setContents] = useState(initContents);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
   const [drawerKey, setDrawerKey] = useState(0);
+  const navigate = useNavigate()
+
 
   useEffect(() => {
     setContents(initContents);
@@ -21,6 +26,10 @@ export function NodeList({ initContents, parentType }) {
     setDrawerOpen(false);
     setDrawerKey(prev => prev + 1);
   };
+
+  const handleClick = (id, type) => {
+    navigate(`/edit/${type}/${id}`)
+  }
 
   return (
     <>
@@ -46,12 +55,18 @@ export function NodeList({ initContents, parentType }) {
         >
           <ul className="space-y-2">
             {selectedContent.properties.contents?.map((child) => (
+              <>
               <EntityCard
-                key={child.id}
+                key={child.properties.id}
                 name={child.properties.name}
-                avatarUrl="https://cdn.midjourney.com/484b9f2d-6652-4af4-a82a-706244b76e1f/0_3.jpeg"
+                avatarUrl={getEntityImage(child.properties.id, "avatar")}
                 fallbackText="CN"
+                onClick={() => {
+                  handleClick(child.properties.id, child._nodeType);
+                  setDrawerOpen(false);
+                }}
               />
+              </>
             ))}
           </ul>
         </EditDrawer>

@@ -33,16 +33,16 @@ export default {
     removeUniverse: async (_parent, { obj }) => {await commonResolver.delete(obj)},
 
     addPlace: async (_parent, { place }) => {await commonResolver.create(NODE_PLACE, place)},
-    editPlace: async (_parent, { obj }) => {await commonResolver.update(obj)},
-    removePlace: async (_parent, { obj }) => {await commonResolver.delete(obj)},
+    editPlace: async (_parent, { place }) => {await commonResolver.update(place)},
+    removePlace: async (_parent, { place }) => {await commonResolver.delete(place)},
 
     addCharacter: async (_parent, { character }) => {await commonResolver.create(NODE_CHARACTER, character)},
-    editCharacter: async (_parent, { obj }) => {await commonResolver.update(obj)},
-    removeCharacter: async (_parent, { obj }) => {await commonResolver.delete(obj)},
+    editCharacter: async (_parent, { character }) => {await commonResolver.update(character)},
+    removeCharacter: async (_parent, { character }) => {await commonResolver.delete(character)},
 
     addTag: async (_parent, { tag }) => {await commonResolver.create(NODE_TAG, tag)},
-    editTag: async (_parent, { obj }) => {await commonResolver.update(obj)},
-    removeTag: async (_parent, { obj }) => {await commonResolver.delete(obj)},
+    editTag: async (_parent, { tag }) => {await commonResolver.update(tag)},
+    removeTag: async (_parent, { tag }) => {await commonResolver.delete(tag)},
 
     relateContains: async (_parent, { relation }) => {
       await relation.childIds.forEach(async childId => {
