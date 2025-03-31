@@ -20,9 +20,9 @@ export default function EntityCard({
     <div onClick={onClick} className="gap-4 mt-4 w-full">
       <Badge
         variant="secondary"
-        className="pl-4 w-full min-h-15 hover:bg-gray-700 hover:text-gray-200 cursor-pointer transition-colors duration-200 p-5 "
+        className="pl-4 w-full min-h-15 hover:bg-gray-700 hover:text-gray-200 cursor-pointer transition-colors duration-200 p-3 "
       >
-        <div className="flex justify-start gap-4 w-full">
+        <div className="flex justify-start gap-4 w-full ">
           <div className="w-1/4">
             <Avatar>
               <AvatarImage src={avatarUrl} />

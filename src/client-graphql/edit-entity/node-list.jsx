@@ -38,7 +38,7 @@ export function NodeList({ initContents, parentType }) {
           <li key={content.id} onClick={() => handleOpen(content)}>
             <EntityCard
               name={content.properties.name}
-              avatarUrl="https://cdn.midjourney.com/484b9f2d-6652-4af4-a82a-706244b76e1f/0_3.jpeg"
+              avatarUrl={getEntityImage(content.properties.contents[0].properties.id, "avatar")}
               fallbackText="CN"
             />
           </li>

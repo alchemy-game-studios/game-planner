@@ -167,7 +167,7 @@ export function EditEntityComponent({id, type, isEdit}) {
     return (
         <>
         <div
-            className="absolute inset-0 pointer-events-none z-negative bg-cover bg-center opacity-5"
+            className="absolute fixed scale-150 inset-0 pointer-events-none z-negative bg-cover bg-center opacity-5"
             style={{ backgroundImage: `url(${getEntityImage(id, "hero")})` }}
         />
         <div className="z-10">
@@ -190,7 +190,7 @@ export function EditEntityComponent({id, type, isEdit}) {
             <Separator />
             <div className="flex">
             <div className="w-6/8">
-                <div className="rounded mt-5 relative w-full aspect-[1/1] overflow-hidden">
+                <div className="rounded mt-5 relative w-full aspect-[2/1] overflow-hidden">
                         <div
                             className="absolute inset-0 bg-cover bg-center"
                             style={{
