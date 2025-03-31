@@ -186,7 +186,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                             />
                             
                     </div>
-                    <Badge className=" bg-yellow-700 font-heading text-2xl size-14 pl-20 pr-20 pt-3 pb-3 justify-center text-center m-auto mb-9 mr-8">{capitalizeFirst(type)}</Badge>
+                    <Badge className=" bg-yellow-700 font-heading text-2xl size-14 pl-20 pr-20 pt-3 pb-3 justify-center text-center m-auto mb-7.5 mr-8">{capitalizeFirst(type)}</Badge>
                 </div>
                 <Separator />
             </div>
