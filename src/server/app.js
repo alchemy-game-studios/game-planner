@@ -53,9 +53,6 @@ passport.use(
 );
 // Database
 
-
-
-
 // GraphQL
 const startApolloServer = async () => {
   const graphqlSchema = graphqlSchemaBuilder();  // Your schema
@@ -76,7 +73,7 @@ const startApolloServer = async () => {
 startApolloServer();
 
 // Rendering
-app.use(express.static(path.join(__dirname, '../dist')));
+app.use(express.static(path.join(__dirname, 'static')));
 
 
 

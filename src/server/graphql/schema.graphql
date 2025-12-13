@@ -1,151 +1,20 @@
 # Query type for fetching data
 type Query {
-  universes: [EnityResponse]
-  places: [EnityResponse]
-  characters:[EnityResponse]
-  tags: [EnityResponse]
-
-  universe(obj: IdInput): EnityResponse
-  place(obj: IdInput): EnityResponse
-  character(obj: IdInput):EnityResponse
-  tag(obj: IdInput): EnityResponse
+  hello: Hello
 }
 
 # Mutation type for modifying data
 type Mutation {
-  addTag(tag: TagInput!) : Response
-  removeTag(tag: TagInput!) : Response
-  editTag(tag: TagInput!) : Response
-
-  addUniverse(universe: UniverseInput!) : Response
-  editUniverse(universe: UniverseInput!) : Response
-  removeUniverse(universe: UniverseInput!) : Response
-
-  addPlace(place: PlaceInput!) : Response
-  editPlace(place: PlaceInput!) : Response
-  removePlace(place: PlaceInput!) : Response
-
-  addCharacter(character: CharacterInput!) : Response
-  editCharacter(character: CharacterInput!) : Response
-  removeCharacter(character: CharacterInput!) : Response
-
-  relateContains(relation: RelatableInput!) : Response
-  relateTagged(relation: TaggableInput!) : Response
+  submitText(input: SubmitText!) : Response
 }
 
-input IdInput {
-  id: String!
-}
-
-input RelatableInput {
-  id: String!
-  childIds: [String]
-}
-
-input TaggableInput {
-  id: String!
-  tagIds: [String]
+type Hello {
+  message: String!
 }
 
 type Response {
   message: String!
 }
-
-#################################################
-input UniverseInput {
-  id: String!
-  name: String!
-  description: String!
-  type: String
+input SubmitText {
+  text: String!
 }
-
-input PlaceInput {
-  id: String!
-  name: String!
-  description: String!
-  type: String
-}
-
-input CharacterInput {
-  id: String!
-  name: String!
-  description: String!
-  type: String
-}
-
-input TagInput {
-  id: String!
-  name: String!
-  description: String!
-  type: String
-}
-
-##############################################################
-## Main entities
-type EnityResponse {
-  id: String!
-  contents:[EntityContents]
-  tags: [EntityProperties]
-  properties: EntityProperties
-}
-
-type EntityContents {
-  _nodeType: String
-  properties: EntityProperties
-}
-
-type EntityProperties {
-  id: String!
-  name: String
-  description: String
-  type: String
-
-}
-
-
-
-
-# type Universe {
-#   id: String!
-#   name: String!
-#   description: String!
-#   places: [Place]
-#   characters: [Character]
-#   tags: [String]
-# }
-
-# type Place {
-#   id: String!
-#   name: String!
-#   description: String!
-#   tags: [String]
-# }
-
-# type Character {
-#   id: String!
-#   name: String!
-#   description: String!
-#   originPlace: Place
-#   tags: [String]
-# }
-
-
-
-
-##############################################################
-## Tags
-# type Tags {
-#   feelingTags: [Tag]
-#   descriptorTags: [Tag]
-# }
-# type Tag {
-#   id: ID!
-#   name: String!
-#   description: String
-#   type: String
-# }
-
-# type LocalizedText {
-#   locale: String!
-#   text: String!
-# }

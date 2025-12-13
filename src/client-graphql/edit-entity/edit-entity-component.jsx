@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from '@/components/ui/badge';
 import { NodeList } from './node-list.jsx';
+import { EditableNodeList } from './editable-node-list.tsx';
 import { Textarea } from "@/components/ui/textarea"
 import { removeTypeName } from '../util.js'
 import { HoverEditableText } from './hover-editable-text.jsx';
@@ -234,9 +235,85 @@ export function EditEntityComponent({id, type, isEdit}) {
           </div> */}
           </div>
           
-        <div id="related-contains" class="fixed top-30 right-2 flex w-2/8 justify-end ml-4 mt-1 mr-0">
-            <NodeList initContents={relationTypes} parentType={name}/>
-           
+        <div id="related-contains" class="fixed top-30 right-2 flex flex-col gap-4 w-2/8 justify-end ml-4 mt-1 mr-0">
+            {/* Render Places for Universe */}
+            {type === 'universe' && relationGroups['place'] && (
+                <EditableNodeList
+                    initContents={relationGroups['place']}
+                    parentId={id}
+                    parentType={type}
+                    entityType="place"
+                    onUpdate={() => {
+                      console.log('Update triggered - should refetch data');
+                    }}
+                />
+            )}
+            
+            {/* Render Characters for Place */}
+            {type === 'place' && relationGroups['character'] && (
+                <EditableNodeList
+                    initContents={relationGroups['character']}
+                    parentId={id}
+                    parentType={type}
+                    entityType="character"
+                    onUpdate={() => {
+                      console.log('Update triggered - should refetch data');
+                    }}
+                />
+            )}
+            
+            {/* Render Tags for all entity types */}
+            {entity.tags && entity.tags.length > 0 && (
+                <EditableNodeList
+                    initContents={entity.tags}
+                    parentId={id}
+                    parentType={type}
+                    entityType="tag"
+                    isTagRelation={true}
+                    onUpdate={() => {
+                      console.log('Update triggered - should refetch data');
+                    }}
+                />
+            )}
+            
+            {/* Add empty states with ability to add */}
+            {type === 'universe' && !relationGroups['place'] && (
+                <EditableNodeList
+                    initContents={[]}
+                    parentId={id}
+                    parentType={type}
+                    entityType="place"
+                    onUpdate={() => {
+                      console.log('Update triggered - should refetch data');
+                    }}
+                />
+            )}
+            
+            {type === 'place' && !relationGroups['character'] && (
+                <EditableNodeList
+                    initContents={[]}
+                    parentId={id}
+                    parentType={type}
+                    entityType="character"
+                    onUpdate={() => {
+                      console.log('Update triggered - should refetch data');
+                    }}
+                />
+            )}
+            
+            {/* Always show tags section */}
+            {(!entity.tags || entity.tags.length === 0) && (
+                <EditableNodeList
+                    initContents={[]}
+                    parentId={id}
+                    parentType={type}
+                    entityType="tag"
+                    isTagRelation={true}
+                    onUpdate={() => {
+                      console.log('Update triggered - should refetch data');
+                    }}
+                />
+            )}
         </div>
         </div>
         </div>
