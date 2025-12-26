@@ -202,9 +202,11 @@ export function EditEntityComponent({id, type, isEdit}) {
             <div className="w-6/8">
                 <div className="rounded mt-5 relative w-full">
                         <ImageGallery
-                            images={entity.allImages || entity.images || []}
+                            images={entity.images || []}
+                            allImages={entity.allImages || []}
                             entityId={id}
                             entityType={type}
+                            entityName={entity.properties.name}
                             onUpdate={() => {
                                 console.log('Images updated - refetching');
                                 Get({ variables: { obj: { id } } });

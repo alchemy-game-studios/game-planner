@@ -17,25 +17,32 @@ interface Image {
 }
 
 interface ImageGalleryProps {
-  images: Image[];
+  images: Image[];           // Direct images for editing
+  allImages?: Image[];       // All images including descendants for display
   entityId: string;
   entityType: string;
+  entityName: string;
   onUpdate?: () => void;
   fallbackImage?: string;
 }
 
 export const ImageGallery: React.FC<ImageGalleryProps> = ({
   images,
+  allImages,
   entityId,
   entityType,
+  entityName,
   onUpdate,
   fallbackImage
 }) => {
   const [editorOpen, setEditorOpen] = useState(false);
   const [rotationOffset, setRotationOffset] = useState(0);
 
+  // Use allImages for display if available, otherwise use direct images
+  const displayImages = allImages && allImages.length > 0 ? allImages : images;
+
   // Sort images by rank
-  const sortedImages = [...images].sort((a, b) => a.rank - b.rank);
+  const sortedImages = [...displayImages].sort((a, b) => a.rank - b.rank);
 
   // Get rotated array based on offset
   const getRotatedImages = () => {
@@ -73,10 +80,10 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     return () => clearInterval(timer);
   }, [sortedImages.length]);
 
-  // Reset rotation when images change
+  // Reset rotation when display images change
   useEffect(() => {
     setRotationOffset(0);
-  }, [images.length]);
+  }, [displayImages.length]);
 
   const handleEditorClose = () => {
     setEditorOpen(false);
@@ -85,7 +92,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     }
   };
 
-  if (images.length === 0) {
+  if (displayImages.length === 0) {
     return (
       <div className="relative rounded-lg overflow-hidden bg-gray-800 aspect-[2/1]">
         {fallbackImage ? (
@@ -114,6 +121,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           images={images}
           entityId={entityId}
           entityType={entityType}
+          entityName={entityName}
           onClose={handleEditorClose}
         />
       </div>
@@ -121,7 +129,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   }
 
   // Single image layout
-  if (images.length === 1) {
+  if (displayImages.length === 1) {
     return (
       <div className="relative rounded-lg overflow-hidden">
         <img
@@ -144,6 +152,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           images={images}
           entityId={entityId}
           entityType={entityType}
+          entityName={entityName}
           onClose={handleEditorClose}
         />
       </div>
@@ -189,7 +198,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   };
 
   // Two images layout
-  if (images.length === 2) {
+  if (displayImages.length === 2) {
     return (
       <div className="relative rounded-lg overflow-hidden">
         <div className="flex gap-1 aspect-[2/1]">
@@ -231,6 +240,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           images={images}
           entityId={entityId}
           entityType={entityType}
+          entityName={entityName}
           onClose={handleEditorClose}
         />
       </div>
@@ -238,7 +248,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   }
 
   // Three images layout
-  if (images.length === 3) {
+  if (displayImages.length === 3) {
     return (
       <div className="relative rounded-lg overflow-hidden">
         <div className="flex gap-1 aspect-[2/1]">
@@ -292,6 +302,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           images={images}
           entityId={entityId}
           entityType={entityType}
+          entityName={entityName}
           onClose={handleEditorClose}
         />
       </div>
@@ -383,6 +394,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
         images={images}
         entityId={entityId}
         entityType={entityType}
+        entityName={entityName}
         onClose={handleEditorClose}
       />
     </div>

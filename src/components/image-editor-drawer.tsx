@@ -41,6 +41,7 @@ interface ImageEditorDrawerProps {
   images: Image[];
   entityId: string;
   entityType: string;
+  entityName: string;
   onClose: () => void;
 }
 
@@ -133,6 +134,7 @@ export const ImageEditorDrawer: React.FC<ImageEditorDrawerProps> = ({
   images: initialImages,
   entityId,
   entityType,
+  entityName,
   onClose,
 }) => {
   const [images, setImages] = useState<Image[]>(() =>
@@ -241,7 +243,7 @@ export const ImageEditorDrawer: React.FC<ImageEditorDrawerProps> = ({
     <Sheet open={open} onOpenChange={handleClose}>
       <SheetContent side="right" className="w-[400px] sm:w-[540px] bg-gray-900">
         <SheetHeader>
-          <SheetTitle className="text-white">Manage Images</SheetTitle>
+          <SheetTitle className="text-white">{entityName} Images</SheetTitle>
         </SheetHeader>
 
         <div className="mt-6 space-y-4">
