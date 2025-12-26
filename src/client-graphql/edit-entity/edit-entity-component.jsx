@@ -13,6 +13,7 @@ import { removeTypeName } from '../util.js'
 import { HoverEditableText } from './hover-editable-text.jsx';
 import { getEntityImage } from "@/media/util"
 import { TagPills } from "@/components/tag-pills"
+import { ImageGallery } from "@/components/image-gallery"
 
 
 
@@ -41,8 +42,9 @@ export function EditEntityComponent({id, type, isEdit}) {
             description: '',
             type: ''
         },
-        contents: []
-       
+        contents: [],
+        tags: [],
+        images: []
     }
     const [entity, setEntity] = useState(initEntity);
 
@@ -197,12 +199,16 @@ export function EditEntityComponent({id, type, isEdit}) {
             </div>
             <div className="flex mt-30">
             <div className="w-6/8">
-                <div className="rounded mt-5 relative w-full aspect-[2/1] overflow-hidden">
-                        <div
-                            className="absolute inset-0 bg-cover bg-center"
-                            style={{
-                            backgroundImage: `url(${getEntityImage(id, "hero")})`,
+                <div className="rounded mt-5 relative w-full">
+                        <ImageGallery
+                            images={entity.images || []}
+                            entityId={id}
+                            entityType={type}
+                            onUpdate={() => {
+                                console.log('Images updated - refetching');
+                                Get({ variables: { obj: { id } } });
                             }}
+                            fallbackImage={getEntityImage(id, "hero")}
                         />
                 </div>
 
@@ -390,6 +396,14 @@ function oneQuery(type) {
                     name
                     description
                     type
+                }
+                images {
+                    id
+                    filename
+                    url
+                    mimeType
+                    size
+                    rank
                 }
             }
     }

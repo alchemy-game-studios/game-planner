@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { getImageUrl, deleteImage as deleteS3Image } from '../storage/s3-client.js';
 
 // Neo4j driver will be injected
 let driver = null;
@@ -16,6 +17,29 @@ async function runQuery(cypher, params = {}) {
   } finally {
     await session.close();
   }
+}
+
+// Helper to get images for an entity
+async function getImagesForEntity(entityId) {
+  const result = await runQuery(`
+    MATCH (e {id: $entityId})-[r:HAS_IMAGE]->(i:Image)
+    RETURN i, r.rank as rank
+    ORDER BY r.rank
+  `, { entityId });
+
+  return result.records.map(record => {
+    const img = record.get('i').properties;
+    const rank = record.get('rank');
+    return {
+      id: img.id,
+      filename: img.filename,
+      url: getImageUrl(img.key),
+      mimeType: img.mimeType,
+      size: typeof img.size === 'object' ? img.size.toNumber() : img.size,
+      rank: typeof rank === 'object' ? rank.toNumber() : rank,
+      uploadedAt: img.uploadedAt
+    };
+  });
 }
 
 // Helper to get single entity with contents and tags
@@ -45,7 +69,11 @@ async function getEntity(type, id) {
   `, { id });
 
   if (result.records.length === 0) return null;
-  return result.records[0].get('entity');
+
+  const entity = result.records[0].get('entity');
+  // Fetch images separately
+  entity.images = await getImagesForEntity(id);
+  return entity;
 }
 
 // Helper to get all entities of a type
@@ -74,7 +102,11 @@ async function getAllEntities(type) {
     } AS entity
   `);
 
-  return result.records.map(r => r.get('entity'));
+  // For list views, we include empty images array for now (fetch on demand for detail view)
+  return result.records.map(r => ({
+    ...r.get('entity'),
+    images: []
+  }));
 }
 
 // Helper to create entity
@@ -241,6 +273,52 @@ export default {
       }
 
       return { message: 'Tag relationships updated' };
+    },
+
+    // Image mutations
+    reorderImages: async (_, { entityId, imageIds }) => {
+      // Update ranks based on array order
+      for (let i = 0; i < imageIds.length; i++) {
+        await runQuery(`
+          MATCH (e {id: $entityId})-[r:HAS_IMAGE]->(i:Image {id: $imageId})
+          SET r.rank = $rank
+        `, {
+          entityId,
+          imageId: imageIds[i],
+          rank: i + 1,
+        });
+      }
+
+      return await getImagesForEntity(entityId);
+    },
+
+    removeImage: async (_, { imageId }) => {
+      // Get image key before deleting
+      const result = await runQuery(`
+        MATCH (i:Image {id: $imageId})
+        RETURN i.key as key
+      `, { imageId });
+
+      if (result.records.length === 0) {
+        return { message: 'Image not found' };
+      }
+
+      const key = result.records[0].get('key');
+
+      // Delete from S3/MinIO
+      try {
+        await deleteS3Image(key);
+      } catch (e) {
+        console.error('Error deleting from S3:', e);
+      }
+
+      // Delete from Neo4j
+      await runQuery(`
+        MATCH (i:Image {id: $imageId})
+        DETACH DELETE i
+      `, { imageId });
+
+      return { message: 'Image deleted successfully' };
     }
   }
 };

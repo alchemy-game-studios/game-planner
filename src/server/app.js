@@ -1,5 +1,6 @@
 import indexRouter from "./routes/index.js";
 import testApiRouter from "./routes/testApi.js";
+import uploadRouter, { setUploadDriver } from "./routes/upload.js";
 import express from "express";
 import session from "express-session";
 import cors from "cors";
@@ -25,6 +26,7 @@ const driver = neo4j.driver(NEO4J_URI, neo4j.auth.basic(NEO4J_USER, NEO4J_PASSWO
 
 // Inject driver into resolvers
 setDriver(driver);
+setUploadDriver(driver);
 
 const app = express();
 const __dirname = import.meta.dirname;
@@ -96,6 +98,7 @@ app.use(express.static(path.join(__dirname, 'static')));
 
 app.use("/", indexRouter);
 app.use("/testApi", testApiRouter);
+app.use("/api/upload", uploadRouter);
 
 // Graceful shutdown
 process.on('SIGINT', async () => {

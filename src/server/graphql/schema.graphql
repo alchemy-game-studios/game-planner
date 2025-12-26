@@ -50,6 +50,10 @@ type Mutation {
   # Relationship mutations
   relateContains(relation: RelatableInput!): Response
   relateTagged(relation: TagRelationInput!): Response
+
+  # Image mutations
+  reorderImages(entityId: String!, imageIds: [String!]!): [Image!]!
+  removeImage(imageId: String!): Response
 }
 
 # Common types
@@ -67,6 +71,7 @@ type Entity {
   properties: EntityProperties!
   contents: [ContentItem!]!
   tags: [EntityProperties!]!
+  images: [Image!]!
 }
 
 type EntityProperties {
@@ -79,6 +84,17 @@ type EntityProperties {
 type ContentItem {
   _nodeType: String!
   properties: EntityProperties!
+}
+
+# Image type for entity images
+type Image {
+  id: String!
+  filename: String!
+  url: String!
+  mimeType: String!
+  size: Int!
+  rank: Int!
+  uploadedAt: String
 }
 
 # Input types

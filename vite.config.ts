@@ -15,6 +15,12 @@ export default defineConfig({
     port: 3001,
     proxy: {
       '/graphql': 'http://localhost:3000',
+      '/api': 'http://localhost:3000',
+      '/s3': {
+        target: 'http://localhost:9000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/s3/, ''),
+      },
     }
   },
 });

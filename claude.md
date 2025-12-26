@@ -10,6 +10,7 @@ Full-stack web application for game development planning built with React, Graph
 - **Data**: Apollo Client, GraphQL
 - **Backend**: Express, Apollo Server
 - **Database**: Neo4j 5 (graph database via Docker)
+- **Storage**: MinIO (S3-compatible object storage for images)
 - **Auth**: Passport.js (integrated but not fully implemented)
 - **Testing**: Jest, React Testing Library
 
@@ -27,6 +28,7 @@ This starts:
 - Frontend: http://localhost:3001
 - Backend: http://localhost:3000/graphql
 - Neo4j Browser: http://localhost:7474
+- MinIO Console: http://localhost:9001 (minioadmin/minioadmin)
 
 ## Prerequisites
 
@@ -55,11 +57,15 @@ This starts:
 │       │   ├── schema.graphql # GraphQL type definitions
 │       │   └── graphql-resolvers.js
 │       ├── repository/        # Neo4j data access
-│       └── routes/            # Express routes
+│       ├── routes/            # Express routes
+│       │   └── upload.js      # Image upload endpoint
+│       └── storage/           # S3/MinIO client
+│           └── s3-client.js   # S3 abstraction (works with MinIO or AWS)
 ├── scripts/
 │   ├── seed.js                # Database seeding script
-│   └── wait-for-neo4j.js      # Health check script
-├── docker-compose.yml         # Neo4j container config
+│   ├── wait-for-neo4j.js      # Health check script
+│   └── migrate-images.js      # Migrate existing images to MinIO
+├── docker-compose.yml         # Neo4j + MinIO container config
 └── package.json               # npm scripts and dependencies
 ```
 
@@ -74,11 +80,12 @@ npm run dev:server    # Start Express server only (port 3000)
 
 ### Database
 ```bash
-npm run db:start      # Start Neo4j container
-npm run db:stop       # Stop Neo4j container
-npm run db:wait       # Wait for Neo4j to be ready
-npm run db:seed       # Seed database with sample data
-npm run db:reset      # Stop, clear data, restart, and reseed
+npm run db:start           # Start Neo4j + MinIO containers
+npm run db:stop            # Stop containers
+npm run db:wait            # Wait for Neo4j to be ready
+npm run db:seed            # Seed database with sample data
+npm run db:migrate-images  # Migrate existing images to MinIO
+npm run db:reset           # Stop, clear all data, restart, and reseed
 ```
 
 ### Build & Test
@@ -119,11 +126,14 @@ npm start             # Alias for npm run dev
 - **Universe** - Top-level game world container
 - **Place** - Locations within a universe
 - **Character** - Characters that inhabit places
+- **Item** - Items that belong to characters
 - **Tag** - Labels that can be applied to any entity
+- **Image** - Images associated with entities (stored in MinIO)
 
 ### Relationships
-- `CONTAINS`: Universe → Place → Character (hierarchy)
+- `CONTAINS`: Universe → Place → Character → Item (hierarchy)
 - `TAGGED`: Any entity → Tag
+- `HAS_IMAGE`: Any entity → Image (with rank property)
 
 ### Entity Properties
 - `id` (UUID)
@@ -188,13 +198,21 @@ relateTagged(relation: TagRelationInput!): Response
 | `NEO4J_USER` | `neo4j` | Neo4j username |
 | `NEO4J_PASSWORD` | `password` | Neo4j password |
 | `SESSION_SECRET` | (hardcoded) | Express session secret |
+| `S3_ENDPOINT` | `http://localhost:9000` | S3/MinIO endpoint |
+| `S3_BUCKET` | `game-planner-images` | S3 bucket name |
+| `S3_ACCESS_KEY` | `minioadmin` | S3 access key |
+| `S3_SECRET_KEY` | `minioadmin` | S3 secret key |
+| `S3_REGION` | `us-east-1` | S3 region |
+
+For production with AWS S3, just change the endpoint and credentials.
 
 ## Seed Data
 
 The seed script (`scripts/seed.js`) creates sample data:
 - 2 Universes (Eldoria fantasy, Neon Sprawl cyberpunk)
 - 4 Places (2 per universe)
-- 4 Characters (1 per place)
+- 8 Characters (2 per place)
+- 10 Items (distributed among characters)
 - 6 Tags with relationships
 
 ## Configuration Files
