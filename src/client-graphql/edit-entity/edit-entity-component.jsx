@@ -93,7 +93,10 @@ export function EditEntityComponent({id, type, isEdit}) {
         const fetchData = async() => {
             if (id) {
                 const result = await Get({ variables: { obj: { id } } });
+                console.log('Fetched entity:', result.data[type]);
+                console.log('Contents:', result.data[type].contents);
                 const groupedResult = grouped(result.data[type].contents)
+                console.log('Grouped result:', groupedResult);
                 setEntity(result.data[type])
                 setDescription(result.data[type].properties.description || '');
                 setName(result.data[type].properties.name)
@@ -249,7 +252,8 @@ export function EditEntityComponent({id, type, isEdit}) {
           </div> */}
           </div>
           
-        <div id="related-contains" class="fixed top-30 right-2 flex flex-col gap-4 w-2/8 justify-end ml-4 mt-1 mr-0">
+        <div id="related-contains" className="fixed top-32 right-4 flex flex-col gap-4 w-1/4 ml-4 mt-1">
+            {console.log('Rendering sidebar - type:', type, 'relationGroups:', relationGroups)}
             {/* Render Places for Universe */}
             {type === 'universe' && relationGroups['place'] && (
                 <EditableNodeList
@@ -275,7 +279,20 @@ export function EditEntityComponent({id, type, isEdit}) {
                     }}
                 />
             )}
-            
+
+            {/* Render Items for Character */}
+            {type === 'character' && relationGroups['item'] && (
+                <EditableNodeList
+                    initContents={relationGroups['item']}
+                    parentId={id}
+                    parentType={type}
+                    entityType="item"
+                    onUpdate={() => {
+                      console.log('Update triggered - should refetch data');
+                    }}
+                />
+            )}
+
             {/* Add empty states with ability to add */}
             {type === 'universe' && !relationGroups['place'] && (
                 <EditableNodeList
@@ -295,6 +312,18 @@ export function EditEntityComponent({id, type, isEdit}) {
                     parentId={id}
                     parentType={type}
                     entityType="character"
+                    onUpdate={() => {
+                      console.log('Update triggered - should refetch data');
+                    }}
+                />
+            )}
+
+            {type === 'character' && !relationGroups['item'] && (
+                <EditableNodeList
+                    initContents={[]}
+                    parentId={id}
+                    parentType={type}
+                    entityType="item"
                     onUpdate={() => {
                       console.log('Update triggered - should refetch data');
                     }}

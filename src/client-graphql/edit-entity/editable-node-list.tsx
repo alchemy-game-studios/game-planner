@@ -15,7 +15,7 @@ interface EditableNodeListProps {
   initContents: any[];
   parentId: string;
   parentType: string;
-  entityType: 'place' | 'character' | 'tag';
+  entityType: 'place' | 'character' | 'item' | 'tag';
   isTagRelation?: boolean;
   onUpdate?: () => void;
 }
@@ -169,12 +169,13 @@ export function EditableNodeList({
         {normalizedContents.map((content) => {
           const contentId = content.properties?.id || content.id;
           const contentData = content.properties || content;
-          
+          const contentType = content._nodeType || entityType;
+
           return (
             <li key={contentId} className="relative group">
-              <div 
+              <div
                 className="cursor-pointer"
-                onClick={() => handleOpen(content)}
+                onClick={() => handleClick(contentId, contentType)}
               >
                 <EntityCard
                   name={contentData.name}

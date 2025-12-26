@@ -6,7 +6,7 @@ import EntityCard from '../client-graphql/edit-entity/entity-card';
 import { capitalizeFirst } from '../client-graphql/util';
 
 interface EntitySearchProps {
-  entityType: 'place' | 'character' | 'tag';
+  entityType: 'place' | 'character' | 'item' | 'tag';
   onSelect: (entity: any) => void;
   excludeIds?: string[];
   placeholder?: string;
@@ -29,6 +29,19 @@ const SEARCH_QUERIES = {
   character: gql`
     query SearchCharacters {
       characters {
+        id
+        properties {
+          id
+          name
+          description
+          type
+        }
+      }
+    }
+  `,
+  item: gql`
+    query SearchItems {
+      items {
         id
         properties {
           id

@@ -85,6 +85,106 @@ const seedData = {
       description: 'The ruthless CEO of OmniCorp who will stop at nothing to maintain control.',
       type: 'executive',
       placeId: 'place-004'
+    },
+    {
+      id: 'char-005',
+      name: 'Seraphina the Bold',
+      description: 'A legendary knight sworn to protect the Crystal Citadel, known for her unbreakable spirit.',
+      type: 'knight',
+      placeId: PLACE_1_ID
+    },
+    {
+      id: 'char-006',
+      name: 'Grimjaw the Merchant',
+      description: 'A shrewd goblin trader who deals in rare artifacts and forbidden knowledge.',
+      type: 'merchant',
+      placeId: PLACE_2_ID
+    },
+    {
+      id: 'char-007',
+      name: 'Nyx',
+      description: 'A synthetic android who gained sentience and now fights for AI rights in the underground.',
+      type: 'android',
+      placeId: 'place-003'
+    },
+    {
+      id: 'char-008',
+      name: 'Dr. Yuki Tanaka',
+      description: 'A brilliant scientist secretly working to sabotage OmniCorp from within.',
+      type: 'scientist',
+      placeId: 'place-004'
+    }
+  ],
+  items: [
+    {
+      id: 'item-001',
+      name: 'Staff of Eternity',
+      description: 'An ancient staff that channels raw magical energy from the ley lines.',
+      type: 'weapon',
+      characterId: 'char-001'
+    },
+    {
+      id: 'item-002',
+      name: 'Cloak of Shadows',
+      description: 'A magical cloak that renders the wearer nearly invisible in darkness.',
+      type: 'armor',
+      characterId: 'char-002'
+    },
+    {
+      id: 'item-003',
+      name: 'Moonbow',
+      description: 'A silver bow blessed by the moon goddess, arrows fly true even in complete darkness.',
+      type: 'weapon',
+      characterId: 'char-002'
+    },
+    {
+      id: 'item-004',
+      name: 'Neural Interface Deck',
+      description: 'Custom-built hacking rig capable of breaching the most secure corporate networks.',
+      type: 'tool',
+      characterId: 'char-003'
+    },
+    {
+      id: 'item-005',
+      name: 'Quantum Encryption Key',
+      description: 'A stolen OmniCorp master key that can unlock any digital door.',
+      type: 'key',
+      characterId: 'char-003'
+    },
+    {
+      id: 'item-006',
+      name: 'Executive Override Chip',
+      description: 'A neural implant granting Director Chen absolute control over OmniCorp systems.',
+      type: 'implant',
+      characterId: 'char-004'
+    },
+    {
+      id: 'item-007',
+      name: 'Sunblade',
+      description: 'A legendary sword that glows with holy light, bane of all dark creatures.',
+      type: 'weapon',
+      characterId: 'char-005'
+    },
+    {
+      id: 'item-008',
+      name: 'Shield of the Dawn',
+      description: 'An indestructible shield forged from crystallized sunlight.',
+      type: 'armor',
+      characterId: 'char-005'
+    },
+    {
+      id: 'item-009',
+      name: 'Bag of Infinite Holdings',
+      description: 'A magical satchel that can store far more than its size suggests.',
+      type: 'container',
+      characterId: 'char-006'
+    },
+    {
+      id: 'item-010',
+      name: 'Probability Disruptor',
+      description: 'Experimental tech that allows Nyx to predict and alter combat outcomes.',
+      type: 'implant',
+      characterId: 'char-007'
     }
   ],
   tags: [
@@ -125,6 +225,7 @@ async function createConstraints(session) {
     'CREATE CONSTRAINT universe_id IF NOT EXISTS FOR (u:Universe) REQUIRE u.id IS UNIQUE',
     'CREATE CONSTRAINT place_id IF NOT EXISTS FOR (p:Place) REQUIRE p.id IS UNIQUE',
     'CREATE CONSTRAINT character_id IF NOT EXISTS FOR (c:Character) REQUIRE c.id IS UNIQUE',
+    'CREATE CONSTRAINT item_id IF NOT EXISTS FOR (i:Item) REQUIRE i.id IS UNIQUE',
     'CREATE CONSTRAINT tag_id IF NOT EXISTS FOR (t:Tag) REQUIRE t.id IS UNIQUE'
   ];
 
@@ -173,6 +274,19 @@ async function seedCharacters(session) {
   }
 }
 
+async function seedItems(session) {
+  console.log('Seeding items...');
+  for (const item of seedData.items) {
+    await session.run(
+      `CREATE (i:Item {id: $id, name: $name, description: $description, type: $type})
+       WITH i
+       MATCH (c:Character {id: $characterId})
+       CREATE (c)-[:CONTAINS]->(i)`,
+      item
+    );
+  }
+}
+
 async function seedTags(session) {
   console.log('Seeding tags...');
   for (const tag of seedData.tags) {
@@ -205,11 +319,12 @@ async function seed() {
     await seedUniverses(session);
     await seedPlaces(session);
     await seedCharacters(session);
+    await seedItems(session);
     await seedTags(session);
     await seedTagRelations(session);
 
     console.log('Seeding complete!');
-    console.log(`Created: ${seedData.universes.length} universes, ${seedData.places.length} places, ${seedData.characters.length} characters, ${seedData.tags.length} tags`);
+    console.log(`Created: ${seedData.universes.length} universes, ${seedData.places.length} places, ${seedData.characters.length} characters, ${seedData.items.length} items, ${seedData.tags.length} tags`);
 
   } catch (error) {
     console.error('Seeding failed:', error);

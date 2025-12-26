@@ -144,6 +144,10 @@ export default {
     character: async (_, { obj }) => getEntity('Character', obj.id),
     characters: async () => getAllEntities('Character'),
 
+    // Item queries
+    item: async (_, { obj }) => getEntity('Item', obj.id),
+    items: async () => getAllEntities('Item'),
+
     // Tag queries
     tag: async (_, { obj }) => getEntity('Tag', obj.id),
     tags: async () => getAllEntities('Tag'),
@@ -186,6 +190,11 @@ export default {
     addCharacter: async (_, { character }) => createEntity('Character', character),
     editCharacter: async (_, { character }) => updateEntity('Character', character),
     removeCharacter: async (_, { character }) => deleteEntity('Character', character.id),
+
+    // Item mutations
+    addItem: async (_, { item }) => createEntity('Item', item),
+    editItem: async (_, { item }) => updateEntity('Item', item),
+    removeItem: async (_, { item }) => deleteEntity('Item', item.id),
 
     // Tag mutations
     addTag: async (_, { tag }) => createEntity('Tag', tag),

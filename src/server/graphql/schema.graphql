@@ -9,6 +9,8 @@ type Query {
   places: [Entity!]!
   character(obj: IdInput!): Entity
   characters: [Entity!]!
+  item(obj: IdInput!): Entity
+  items: [Entity!]!
   tag(obj: IdInput!): Entity
   tags: [Entity!]!
 
@@ -34,6 +36,11 @@ type Mutation {
   addCharacter(character: CharacterInput!): Response
   editCharacter(character: CharacterInput!): Response
   removeCharacter(character: CharacterInput!): Response
+
+  # Item mutations
+  addItem(item: ItemInput!): Response
+  editItem(item: ItemInput!): Response
+  removeItem(item: ItemInput!): Response
 
   # Tag mutations
   addTag(tag: TagInput!): Response
@@ -98,6 +105,13 @@ input PlaceInput {
 }
 
 input CharacterInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input ItemInput {
   id: String!
   name: String
   description: String
