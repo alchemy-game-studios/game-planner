@@ -43,6 +43,7 @@ export function EditEntityComponent({id, type, isEdit}) {
             type: ''
         },
         contents: [],
+        allContents: [],
         tags: [],
         images: [],
         allImages: []
@@ -81,6 +82,7 @@ export function EditEntityComponent({id, type, isEdit}) {
 
    
     const [relationGroups, setRelationGroups] = useState([]);
+    const [allRelationGroups, setAllRelationGroups] = useState([]);
     const [relationTypes, setRelationTypes] = useState([]);
 
     const [resultText] = useState('');
@@ -98,12 +100,16 @@ export function EditEntityComponent({id, type, isEdit}) {
                 const result = await Get({ variables: { obj: { id } } });
                 console.log('Fetched entity:', result.data[type]);
                 console.log('Contents:', result.data[type].contents);
+                console.log('AllContents:', result.data[type].allContents);
                 const groupedResult = grouped(result.data[type].contents)
+                const allGroupedResult = grouped(result.data[type].allContents || [])
                 console.log('Grouped result:', groupedResult);
+                console.log('All grouped result:', allGroupedResult);
                 setEntity(result.data[type])
                 setDescription(result.data[type].properties.description || '');
                 setName(result.data[type].properties.name)
                 setRelationGroups(groupedResult)
+                setAllRelationGroups(allGroupedResult)
 
                 const typeListItems = Object.keys(groupedResult).map((key) => {
                     console.log("Grouped Contents")
@@ -124,7 +130,7 @@ export function EditEntityComponent({id, type, isEdit}) {
         }
 
         fetchData()
-      
+
     }, [id, Get]);
 
     useEffect(() => {
@@ -198,8 +204,8 @@ export function EditEntityComponent({id, type, isEdit}) {
                 </div>
                 <Separator />
             </div>
-            <div className="flex mt-30">
-            <div className="w-6/8">
+            <div className="flex mt-30 gap-6">
+            <div className="flex-1 pr-4">
                 <div className="rounded mt-5 relative w-full">
                         <ImageGallery
                             images={entity.images || []}
@@ -261,82 +267,54 @@ export function EditEntityComponent({id, type, isEdit}) {
           </div> */}
           </div>
           
-        <div id="related-contains" className="fixed top-32 right-4 flex flex-col gap-4 w-1/4 ml-4 mt-1">
-            {console.log('Rendering sidebar - type:', type, 'relationGroups:', relationGroups)}
-            {/* Render Places for Universe */}
-            {type === 'universe' && relationGroups['place'] && (
+        <div id="related-contains" className="w-72 flex-shrink-0 flex flex-col gap-4 mt-5">
+            {/* Show all descendant entity types with max 5 items each */}
+            {allRelationGroups['place'] && allRelationGroups['place'].length > 0 && (
                 <EditableNodeList
-                    initContents={relationGroups['place']}
+                    initContents={allRelationGroups['place']}
                     parentId={id}
                     parentType={type}
                     entityType="place"
+                    maxItems={5}
                     onUpdate={() => {
-                      console.log('Update triggered - should refetch data');
+                      Get({ variables: { obj: { id } } });
                     }}
                 />
             )}
-            
-            {/* Render Characters for Place */}
-            {type === 'place' && relationGroups['character'] && (
+
+            {allRelationGroups['character'] && allRelationGroups['character'].length > 0 && (
                 <EditableNodeList
-                    initContents={relationGroups['character']}
+                    initContents={allRelationGroups['character']}
                     parentId={id}
                     parentType={type}
                     entityType="character"
+                    maxItems={5}
                     onUpdate={() => {
-                      console.log('Update triggered - should refetch data');
+                      Get({ variables: { obj: { id } } });
                     }}
                 />
             )}
 
-            {/* Render Items for Character */}
-            {type === 'character' && relationGroups['item'] && (
+            {allRelationGroups['item'] && allRelationGroups['item'].length > 0 && (
                 <EditableNodeList
-                    initContents={relationGroups['item']}
+                    initContents={allRelationGroups['item']}
                     parentId={id}
                     parentType={type}
                     entityType="item"
+                    maxItems={5}
                     onUpdate={() => {
-                      console.log('Update triggered - should refetch data');
+                      Get({ variables: { obj: { id } } });
                     }}
                 />
             )}
 
-            {/* Add empty states with ability to add */}
-            {type === 'universe' && !relationGroups['place'] && (
-                <EditableNodeList
-                    initContents={[]}
-                    parentId={id}
-                    parentType={type}
-                    entityType="place"
-                    onUpdate={() => {
-                      console.log('Update triggered - should refetch data');
-                    }}
-                />
-            )}
-            
-            {type === 'place' && !relationGroups['character'] && (
-                <EditableNodeList
-                    initContents={[]}
-                    parentId={id}
-                    parentType={type}
-                    entityType="character"
-                    onUpdate={() => {
-                      console.log('Update triggered - should refetch data');
-                    }}
-                />
-            )}
-
-            {type === 'character' && !relationGroups['item'] && (
-                <EditableNodeList
-                    initContents={[]}
-                    parentId={id}
-                    parentType={type}
-                    entityType="item"
-                    onUpdate={() => {
-                      console.log('Update triggered - should refetch data');
-                    }}
-                />
+            {/* Show empty state if no descendants at all */}
+            {(!allRelationGroups['place'] || allRelationGroups['place'].length === 0) &&
+             (!allRelationGroups['character'] || allRelationGroups['character'].length === 0) &&
+             (!allRelationGroups['item'] || allRelationGroups['item'].length === 0) && (
+                <div className="text-gray-500 text-sm text-center py-4">
+                    No related entities
+                </div>
             )}
         </div>
         </div>
@@ -387,6 +365,18 @@ function oneQuery(type) {
                         description
                         type
                     }
+                }
+                allContents {
+                    _nodeType
+                    properties {
+                        id
+                        name
+                        description
+                        type
+                    }
+                    parentId
+                    parentName
+                    depth
                 }
                 properties {
                     id

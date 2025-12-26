@@ -102,6 +102,40 @@ async function getAllImagesForEntity(entityId) {
   });
 }
 
+// Helper to get all descendant content entities (recursive)
+async function getAllContentsForEntity(entityId) {
+  const result = await runQuery(`
+    MATCH (root {id: $entityId})
+
+    // Get all descendant entities via CONTAINS (recursive)
+    OPTIONAL MATCH path = (root)-[:CONTAINS*1..]->(descendant)
+    WHERE descendant IS NOT NULL
+
+    // Get the immediate parent of each descendant
+    WITH root, descendant, path,
+         length(path) AS depth,
+         nodes(path)[-2] AS parent
+
+    RETURN
+      toLower(labels(descendant)[0]) AS _nodeType,
+      properties(descendant) AS properties,
+      parent.id AS parentId,
+      parent.name AS parentName,
+      depth
+    ORDER BY depth, descendant.name
+  `, { entityId });
+
+  return result.records.map(record => ({
+    _nodeType: record.get('_nodeType'),
+    properties: record.get('properties'),
+    parentId: record.get('parentId'),
+    parentName: record.get('parentName'),
+    depth: typeof record.get('depth') === 'object'
+      ? record.get('depth').toNumber()
+      : record.get('depth')
+  }));
+}
+
 // Helper to get single entity with contents and tags
 async function getEntity(type, id) {
   const result = await runQuery(`
@@ -135,6 +169,8 @@ async function getEntity(type, id) {
   entity.images = await getImagesForEntity(id);
   // Fetch all images including descendants
   entity.allImages = await getAllImagesForEntity(id);
+  // Fetch all descendant content entities
+  entity.allContents = await getAllContentsForEntity(id);
   return entity;
 }
 
@@ -164,11 +200,12 @@ async function getAllEntities(type) {
     } AS entity
   `);
 
-  // For list views, we include empty images array for now (fetch on demand for detail view)
+  // For list views, we include empty arrays for now (fetch on demand for detail view)
   return result.records.map(r => ({
     ...r.get('entity'),
     images: [],
-    allImages: []
+    allImages: [],
+    allContents: []
   }));
 }
 

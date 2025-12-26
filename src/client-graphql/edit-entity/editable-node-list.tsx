@@ -17,15 +17,17 @@ interface EditableNodeListProps {
   parentType: string;
   entityType: 'place' | 'character' | 'item' | 'tag';
   isTagRelation?: boolean;
+  maxItems?: number;
   onUpdate?: () => void;
 }
 
-export function EditableNodeList({ 
-  initContents, 
+export function EditableNodeList({
+  initContents,
   parentId,
-  parentType, 
+  parentType,
   entityType,
   isTagRelation = false,
+  maxItems = 0,
   onUpdate
 }: EditableNodeListProps) {
   const [contents, setContents] = useState(initContents);
@@ -165,7 +167,10 @@ export function EditableNodeList({
         </Button>
       </div>
       
-      <ol className="-mr-3 space-y-1">
+      <ol
+        className={`-mr-3 space-y-1 ${maxItems > 0 ? 'overflow-y-auto pr-1' : ''}`}
+        style={maxItems > 0 ? { maxHeight: `${maxItems * 52}px` } : undefined}
+      >
         {normalizedContents.map((content) => {
           const contentId = content.properties?.id || content.id;
           const contentData = content.properties || content;
@@ -197,6 +202,11 @@ export function EditableNodeList({
           );
         })}
       </ol>
+      {maxItems > 0 && normalizedContents.length > maxItems && (
+        <div className="text-xs text-gray-500 mt-1 text-center">
+          Scroll for more ({normalizedContents.length} total)
+        </div>
+      )}
 
       {(selectedContent || editMode) && (
         <EditDrawer

@@ -70,6 +70,7 @@ type Entity {
   id: String!
   properties: EntityProperties!
   contents: [ContentItem!]!
+  allContents: [DescendantContent!]!
   tags: [EntityProperties!]!
   images: [Image!]!
   allImages: [EntityImage!]!
@@ -85,6 +86,15 @@ type EntityProperties {
 type ContentItem {
   _nodeType: String!
   properties: EntityProperties!
+}
+
+# Content item with depth info (for descendant content)
+type DescendantContent {
+  _nodeType: String!
+  properties: EntityProperties!
+  parentId: String!
+  parentName: String!
+  depth: Int!
 }
 
 # Image type for entity images
