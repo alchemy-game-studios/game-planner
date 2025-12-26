@@ -9,69 +9,131 @@ Full-stack web application for game development planning built with React, Graph
 - **Routing**: React Router
 - **Data**: Apollo Client, GraphQL
 - **Backend**: Express, Apollo Server
-- **Database**: Neo4j (graph database)
+- **Database**: Neo4j 5 (graph database via Docker)
 - **Auth**: Passport.js (integrated but not fully implemented)
 - **Testing**: Jest, React Testing Library
+
+## Quick Start
+
+```bash
+# Full setup (install deps, start database, seed data)
+npm run setup
+
+# Start development servers
+npm run dev
+```
+
+This starts:
+- Frontend: http://localhost:3001
+- Backend: http://localhost:3000/graphql
+- Neo4j Browser: http://localhost:7474
+
+## Prerequisites
+
+- Node.js 18+
+- Docker and Docker Compose
 
 ## Project Structure
 
 ```
-src/
-├── main.tsx               # Vite entry point with Apollo Client
-├── App.tsx                # Main React component
-├── router.tsx             # React Router configuration
-├── main.css               # Global styles (Tailwind)
-├── components/
-│   └── ui/                # shadcn/ui components (button, dialog, drawer, etc.)
-├── pages/                 # Route pages
-├── lib/
-│   └── utils.ts           # Utility functions (cn helper)
-├── client-graphql/        # GraphQL queries/mutations and components
-│   └── edit-entity/       # Entity editing components
-├── apollo/                # Apollo Client provider
-└── server/
-    ├── app.js             # Express server setup
-    ├── auth/              # Passport authentication
-    ├── graphql/           # Schema and resolvers
-    └── routes/            # Express routes
+├── src/
+│   ├── main.tsx               # Vite entry point with Apollo Client
+│   ├── App.tsx                # Main React component
+│   ├── router.tsx             # React Router configuration
+│   ├── main.css               # Global styles (Tailwind)
+│   ├── components/
+│   │   └── ui/                # shadcn/ui components
+│   ├── pages/                 # Route pages
+│   ├── lib/
+│   │   └── utils.ts           # Utility functions (cn helper)
+│   ├── client-graphql/        # GraphQL queries/mutations and components
+│   │   └── edit-entity/       # Entity editing components
+│   └── server/
+│       ├── app.js             # Express server setup
+│       ├── auth/              # Passport authentication
+│       ├── graphql/           # Schema and resolvers
+│       │   ├── schema.graphql # GraphQL type definitions
+│       │   └── graphql-resolvers.js
+│       ├── repository/        # Neo4j data access
+│       └── routes/            # Express routes
+├── scripts/
+│   ├── seed.js                # Database seeding script
+│   └── wait-for-neo4j.js      # Health check script
+├── docker-compose.yml         # Neo4j container config
+└── package.json               # npm scripts and dependencies
 ```
 
-## Path Aliases
+## npm Scripts
 
-- `@/` → `./src` (configured in vite.config.ts and tsconfig.json)
-
-## Development Commands
-
+### Development
 ```bash
-# Install dependencies
-npm install
+npm run dev           # Start both client and server concurrently
+npm run dev:client    # Start Vite dev server only (port 3001)
+npm run dev:server    # Start Express server only (port 3000)
+```
 
-# Start Vite dev server (frontend on port 3001)
-npx vite
+### Database
+```bash
+npm run db:start      # Start Neo4j container
+npm run db:stop       # Stop Neo4j container
+npm run db:wait       # Wait for Neo4j to be ready
+npm run db:seed       # Seed database with sample data
+npm run db:reset      # Stop, clear data, restart, and reseed
+```
 
-# Start Express server (backend on port 3000)
-gulp server-start
+### Build & Test
+```bash
+npm run build         # Build frontend with Vite
+npm run test          # Run Jest tests
+npm run lint          # Run ESLint
+```
 
-# Run both concurrently
-gulp start
-
-# Build for production
-npx vite build
-
-# Run tests
-npm test
-
-# Lint
-gulp lint
+### Setup
+```bash
+npm run setup         # Full setup: install, start db, seed
+npm start             # Alias for npm run dev
 ```
 
 ## Architecture
 
-- Frontend runs on port 3001 (Vite dev server)
-- Backend runs on port 3000 (Express)
-- Vite proxies `/graphql` requests to backend
-- GraphQL endpoint: `POST /graphql`
-- Neo4j connection: `bolt://localhost:7687`
+```
+┌─────────────────────────────────────┐
+│     React Frontend (port 3001)      │
+│  Vite + Apollo Client + Tailwind    │
+└─────────────────┬───────────────────┘
+                  │ /graphql (proxied)
+┌─────────────────▼───────────────────┐
+│    Express Backend (port 3000)      │
+│      Apollo Server + GraphQL        │
+└─────────────────┬───────────────────┘
+                  │ bolt://localhost:7687
+┌─────────────────▼───────────────────┐
+│        Neo4j (port 7687)            │
+│       Graph Database (Docker)       │
+└─────────────────────────────────────┘
+```
+
+## Data Model
+
+### Entity Types
+- **Universe** - Top-level game world container
+- **Place** - Locations within a universe
+- **Character** - Characters that inhabit places
+- **Tag** - Labels that can be applied to any entity
+
+### Relationships
+- `CONTAINS`: Universe → Place → Character (hierarchy)
+- `TAGGED`: Any entity → Tag
+
+### Entity Properties
+- `id` (UUID)
+- `name`
+- `description`
+- `type`
+
+## Path Aliases
+
+- `@/` → `./src` (configured in vite.config.ts and tsconfig.json)
 
 ## UI Components (shadcn/ui)
 
@@ -81,36 +143,59 @@ Components in `src/components/ui/` use:
 - `class-variance-authority` for variants
 - `cn()` utility for class merging
 
-Add new components: `npx shadcn@latest add <component>`
+Add new components:
+```bash
+npx shadcn@latest add <component>
+```
 
 ## Routes
 
 Defined in `src/router.tsx`:
-- `/` - Main app (renders Breeds component)
+- `/` - Main app
 - `/edit/:type/:id` - Edit entity page
 
-## GraphQL Schema
+## GraphQL API
 
-Key types in `src/server/graphql/schema.graphql`:
-- `Query.places` - Fetches Place nodes from Neo4j
-- `Query.hello` - Returns greeting message
-- `Mutation.submitText` - Example mutation
-
-## Code Patterns
-
-### Adding UI Components
-```bash
-npx shadcn@latest add button
+### Queries
+```graphql
+universe(obj: IdInput!): Entity
+universes: [Entity!]!
+place(obj: IdInput!): Entity
+places: [Entity!]!
+character(obj: IdInput!): Entity
+characters: [Entity!]!
+tag(obj: IdInput!): Entity
+tags: [Entity!]!
+searchEntities(query: String!, type: String): [Entity!]!
 ```
 
-### GraphQL Queries (Frontend)
-Components use Apollo hooks (`useQuery`, `useMutation`) in `src/client-graphql/`.
+### Mutations
+```graphql
+addUniverse/editUniverse/removeUniverse
+addPlace/editPlace/removePlace
+addCharacter/editCharacter/removeCharacter
+addTag/editTag/removeTag
+relateContains(relation: RelatableInput!): Response
+relateTagged(relation: TagRelationInput!): Response
+```
 
-### Adding New Features
-1. Define types in `schema.graphql`
-2. Add resolver in `graphql-resolvers.js`
-3. Create React component with Apollo hooks
-4. Add route in `router.tsx` if needed
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3000` | Backend server port |
+| `NEO4J_URI` | `bolt://localhost:7687` | Neo4j connection URI |
+| `NEO4J_USER` | `neo4j` | Neo4j username |
+| `NEO4J_PASSWORD` | `password` | Neo4j password |
+| `SESSION_SECRET` | (hardcoded) | Express session secret |
+
+## Seed Data
+
+The seed script (`scripts/seed.js`) creates sample data:
+- 2 Universes (Eldoria fantasy, Neon Sprawl cyberpunk)
+- 4 Places (2 per universe)
+- 4 Characters (1 per place)
+- 6 Tags with relationships
 
 ## Configuration Files
 
@@ -118,11 +203,35 @@ Components use Apollo hooks (`useQuery`, `useMutation`) in `src/client-graphql/`
 - `tailwind.config.mjs` - Tailwind theme customization
 - `components.json` - shadcn/ui configuration
 - `tsconfig.json` - TypeScript settings with path aliases
-- `gulpfile.js` - Build and development tasks
+- `docker-compose.yml` - Neo4j container configuration
 - `jest.config.js` - Test runner configuration
 
-## Notes
+## Troubleshooting
 
-- Database credentials are hardcoded (neo4j/password) - consider using environment variables
-- ES Modules enabled (`"type": "module"` in package.json)
-- Custom fonts: Inter (sans), Playfair Display (heading)
+### Neo4j won't start
+```bash
+# Check Docker is running
+docker ps
+
+# View Neo4j logs
+docker compose logs neo4j
+
+# Reset database completely
+npm run db:reset
+```
+
+### Port already in use
+```bash
+# Find process using port
+lsof -i :3000
+lsof -i :3001
+lsof -i :7687
+
+# Kill process
+kill -9 <PID>
+```
+
+### GraphQL errors
+- Check Neo4j is running: `npm run db:wait`
+- Check health endpoint: `curl http://localhost:3000/health`
+- View Neo4j Browser: http://localhost:7474 (neo4j/password)

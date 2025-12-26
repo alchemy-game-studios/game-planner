@@ -1,13 +1,51 @@
 # Query type for fetching data
 type Query {
   hello: Hello
+
+  # Entity queries - single and all
+  universe(obj: IdInput!): Entity
+  universes: [Entity!]!
+  place(obj: IdInput!): Entity
+  places: [Entity!]!
+  character(obj: IdInput!): Entity
+  characters: [Entity!]!
+  tag(obj: IdInput!): Entity
+  tags: [Entity!]!
+
+  # Search entities by name
+  searchEntities(query: String!, type: String): [Entity!]!
 }
 
 # Mutation type for modifying data
 type Mutation {
-  submitText(input: SubmitText!) : Response
+  submitText(input: SubmitText!): Response
+
+  # Universe mutations
+  addUniverse(universe: UniverseInput!): Response
+  editUniverse(universe: UniverseInput!): Response
+  removeUniverse(universe: UniverseInput!): Response
+
+  # Place mutations
+  addPlace(place: PlaceInput!): Response
+  editPlace(place: PlaceInput!): Response
+  removePlace(place: PlaceInput!): Response
+
+  # Character mutations
+  addCharacter(character: CharacterInput!): Response
+  editCharacter(character: CharacterInput!): Response
+  removeCharacter(character: CharacterInput!): Response
+
+  # Tag mutations
+  addTag(tag: TagInput!): Response
+  editTag(tag: TagInput!): Response
+  removeTag(tag: TagInput!): Response
+
+  # Relationship mutations
+  relateContains(relation: RelatableInput!): Response
+  relateTagged(relation: TagRelationInput!): Response
 }
 
+# Common types
 type Hello {
   message: String!
 }
@@ -15,6 +53,70 @@ type Hello {
 type Response {
   message: String!
 }
+
+# Entity type returned from queries
+type Entity {
+  id: String!
+  properties: EntityProperties!
+  contents: [ContentItem!]!
+  tags: [EntityProperties!]!
+}
+
+type EntityProperties {
+  id: String!
+  name: String!
+  description: String
+  type: String
+}
+
+type ContentItem {
+  _nodeType: String!
+  properties: EntityProperties!
+}
+
+# Input types
+input IdInput {
+  id: String!
+}
+
 input SubmitText {
   text: String!
+}
+
+input UniverseInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input PlaceInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input CharacterInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input TagInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input RelatableInput {
+  id: String!
+  childIds: [String!]!
+}
+
+input TagRelationInput {
+  id: String!
+  tagIds: [String!]!
 }
