@@ -10,6 +10,10 @@ interface Image {
   mimeType: string;
   size: number;
   rank: number;
+  // Optional entity info for descendant images
+  entityId?: string;
+  entityName?: string;
+  entityType?: string;
 }
 
 interface ImageGalleryProps {
@@ -125,6 +129,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           alt={primaryImage.filename}
           className="w-full aspect-[2/1] object-cover"
         />
+        <EntityLabel image={primaryImage} />
         <Button
           variant="ghost"
           size="sm"
@@ -170,13 +175,26 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     </div>
   );
 
+  // Entity label for descendant images
+  const EntityLabel = ({ image }: { image: Image }) => {
+    // Only show label if image is from a different entity
+    if (!image.entityId || image.entityId === entityId) return null;
+
+    return (
+      <div className="absolute top-2 left-2 bg-black/80 rounded px-2 py-1 text-xs text-white border border-white/20 z-10">
+        <span className="text-gray-400 capitalize">{image.entityType}: </span>
+        <span className="font-medium">{image.entityName}</span>
+      </div>
+    );
+  };
+
   // Two images layout
   if (images.length === 2) {
     return (
       <div className="relative rounded-lg overflow-hidden">
         <div className="flex gap-1 aspect-[2/1]">
           <div
-            className="w-[61.8%] cursor-pointer"
+            className="w-[61.8%] cursor-pointer relative"
             onClick={() => rotateToImage(0)}
           >
             <img
@@ -184,6 +202,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
               alt={primaryImage.filename}
               className="w-full h-full object-cover transition-transform hover:scale-[1.02]"
             />
+            <EntityLabel image={primaryImage} />
           </div>
           <div
             className="w-[38.2%] cursor-pointer"
@@ -224,7 +243,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
       <div className="relative rounded-lg overflow-hidden">
         <div className="flex gap-1 aspect-[2/1]">
           <div
-            className="w-[61.8%] cursor-pointer"
+            className="w-[61.8%] cursor-pointer relative"
             onClick={() => rotateToImage(0)}
           >
             <img
@@ -232,6 +251,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
               alt={primaryImage.filename}
               className="w-full h-full object-cover transition-transform hover:scale-[1.02]"
             />
+            <EntityLabel image={primaryImage} />
           </div>
           <div className="w-[38.2%] flex flex-col gap-1">
             <div
@@ -284,7 +304,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
       <div className="flex gap-1 aspect-[2/1]">
         {/* Primary image - 61.8% (golden ratio) */}
         <div
-          className="w-[61.8%] cursor-pointer"
+          className="w-[61.8%] cursor-pointer relative"
           onClick={() => rotateToImage(0)}
         >
           <img
@@ -292,6 +312,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
             alt={primaryImage.filename}
             className="w-full h-full object-cover transition-transform hover:scale-[1.02]"
           />
+          <EntityLabel image={primaryImage} />
         </div>
 
         {/* Secondary images - 38.2% total */}

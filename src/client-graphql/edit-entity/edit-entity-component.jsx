@@ -44,7 +44,8 @@ export function EditEntityComponent({id, type, isEdit}) {
         },
         contents: [],
         tags: [],
-        images: []
+        images: [],
+        allImages: []
     }
     const [entity, setEntity] = useState(initEntity);
 
@@ -201,7 +202,7 @@ export function EditEntityComponent({id, type, isEdit}) {
             <div className="w-6/8">
                 <div className="rounded mt-5 relative w-full">
                         <ImageGallery
-                            images={entity.images || []}
+                            images={entity.allImages || entity.images || []}
                             entityId={id}
                             entityType={type}
                             onUpdate={() => {
@@ -404,6 +405,17 @@ function oneQuery(type) {
                     mimeType
                     size
                     rank
+                }
+                allImages {
+                    id
+                    filename
+                    url
+                    mimeType
+                    size
+                    rank
+                    entityId
+                    entityName
+                    entityType
                 }
             }
     }

@@ -42,6 +42,66 @@ async function getImagesForEntity(entityId) {
   });
 }
 
+// Helper to get all images from entity and all descendants (recursive)
+async function getAllImagesForEntity(entityId) {
+  // Use variable-length path to get all descendants via CONTAINS relationship
+  // Then collect images from the entity itself and all descendants
+  const result = await runQuery(`
+    MATCH (root {id: $entityId})
+
+    // Get root entity images
+    OPTIONAL MATCH (root)-[r1:HAS_IMAGE]->(img1:Image)
+    WITH root, collect({
+      image: img1,
+      rank: r1.rank,
+      entity: root,
+      depth: 0
+    }) AS rootImages
+
+    // Get all descendant entities and their images (recursive CONTAINS)
+    OPTIONAL MATCH path = (root)-[:CONTAINS*1..]->(descendant)
+    OPTIONAL MATCH (descendant)-[r2:HAS_IMAGE]->(img2:Image)
+    WITH root, rootImages, collect({
+      image: img2,
+      rank: r2.rank,
+      entity: descendant,
+      depth: length(path)
+    }) AS descendantImages
+
+    // Combine all images
+    WITH rootImages + descendantImages AS allImageData
+    UNWIND allImageData AS imgData
+    WITH imgData
+    WHERE imgData.image IS NOT NULL
+
+    RETURN
+      imgData.image AS image,
+      imgData.rank AS rank,
+      imgData.entity.id AS entityId,
+      imgData.entity.name AS entityName,
+      labels(imgData.entity)[0] AS entityType,
+      imgData.depth AS depth
+    ORDER BY depth, rank
+  `, { entityId });
+
+  return result.records.map(record => {
+    const img = record.get('image').properties;
+    const rank = record.get('rank');
+    return {
+      id: img.id,
+      filename: img.filename,
+      url: getImageUrl(img.key),
+      mimeType: img.mimeType,
+      size: typeof img.size === 'object' ? img.size.toNumber() : img.size,
+      rank: typeof rank === 'object' ? rank.toNumber() : rank,
+      uploadedAt: img.uploadedAt,
+      entityId: record.get('entityId'),
+      entityName: record.get('entityName'),
+      entityType: record.get('entityType')?.toLowerCase() || 'unknown'
+    };
+  });
+}
+
 // Helper to get single entity with contents and tags
 async function getEntity(type, id) {
   const result = await runQuery(`
@@ -73,6 +133,8 @@ async function getEntity(type, id) {
   const entity = result.records[0].get('entity');
   // Fetch images separately
   entity.images = await getImagesForEntity(id);
+  // Fetch all images including descendants
+  entity.allImages = await getAllImagesForEntity(id);
   return entity;
 }
 
@@ -105,7 +167,8 @@ async function getAllEntities(type) {
   // For list views, we include empty images array for now (fetch on demand for detail view)
   return result.records.map(r => ({
     ...r.get('entity'),
-    images: []
+    images: [],
+    allImages: []
   }));
 }
 

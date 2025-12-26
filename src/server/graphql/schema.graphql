@@ -72,6 +72,7 @@ type Entity {
   contents: [ContentItem!]!
   tags: [EntityProperties!]!
   images: [Image!]!
+  allImages: [EntityImage!]!
 }
 
 type EntityProperties {
@@ -95,6 +96,20 @@ type Image {
   size: Int!
   rank: Int!
   uploadedAt: String
+}
+
+# Image with source entity info (for descendant images)
+type EntityImage {
+  id: String!
+  filename: String!
+  url: String!
+  mimeType: String!
+  size: Int!
+  rank: Int!
+  uploadedAt: String
+  entityId: String!
+  entityName: String!
+  entityType: String!
 }
 
 # Input types
