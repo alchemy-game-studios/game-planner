@@ -28,7 +28,7 @@ export const getRelateContainsMutation = () => {
 
 export const getRelateTaggedMutation = () => {
   return gql`
-    mutation RelateTagged($relation: TaggableInput!) {
+    mutation RelateTagged($relation: TagRelationInput!) {
       relateTagged(relation: $relation) {
         message
       }

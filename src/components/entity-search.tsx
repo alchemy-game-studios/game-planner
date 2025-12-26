@@ -123,11 +123,12 @@ export const EntitySearch: React.FC<EntitySearchProps> = ({
                   className="px-2 py-1 hover:bg-gray-800 cursor-pointer"
                   onClick={() => handleSelect(entity)}
                 >
-                  <EntityCard
-                    entity={entity.properties}
-                    entityType={entityType}
-                    onClick={() => {}}
-                  />
+                  <div className="flex items-center gap-2 py-1">
+                    <span className="text-sm text-gray-200">{entity.properties?.name}</span>
+                    {entity.properties?.type && (
+                      <span className="text-xs text-gray-500">({entity.properties.type})</span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

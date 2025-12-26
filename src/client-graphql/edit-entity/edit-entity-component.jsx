@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { removeTypeName } from '../util.js'
 import { HoverEditableText } from './hover-editable-text.jsx';
 import { getEntityImage } from "@/media/util"
+import { TagPills } from "@/components/tag-pills"
 
 
 
@@ -201,6 +202,19 @@ export function EditEntityComponent({id, type, isEdit}) {
                             }}
                         />
                 </div>
+
+                {/* Tag Pills */}
+                <div className="mt-4">
+                    <TagPills
+                        tags={entity.tags || []}
+                        parentId={id}
+                        parentType={type}
+                        onUpdate={() => {
+                            console.log('Tags updated');
+                        }}
+                    />
+                </div>
+
                 {editMode && (
                     <>
                        <HoverEditableText
@@ -262,20 +276,6 @@ export function EditEntityComponent({id, type, isEdit}) {
                 />
             )}
             
-            {/* Render Tags for all entity types */}
-            {entity.tags && entity.tags.length > 0 && (
-                <EditableNodeList
-                    initContents={entity.tags}
-                    parentId={id}
-                    parentType={type}
-                    entityType="tag"
-                    isTagRelation={true}
-                    onUpdate={() => {
-                      console.log('Update triggered - should refetch data');
-                    }}
-                />
-            )}
-            
             {/* Add empty states with ability to add */}
             {type === 'universe' && !relationGroups['place'] && (
                 <EditableNodeList
@@ -295,20 +295,6 @@ export function EditEntityComponent({id, type, isEdit}) {
                     parentId={id}
                     parentType={type}
                     entityType="character"
-                    onUpdate={() => {
-                      console.log('Update triggered - should refetch data');
-                    }}
-                />
-            )}
-            
-            {/* Always show tags section */}
-            {(!entity.tags || entity.tags.length === 0) && (
-                <EditableNodeList
-                    initContents={[]}
-                    parentId={id}
-                    parentType={type}
-                    entityType="tag"
-                    isTagRelation={true}
                     onUpdate={() => {
                       console.log('Update triggered - should refetch data');
                     }}
