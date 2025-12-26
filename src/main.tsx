@@ -6,6 +6,7 @@ import AppRouter from './router'
 import reportWebVitals from './reportWebVitals';
 
 import { ApolloProvider, InMemoryCache, ApolloClient } from '@apollo/client';
+import { BreadcrumbProvider } from '@/context/breadcrumb-context';
 
 // Create an Apollo Client instance
 const client = new ApolloClient({
@@ -20,7 +21,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <ApolloProvider client={client}>
-      <AppRouter />
+      <BreadcrumbProvider>
+        <AppRouter />
+      </BreadcrumbProvider>
     </ApolloProvider>
   </React.StrictMode>
 );

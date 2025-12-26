@@ -14,6 +14,7 @@ import { HoverEditableText } from './hover-editable-text.jsx';
 import { getEntityImage } from "@/media/util"
 import { TagPills } from "@/components/tag-pills"
 import { ImageGallery } from "@/components/image-gallery"
+import { useBreadcrumbs } from "@/context/breadcrumb-context"
 
 
 
@@ -31,6 +32,7 @@ function useDebounce(value, delay = 500) {
 
 export function EditEntityComponent({id, type, isEdit}) {
     let nodeType = capitalizeFirst(type)
+    const { push: pushBreadcrumb } = useBreadcrumbs();
 
     const hasHydrated = useRef(false);
     const initialEntity = useRef(null);
@@ -126,12 +128,20 @@ export function EditEntityComponent({id, type, isEdit}) {
 
                 initialEntity.current = result.data[type];
                 hasHydrated.current = true;
+
+                // Push to breadcrumb trail
+                pushBreadcrumb({
+                    id: id,
+                    name: result.data[type].properties.name,
+                    type: type,
+                    path: `/edit/${type}/${id}`
+                });
             }
         }
 
         fetchData()
 
-    }, [id, Get]);
+    }, [id, Get, type, pushBreadcrumb]);
 
     useEffect(() => {
       setEditMode(isEdit);
@@ -185,7 +195,7 @@ export function EditEntityComponent({id, type, isEdit}) {
             style={{ backgroundImage: `url(${getEntityImage(id, "hero")})` }}
         />
         <div className="z-10">
-            <div className="fixed top-0 left-0 w-full bg-gray-900 z-50">
+            <div className="fixed top-10 left-0 w-full bg-gray-900 z-50">
                 <div className="flex">
                     <Avatar className="size-15 ml-9 mb-3.5 mt-6.5">
                         <AvatarImage src={getEntityImage(id, "avatar")} />

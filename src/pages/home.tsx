@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { Link } from 'react-router-dom';
+import { useBreadcrumbs } from '@/context/breadcrumb-context';
 
 const GET_UNIVERSES = gql`
   query Universes {
@@ -17,6 +19,12 @@ const GET_UNIVERSES = gql`
 
 export default function HomePage() {
   const { loading, error, data } = useQuery(GET_UNIVERSES);
+  const { clear } = useBreadcrumbs();
+
+  // Clear breadcrumbs when navigating to home
+  useEffect(() => {
+    clear();
+  }, [clear]);
 
   if (loading) {
     return (
