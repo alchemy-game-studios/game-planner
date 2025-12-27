@@ -1275,12 +1275,13 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
     }
   ],
   events: [
-    // The Restoration of Eldoria events
+    // The Restoration of Eldoria events (Days 380-446 in Eldoria timeline, year 2487)
     {
       id: 'event-001',
       name: 'The Wards Begin to Fail',
       description: 'Archmage Thalion detects the first signs of weakening in the ancient protective barriers.',
       type: 'discovery',
+      day: 380,
       startDate: '2487-01-15T00:00:00Z',
       endDate: '2487-01-15T23:59:59Z',
       narrativeId: 'narrative-001'
@@ -1290,6 +1291,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Council Convenes',
       description: 'Thalion calls an emergency meeting of the Mage Council to discuss the failing wards.',
       type: 'meeting',
+      day: 385,
       startDate: '2487-01-20T10:00:00Z',
       endDate: '2487-01-20T18:00:00Z',
       narrativeId: 'narrative-001'
@@ -1299,6 +1301,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Quest for the Staff',
       description: 'Seraphina and Lyra are dispatched to recover the Staff of Eternity from the Sunken Library.',
       type: 'quest',
+      day: 397,
       startDate: '2487-02-01T06:00:00Z',
       endDate: '2487-02-28T23:59:59Z',
       narrativeId: 'narrative-001'
@@ -1308,6 +1311,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Descent into the Library',
       description: 'The heroes navigate the treacherous underwater passages to reach the forbidden repository.',
       type: 'exploration',
+      day: 406,
       startDate: '2487-02-10T08:00:00Z',
       endDate: '2487-02-12T16:00:00Z',
       narrativeId: 'narrative-001'
@@ -1317,6 +1321,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Battle with the Guardian',
       description: 'An ancient elemental guardian awakens to test the worthiness of those seeking the Staff.',
       type: 'battle',
+      day: 408,
       startDate: '2487-02-12T16:30:00Z',
       endDate: '2487-02-12T20:00:00Z',
       narrativeId: 'narrative-001'
@@ -1326,6 +1331,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Staff is Found',
       description: 'After passing the Guardian\'s trial, the heroes claim the Staff of Eternity.',
       type: 'discovery',
+      day: 408,
       startDate: '2487-02-12T21:00:00Z',
       endDate: '2487-02-12T22:00:00Z',
       narrativeId: 'narrative-001'
@@ -1335,6 +1341,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Shadow Forces Attack',
       description: 'Dark creatures assault the Crystal Citadel while its defenders are away.',
       type: 'battle',
+      day: 425,
       startDate: '2487-03-01T02:00:00Z',
       endDate: '2487-03-01T08:00:00Z',
       narrativeId: 'narrative-001'
@@ -1344,6 +1351,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Race Home',
       description: 'The heroes rush back to the Citadel with the Staff as news of the attack reaches them.',
       type: 'chase',
+      day: 429,
       startDate: '2487-03-05T00:00:00Z',
       endDate: '2487-03-15T23:59:59Z',
       narrativeId: 'narrative-001'
@@ -1353,6 +1361,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Final Stand',
       description: 'Defenders hold the Citadel against overwhelming odds while waiting for the heroes\' return.',
       type: 'battle',
+      day: 444,
       startDate: '2487-03-20T00:00:00Z',
       endDate: '2487-03-21T18:00:00Z',
       narrativeId: 'narrative-001'
@@ -1362,6 +1371,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Awakening Ritual',
       description: 'Archmage Thalion performs the ancient ritual to restore the Crystal Citadel\'s protective wards.',
       type: 'ritual',
+      day: 445,
       startDate: '2487-03-21T19:00:00Z',
       endDate: '2487-03-21T23:30:00Z',
       narrativeId: 'narrative-001'
@@ -1371,16 +1381,18 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Dawn of the Fourth Age',
       description: 'With the wards restored, Eldoria enters a new era of hope and renewal.',
       type: 'milestone',
+      day: 446,
       startDate: '2487-03-22T00:00:00Z',
       endDate: '2487-03-22T23:59:59Z',
       narrativeId: 'narrative-001'
     },
-    // Rise of the Resistance events
+    // Rise of the Resistance events (Days 10-191 in Neon City timeline, year 2087)
     {
       id: 'event-012',
       name: 'Zero Discovers the Truth',
       description: 'While on a routine data heist, Zero stumbles upon evidence of OmniCorp\'s human experimentation program.',
       type: 'discovery',
+      day: 10,
       startDate: '2087-01-10T23:00:00Z',
       endDate: '2087-01-11T04:00:00Z',
       narrativeId: 'narrative-002'
@@ -1390,6 +1402,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Meeting Nyx',
       description: 'Zero encounters Nyx in Sector 7, and they form an unlikely alliance.',
       type: 'meeting',
+      day: 34,
       startDate: '2087-02-03T20:00:00Z',
       endDate: '2087-02-03T23:00:00Z',
       narrativeId: 'narrative-002'
@@ -1399,6 +1412,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Great Heist',
       description: 'Zero and the underground rebels infiltrate Nexus Tower to steal the Quantum Encryption Key.',
       type: 'heist',
+      day: 121,
       startDate: '2087-05-01T00:00:00Z',
       endDate: '2087-05-01T06:00:00Z',
       narrativeId: 'narrative-002'
@@ -1408,6 +1422,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Duchess Sterling\'s Gamble',
       description: 'The socialite secretly funnels resources to the resistance, risking everything she has.',
       type: 'intrigue',
+      day: 135,
       startDate: '2087-05-15T14:00:00Z',
       endDate: '2087-05-15T22:00:00Z',
       narrativeId: 'narrative-002'
@@ -1417,6 +1432,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Corporate Siege',
       description: 'OmniCorp launches a coordinated assault on Sector 7 Underground, attempting to crush the resistance.',
       type: 'battle',
+      day: 166,
       startDate: '2087-06-15T02:00:00Z',
       endDate: '2087-06-15T08:00:00Z',
       narrativeId: 'narrative-002'
@@ -1426,6 +1442,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Broadcast of Truth',
       description: 'The resistance hijacks the city\'s communication network to reveal OmniCorp\'s crimes.',
       type: 'revelation',
+      day: 185,
       startDate: '2087-07-04T12:00:00Z',
       endDate: '2087-07-04T12:30:00Z',
       narrativeId: 'narrative-002'
@@ -1435,16 +1452,18 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The People Rise',
       description: 'Inspired by the broadcast, citizens across the city begin openly defying OmniCorp.',
       type: 'uprising',
+      day: 185,
       startDate: '2087-07-04T13:00:00Z',
       endDate: '2087-07-10T23:59:59Z',
       narrativeId: 'narrative-002'
     },
-    // The Prophet's Warning events
+    // The Prophet's Warning events (Days 244-274 in Neon City timeline, year 2087)
     {
       id: 'event-019',
       name: 'First Broadcast',
       description: 'Prophet\'s cryptic warning appears on screens across the city for the first time.',
       type: 'omen',
+      day: 244,
       startDate: '2087-09-01T00:00:00Z',
       endDate: '2087-09-01T00:05:00Z',
       narrativeId: 'narrative-005'
@@ -1454,6 +1473,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'OmniCorp Dismissal',
       description: 'Director Chen publicly dismisses Prophet\'s warnings as terrorist propaganda.',
       type: 'speech',
+      day: 245,
       startDate: '2087-09-02T10:00:00Z',
       endDate: '2087-09-02T11:00:00Z',
       narrativeId: 'narrative-005'
@@ -1463,6 +1483,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Glitch Makes Contact',
       description: 'The young hacker manages to establish communication with Prophet.',
       type: 'discovery',
+      day: 253,
       startDate: '2087-09-10T22:00:00Z',
       endDate: '2087-09-11T03:00:00Z',
       narrativeId: 'narrative-005'
@@ -1472,6 +1493,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The DataVault Expedition',
       description: 'A team infiltrates the DataVault to uncover the truth about the Convergence.',
       type: 'infiltration',
+      day: 263,
       startDate: '2087-09-20T01:00:00Z',
       endDate: '2087-09-20T06:00:00Z',
       narrativeId: 'narrative-005'
@@ -1481,16 +1503,18 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Convergence',
       description: 'The moment Prophet warned about arrives, changing everything.',
       type: 'apocalypse',
+      day: 274,
       startDate: '2087-10-01T00:00:00Z',
       endDate: '2087-10-01T00:01:00Z',
       narrativeId: 'narrative-005'
     },
-    // The Thornhaven Conspiracy events (12 events)
+    // The Thornhaven Conspiracy events (Days 60-85 in Eldoria timeline, year 2486)
     {
       id: 'event-031',
       name: 'The First Disappearance',
       description: 'A beloved farmer vanishes from his fields without a trace, leaving only his tools behind.',
       type: 'mystery',
+      day: 60,
       startDate: '2486-03-01T18:00:00Z',
       endDate: '2486-03-01T23:59:59Z',
       narrativeId: 'narrative-003'
@@ -1500,6 +1524,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Elder Moira\'s Vision',
       description: 'The village elder experiences a terrifying prophetic dream of shadows wearing the faces of neighbors.',
       type: 'prophecy',
+      day: 64,
       startDate: '2486-03-05T02:00:00Z',
       endDate: '2486-03-05T06:00:00Z',
       narrativeId: 'narrative-003'
@@ -1509,6 +1534,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Bard Arrives',
       description: 'Finnegan Brightwater rides into Thornhaven with urgent news from the Crystal Citadel.',
       type: 'arrival',
+      day: 69,
       startDate: '2486-03-10T14:00:00Z',
       endDate: '2486-03-10T16:00:00Z',
       narrativeId: 'narrative-003'
@@ -1518,6 +1544,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Shadows in the Tavern',
       description: 'Strange behavior at the village inn raises suspicions among the locals.',
       type: 'intrigue',
+      day: 71,
       startDate: '2486-03-12T20:00:00Z',
       endDate: '2486-03-12T23:00:00Z',
       narrativeId: 'narrative-003'
@@ -1527,6 +1554,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Hidden Cellar',
       description: 'Heroes discover a secret underground passage beneath an abandoned barn.',
       type: 'discovery',
+      day: 74,
       startDate: '2486-03-15T10:00:00Z',
       endDate: '2486-03-15T14:00:00Z',
       narrativeId: 'narrative-003'
@@ -1536,6 +1564,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Doppelganger Revealed',
       description: 'A trusted villager is exposed as an imposter, a shapeshifter from Shadowmere.',
       type: 'revelation',
+      day: 77,
       startDate: '2486-03-18T21:00:00Z',
       endDate: '2486-03-18T22:00:00Z',
       narrativeId: 'narrative-003'
@@ -1545,6 +1574,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Pursuit into the Forest',
       description: 'The heroes chase the fleeing shapeshifter into the depths of Shadowmere Forest.',
       type: 'chase',
+      day: 78,
       startDate: '2486-03-19T00:00:00Z',
       endDate: '2486-03-19T08:00:00Z',
       narrativeId: 'narrative-003'
@@ -1554,6 +1584,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Hive Mind',
       description: 'Deep in the forest, a horrifying truth emerges: a colony of shapeshifters serves an ancient evil.',
       type: 'horror',
+      day: 78,
       startDate: '2486-03-19T10:00:00Z',
       endDate: '2486-03-19T12:00:00Z',
       narrativeId: 'narrative-003'
@@ -1563,6 +1594,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Rescue of the Taken',
       description: 'The missing villagers are found alive in cocoons, their identities being slowly drained.',
       type: 'rescue',
+      day: 78,
       startDate: '2486-03-19T14:00:00Z',
       endDate: '2486-03-19T16:00:00Z',
       narrativeId: 'narrative-003'
@@ -1572,6 +1604,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Burning the Nest',
       description: 'With fire and steel, the heroes destroy the shapeshifter colony and its queen.',
       type: 'battle',
+      day: 78,
       startDate: '2486-03-19T18:00:00Z',
       endDate: '2486-03-19T22:00:00Z',
       narrativeId: 'narrative-003'
@@ -1581,6 +1614,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Return to Thornhaven',
       description: 'The heroes escort the rescued villagers home as dawn breaks over the forest.',
       type: 'journey',
+      day: 79,
       startDate: '2486-03-20T06:00:00Z',
       endDate: '2486-03-20T18:00:00Z',
       narrativeId: 'narrative-003'
@@ -1590,16 +1624,18 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Harvest Festival',
       description: 'Thornhaven celebrates its salvation with a feast honoring the heroes and the returned.',
       type: 'celebration',
+      day: 84,
       startDate: '2486-03-25T12:00:00Z',
       endDate: '2486-03-25T23:59:59Z',
       narrativeId: 'narrative-003'
     },
-    // Ghosts in the Machine events (12 events)
+    // Ghosts in the Machine events (Days 232-258 in Neon City timeline, flashback to Day -680)
     {
       id: 'event-043',
       name: 'The Rust Town Massacre',
       description: 'OmniCorp security forces sweep through Rust Town, leaving devastation in their wake.',
       type: 'tragedy',
+      day: -680,
       startDate: '2085-11-15T02:00:00Z',
       endDate: '2085-11-15T06:00:00Z',
       narrativeId: 'narrative-006'
@@ -1609,6 +1645,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Glitch\'s Download',
       description: 'Years later, Glitch accidentally interfaces with a corrupted data cache containing fragmented memories.',
       type: 'discovery',
+      day: 232,
       startDate: '2087-08-20T23:00:00Z',
       endDate: '2087-08-21T02:00:00Z',
       narrativeId: 'narrative-006'
@@ -1618,6 +1655,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Memories Not Her Own',
       description: 'Glitch experiences vivid flashbacks of the massacre from multiple perspectives.',
       type: 'vision',
+      day: 233,
       startDate: '2087-08-21T03:00:00Z',
       endDate: '2087-08-21T06:00:00Z',
       narrativeId: 'narrative-006'
@@ -1627,6 +1665,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Hunt Begins',
       description: 'OmniCorp detects the data breach and dispatches kill teams to silence Glitch.',
       type: 'pursuit',
+      day: 234,
       startDate: '2087-08-22T00:00:00Z',
       endDate: '2087-08-22T23:59:59Z',
       narrativeId: 'narrative-006'
@@ -1636,6 +1675,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Commander Kane\'s Choice',
       description: 'Kane, ordered to eliminate Glitch, instead warns her and offers his protection.',
       type: 'decision',
+      day: 235,
       startDate: '2087-08-23T14:00:00Z',
       endDate: '2087-08-23T15:00:00Z',
       narrativeId: 'narrative-006'
@@ -1645,6 +1685,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Survivors\' Network',
       description: 'Kane leads Glitch to a hidden community of massacre survivors who\'ve been gathering evidence.',
       type: 'meeting',
+      day: 236,
       startDate: '2087-08-24T20:00:00Z',
       endDate: '2087-08-24T23:00:00Z',
       narrativeId: 'narrative-006'
@@ -1654,6 +1695,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Decrypting the Truth',
       description: 'Glitch works to decode the fragmented memories, revealing Director Chen at the scene.',
       type: 'investigation',
+      day: 237,
       startDate: '2087-08-25T00:00:00Z',
       endDate: '2087-08-27T23:59:59Z',
       narrativeId: 'narrative-006'
@@ -1663,6 +1705,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Betrayal in the Ranks',
       description: 'A survivor is revealed as an OmniCorp mole; the safe house is compromised.',
       type: 'betrayal',
+      day: 240,
       startDate: '2087-08-28T03:00:00Z',
       endDate: '2087-08-28T04:00:00Z',
       narrativeId: 'narrative-006'
@@ -1672,6 +1715,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Escape Through the Undercity',
       description: 'Glitch, Kane, and the survivors flee through the city\'s forgotten maintenance tunnels.',
       type: 'escape',
+      day: 240,
       startDate: '2087-08-28T04:00:00Z',
       endDate: '2087-08-28T10:00:00Z',
       narrativeId: 'narrative-006'
@@ -1681,6 +1725,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Luna Vex\'s Gambit',
       description: 'The fixer arranges a meeting with underground media contacts willing to broadcast the truth.',
       type: 'intrigue',
+      day: 241,
       startDate: '2087-08-29T22:00:00Z',
       endDate: '2087-08-30T01:00:00Z',
       narrativeId: 'narrative-006'
@@ -1690,6 +1735,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Confession',
       description: 'Kane publicly broadcasts his testimony alongside Glitch\'s decoded memories.',
       type: 'revelation',
+      day: 242,
       startDate: '2087-08-30T12:00:00Z',
       endDate: '2087-08-30T12:30:00Z',
       narrativeId: 'narrative-006'
@@ -1699,16 +1745,18 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Ghosts No More',
       description: 'The victims of Rust Town are finally acknowledged; Chen faces corporate tribunal.',
       type: 'justice',
+      day: 258,
       startDate: '2087-09-15T09:00:00Z',
       endDate: '2087-09-15T18:00:00Z',
       narrativeId: 'narrative-006'
     },
-    // The Lich King's Gambit events
+    // The Lich King's Gambit events (Days 517-580 in Eldoria timeline, year 2488)
     {
       id: 'event-024',
       name: 'The Lich Stirs',
       description: 'Korrath awakens in his tomb as dark energies pulse through the Obsidian Wastes.',
       type: 'awakening',
+      day: 517,
       startDate: '2488-06-01T00:00:00Z',
       endDate: '2488-06-01T00:00:01Z',
       narrativeId: 'narrative-004'
@@ -1718,6 +1766,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Dead Rise in Thornhaven',
       description: 'The first signs of Korrath\'s return appear as corpses claw their way from graves.',
       type: 'horror',
+      day: 531,
       startDate: '2488-06-15T23:00:00Z',
       endDate: '2488-06-16T05:00:00Z',
       narrativeId: 'narrative-004'
@@ -1727,6 +1776,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Council of War',
       description: 'The heroes gather at the Crystal Citadel to plan their response to the undead threat.',
       type: 'meeting',
+      day: 536,
       startDate: '2488-06-20T09:00:00Z',
       endDate: '2488-06-20T18:00:00Z',
       narrativeId: 'narrative-004'
@@ -1736,6 +1786,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Into the Wastes',
       description: 'A strike team ventures into the Obsidian Wastes to confront Korrath.',
       type: 'quest',
+      day: 547,
       startDate: '2488-07-01T06:00:00Z',
       endDate: '2488-07-15T23:59:59Z',
       narrativeId: 'narrative-004'
@@ -1745,6 +1796,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Phylactery\'s Secret',
       description: 'The heroes discover the location of Korrath\'s phylactery and the key to his destruction.',
       type: 'revelation',
+      day: 556,
       startDate: '2488-07-10T14:00:00Z',
       endDate: '2488-07-10T16:00:00Z',
       narrativeId: 'narrative-004'
@@ -1754,6 +1806,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'Siege of the Citadel',
       description: 'Korrath\'s undead army attacks the Crystal Citadel while heroes race to destroy the phylactery.',
       type: 'battle',
+      day: 578,
       startDate: '2488-08-01T00:00:00Z',
       endDate: '2488-08-03T12:00:00Z',
       narrativeId: 'narrative-004'
@@ -1763,6 +1816,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       name: 'The Lich Falls',
       description: 'With his phylactery destroyed, Korrath is finally defeated once and for all.',
       type: 'victory',
+      day: 580,
       startDate: '2488-08-03T12:00:00Z',
       endDate: '2488-08-03T12:30:00Z',
       narrativeId: 'narrative-004'
@@ -1961,7 +2015,7 @@ async function seedEvents(session) {
   console.log('Seeding events...');
   for (const event of seedData.events) {
     await session.run(
-      `CREATE (e:Event {id: $id, name: $name, description: $description, type: $type, startDate: $startDate, endDate: $endDate})
+      `CREATE (e:Event {id: $id, name: $name, description: $description, type: $type, day: $day, startDate: $startDate, endDate: $endDate})
        WITH e
        MATCH (n:Narrative {id: $narrativeId})
        CREATE (n)-[:CONTAINS]->(e)`,

@@ -176,6 +176,7 @@ export function EditableNodeList({
           const contentId = content.properties?.id || content.id;
           const contentData = content.properties || content;
           const contentType = content._nodeType || entityType;
+          const eventDay = contentType === 'event' ? contentData.day : undefined;
 
           return (
             <li key={contentId} className="relative group">
@@ -183,6 +184,7 @@ export function EditableNodeList({
                 name={contentData.name}
                 avatarUrl={getEntityImage(contentId, "avatar")}
                 fallbackText="CN"
+                day={eventDay}
                 onClick={() => handleClick(contentId, contentType)}
               />
               <button

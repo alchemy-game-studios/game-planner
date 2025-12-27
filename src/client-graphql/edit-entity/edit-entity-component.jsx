@@ -270,6 +270,15 @@ export function EditEntityComponent({id, type, isEdit}) {
                     </div>
                 )}
 
+                {/* Event Day (Timeline) */}
+                {type === 'event' && entity.properties.day !== undefined && entity.properties.day !== null && (
+                    <div className="mt-4 mb-2">
+                        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-900/50 border border-indigo-700/50">
+                            <span className="text-indigo-300 text-sm font-medium">Day {entity.properties.day}</span>
+                        </span>
+                    </div>
+                )}
+
                 {/* Event Locations */}
                 {type === 'event' && entity.locations && entity.locations.length > 0 && (
                     <div className="mt-4 mb-2">
@@ -594,6 +603,7 @@ function oneQuery(type) {
                     name
                     description
                     type
+                    day
                     startDate
                     endDate
                 }

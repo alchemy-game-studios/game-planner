@@ -332,6 +332,7 @@ async function createEntity(type, input) {
 
   // Add Event-specific properties
   if (type === 'Event') {
+    props.day = input.day || 0;
     props.startDate = input.startDate || '';
     props.endDate = input.endDate || '';
   }
@@ -365,6 +366,10 @@ async function updateEntity(type, input) {
   }
 
   // Event-specific properties
+  if (input.day !== undefined) {
+    updates.push('e.day = $day');
+    params.day = input.day;
+  }
   if (input.startDate !== undefined) {
     updates.push('e.startDate = $startDate');
     params.startDate = input.startDate;

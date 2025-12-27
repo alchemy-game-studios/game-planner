@@ -7,12 +7,14 @@ interface EntityCardProps {
   name: string
   avatarUrl: string
   fallbackText?: string
+  day?: number | null
   onClick?: () => void
 }
 
 export default function EntityCard({
   name,
   avatarUrl,
+  day,
   onClick
 }: EntityCardProps) {
   const placeholderUrl = getPlaceholderImage('avatar');
@@ -36,8 +38,13 @@ export default function EntityCard({
               />
             </div>
           </div>
-          <div className="text-2xl w-3/4 flex items-center justify-start text-center">
-            <p className="m-0 leading-none font-primary">{name}</p>
+          <div className="text-2xl w-3/4 flex items-center justify-start">
+            <div className="flex flex-col items-start">
+              <p className="m-0 leading-none font-primary">{name}</p>
+              {day !== undefined && day !== null && (
+                <span className="text-xs text-indigo-400 mt-1">Day {day}</span>
+              )}
+            </div>
           </div>
         </div>
       </Badge>

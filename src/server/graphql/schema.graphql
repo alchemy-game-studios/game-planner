@@ -107,6 +107,7 @@ type EntityProperties {
   description: String
   type: String
   # Event-specific properties
+  day: Int
   startDate: String
   endDate: String
 }
@@ -208,6 +209,7 @@ input EventInput {
   name: String
   description: String
   type: String
+  day: Int
   startDate: String
   endDate: String
 }
