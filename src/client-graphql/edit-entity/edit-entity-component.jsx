@@ -345,6 +345,60 @@ export function EditEntityComponent({id, type, isEdit}) {
                         </p>
                     </div>
                 </div>
+
+                {/* Narrative Locations (aggregated from events) */}
+                {entity.locations && entity.locations.length > 0 && (
+                    <div className="mt-6 mb-2">
+                        <h3 className="text-lg font-medium text-gray-300 mb-3">Places in this Story</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {entity.locations.map((location) => (
+                                <Link
+                                    key={location.id}
+                                    to={`/edit/place/${location.id}`}
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-900/50 hover:bg-emerald-800/50 border border-emerald-700/50 transition-colors"
+                                >
+                                    <span className="text-emerald-400 text-sm">
+                                        {location.name}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Narrative Participants (aggregated from events) */}
+                {entity.participants && entity.participants.length > 0 && (
+                    <div className="mt-4 mb-2">
+                        <h3 className="text-lg font-medium text-gray-300 mb-3">Characters & Items</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {entity.participants.map((participant) => {
+                                const isCharacter = participant._nodeType === 'character';
+                                const linkPath = isCharacter
+                                    ? `/edit/character/${participant.id}`
+                                    : `/edit/item/${participant.id}`;
+                                const bgClass = isCharacter
+                                    ? 'bg-purple-900/50 hover:bg-purple-800/50 border-purple-700/50'
+                                    : 'bg-amber-900/50 hover:bg-amber-800/50 border-amber-700/50';
+                                const textClass = isCharacter ? 'text-purple-400' : 'text-amber-400';
+
+                                return (
+                                    <Link
+                                        key={participant.id}
+                                        to={linkPath}
+                                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${bgClass} border transition-colors`}
+                                    >
+                                        <span className={`text-sm ${textClass}`}>
+                                            {participant.name}
+                                        </span>
+                                        <span className="text-xs text-gray-500">
+                                            {isCharacter ? 'Character' : 'Item'}
+                                        </span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
             </>
           )}
 

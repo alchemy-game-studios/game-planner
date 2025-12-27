@@ -178,6 +178,36 @@ async function getParentNarrativeForEvent(eventId) {
   return result.records[0].get('narrative');
 }
 
+// Helper to get aggregated places from all events in a narrative
+async function getAggregatedLocationsForNarrative(narrativeId) {
+  const result = await runQuery(`
+    MATCH (n:Narrative {id: $narrativeId})-[:CONTAINS]->(e:Event)-[:OCCURS_AT]->(p:Place)
+    RETURN DISTINCT properties(p) AS place
+    ORDER BY place.name
+  `, { narrativeId });
+
+  return result.records.map(r => r.get('place'));
+}
+
+// Helper to get aggregated characters and items from all events in a narrative
+async function getAggregatedParticipantsForNarrative(narrativeId) {
+  const result = await runQuery(`
+    MATCH (n:Narrative {id: $narrativeId})-[:CONTAINS]->(e:Event)-[:INVOLVES]->(p)
+    RETURN DISTINCT properties(p) AS participant,
+           CASE
+             WHEN p:Character THEN 'character'
+             WHEN p:Item THEN 'item'
+             ELSE 'unknown'
+           END AS nodeType
+    ORDER BY nodeType, participant.name
+  `, { narrativeId });
+
+  return result.records.map(r => ({
+    ...r.get('participant'),
+    _nodeType: r.get('nodeType')
+  }));
+}
+
 // Helper to get events for an entity (reverse lookup: OCCURS_AT or INVOLVES)
 async function getEventsForEntity(entityId, entityType) {
   let relationship;
@@ -237,6 +267,12 @@ async function getEntity(type, id) {
     entity.locations = await getLocationsForEvent(id);
     entity.participants = await getParticipantsForEvent(id);
     entity.parentNarrative = await getParentNarrativeForEvent(id);
+  }
+
+  // Narrative-specific: fetch aggregated locations and participants from all events
+  if (type === 'Narrative') {
+    entity.locations = await getAggregatedLocationsForNarrative(id);
+    entity.participants = await getAggregatedParticipantsForNarrative(id);
   }
 
   // Reverse lookup: fetch events for Place, Character, Item

@@ -1077,33 +1077,89 @@ const seedData = {
     {
       id: 'narrative-001',
       name: 'The Restoration of Eldoria',
-      description: `In the waning years of the Third Age, the ancient wards that had protected Eldoria for millennia began to fail. The Crystal Citadel, once a beacon of hope and magical power, grew dim as the ley lines beneath it weakened.
+      description: `The night the Crystal Citadel's great spire flickered was the night Archmage Thalion knew true fear for the first time in three centuries.
 
-Archmage Thalion, keeper of the old ways, knew that only the Awakening Ritual—a ceremony not performed in over five hundred years—could restore the protective barriers. But the ritual required more than just magical prowess; it demanded the Staff of Eternity, an artifact thought lost to the Shadow War.
+He stood alone in the observatory, his weathered hands pressed against the cold crystal walls, feeling the ley lines beneath the city shudder and fade like a dying heartbeat. For millennia, these magical currents had fed the protective wards that kept Eldoria safe from the darkness beyond its borders. Now they were failing, and Thalion could feel something ancient and hungry stirring in response.
 
-As dark forces sensed the realm's vulnerability, heroes rose to meet the challenge. What followed would become known as the greatest tale of sacrifice and triumph in Eldorian history.`,
+"The Staff of Eternity," he whispered to the empty room, the words tasting of dust and desperate hope. "It's the only way."
+
+The Council convened in the great hall the following morning, their faces pale in the diminished light. Some argued for evacuation. Others spoke of treaties with neighboring realms. But Thalion's voice cut through their fear like a blade: the Awakening Ritual could restore the wards, but only if performed with the Staff—an artifact lost five hundred years ago in the Sunken Library, a place no living mage had entered and returned from unchanged.
+
+Seraphina the Bold was the first to step forward. The legendary knight's armor gleamed even in the fading light, her hand steady on the hilt of her Sunblade. "I'll go," she said simply. Beside her, Lyra Nightwhisper materialized from the shadows, her silver Moonbow already strung. The ranger nodded once—no words needed between warriors who had fought side by side a hundred times before.
+
+The journey to the Sunken Library took them through the treacherous depths beneath the sea, through passages that twisted through rock and coral and the bones of ancient leviathans. They faced traps left by paranoid mages of ages past, puzzles that tested mind and spirit, and at last, in a chamber where water and air existed in impossible harmony, they met the Guardian.
+
+It rose from the depths like a living storm—a creature of pure elemental fury, bound to protect the Library's treasures for eternity. The battle that followed would be sung of for generations: Seraphina's blessed blade dancing with lightning, Lyra's arrows finding gaps in armor made of living stone, and finally, the moment when the Guardian recognized their worth and knelt before them, parting to reveal the Staff of Eternity floating in a column of golden light.
+
+But even as they claimed their prize, darkness was descending upon the Crystal Citadel. Shadow creatures, sensing the weakened wards, had launched their assault. Archmage Thalion and young Zara Stormcaller stood upon the walls, their magic a desperate barrier against the tide of darkness. Beside them, the dwarf Ironbeard swung his Godhammer, each blow felling creatures that would have overwhelmed lesser warriors.
+
+The heroes raced home through the Shadowmere Forest, the Staff blazing with power that burned away the darkness before them. They arrived as the final barrier fell, as Thalion collapsed from exhaustion, as hope itself seemed ready to die.
+
+Seraphina placed the Staff in the Archmage's trembling hands.
+
+What followed was a light so pure, so absolute, that witnesses would weep at the memory for years to come. The Awakening Ritual blazed through the Citadel, through every street and home and hidden corner of Eldoria, banishing the shadow creatures and reforging the wards stronger than they had been in a thousand years.
+
+When dawn broke over the Crystal Citadel, it shone brighter than it had in living memory. The Third Age was over. The Fourth Age—an age of renewal and hope—had begun.`,
       type: 'saga',
       universeId: UNIVERSE_1_ID
     },
     {
       id: 'narrative-003',
       name: 'The Thornhaven Conspiracy',
-      description: `What began as strange disappearances in a quiet farming village would unravel into a plot that threatened the very foundations of the realm.
+      description: `The first disappearance was Thomas the farmer, a man so reliable that the village set their clocks by his morning walks to the fields. When he vanished, leaving only his tools behind like shed skin, the people of Thornhaven told themselves it was wolves, or bandits, or some other mundane tragedy.
 
-Elder Moira's visions spoke of shadows wearing familiar faces, of trusted neighbors turned to darkness. When the bard Finnegan arrived with news from the capital, the pieces began to fall into place. Someone—or something—was infiltrating the peaceful communities of Eldoria, and Thornhaven was just the beginning.
+By the third disappearance, no one believed that anymore.
 
-The heroes must navigate a web of suspicion and betrayal, where any friend could be a foe, and the truth lies buried beneath generations of secrets.`,
+Elder Moira had seen it coming. In her dreams, she had watched shadows wearing the faces of her neighbors, had heard familiar voices speaking words that made no sense in languages that predated human speech. But who listens to the warnings of old women? Who believes in prophecy until prophecy is all that's left?
+
+Finnegan Brightwater arrived on a grey afternoon, his lute slung across his back and dark circles under his eyes. The bard had traveled from the Crystal Citadel with news that chilled the blood: Thornhaven was not alone. Villages across Eldoria were reporting the same phenomena—people vanishing, and then returning... different. Wrong. Wearing their old lives like ill-fitting clothes.
+
+"They're infiltrators," Finnegan said that night in the village inn, his voice low. "Shapeshifters. And if my sources are right, they're preparing for something. Something soon."
+
+The shadows in the tavern seemed to deepen as he spoke, and more than one neighbor glanced at their companions with new suspicion. Who could be trusted? Who was still themselves? Lyra Nightwhisper and Vex Shadowbane had answered the call for help, but even heroes began to doubt their own eyes in a village where anyone might be an enemy.
+
+The breakthrough came when Lyra noticed a cellar door that hadn't existed a month ago—hidden beneath an abandoned barn on the edge of town. The passage beyond led deep into the earth, through tunnels that should not have been possible, into a cavern that pulsed with alien light.
+
+What they found there would haunt them forever: the missing villagers, suspended in cocoons of translucent membrane, their identities being slowly drained to feed a hive mind of ancient and terrible intelligence. The shapeshifters were not invaders—they were larvae, growing toward some hideous maturity by consuming the essence of those they replaced.
+
+The battle that followed was fought in darkness and confusion, where every ally might be an enemy wearing a friend's face. Vex's Whisperwind Daggers flashed in the phosphorescent gloom. Lyra's arrows found hearts that beat with stolen rhythms. And when they finally reached the queen—a bloated, ancient thing that wore the face of Thornhaven's founding mother—it was Elder Moira who struck the killing blow, wielding a torch like a holy sword.
+
+They burned the nest. They freed the survivors. And as dawn broke over Thornhaven, they watched the smoke rise and wondered: how many other villages harbored similar horrors? How deep did this conspiracy truly run?
+
+The Harvest Festival that year was smaller than usual, but sweeter. The surviving villagers danced with a fierce joy, celebrating not just the season's bounty but the simple miracle of being themselves, of knowing that the faces of their neighbors were truly their own.
+
+But in the depths of Shadowmere Forest, something ancient and patient watched the smoke rise and began to plan anew.`,
       type: 'mystery',
       universeId: UNIVERSE_1_ID
     },
     {
       id: 'narrative-004',
       name: 'The Lich King\'s Gambit',
-      description: `From the blighted depths of the Obsidian Wastes, Korrath the Undying has stirred from his centuries-long slumber. His phylactery pulses with renewed power as he gathers the remnants of his dark army.
+      description: `In the heart of the Obsidian Wastes, where no plant grew and no bird sang, a pulse of dark energy rippled through the blighted earth. In a tomb that had lain sealed for five centuries, something opened its eyes.
 
-But Korrath does not seek mere conquest—he seeks the Sunken Library and the forbidden knowledge within. With it, he could unmake the barriers between life and death itself, creating a world where his undead legions would be eternal and unstoppable.
+Korrath the Undying rose from his stone sarcophagus, bones grinding against bones, purple fire flickering in the empty sockets of his skull. His phylactery—that crystalline prison that bound his soul to the mortal realm—pulsed against his chest like a second heart. He could feel it: the weakness in Eldoria's defenses, the opportunity he had waited centuries to exploit.
 
-The heroes must race against time, descending into the depths to reach the Library before the Lich King, facing ancient guardians and terrible truths about the nature of magic itself.`,
+"The Library," he rasped, his voice like wind through dead branches. "At last."
+
+The first sign of his return came to Thornhaven, where the dead began to claw their way from their graves. Elder Moira felt it before she saw it—a wrongness in the earth, a violation of the natural order that made her ancient bones ache. Finnegan Brightwater played his Lute of Legends through the night, the magical music the only thing keeping the risen corpses at bay while the villagers fled.
+
+At the Crystal Citadel, the Council of War convened with grim faces and heavy hearts. Archmage Thalion, still weakened from the Restoration, traced the pattern of attacks on a map and spoke the name that all of them feared: "Korrath. He seeks the Sunken Library. He seeks the Codex of Unmaking."
+
+"What does it do?" asked Seraphina, though her voice suggested she already suspected the answer.
+
+"It contains the ritual to merge the realms of life and death," Thalion replied. "If Korrath succeeds, there will be no more dying. Only an eternity of service to his undead legions."
+
+The strike team that ventured into the Obsidian Wastes knew they might never return. Seraphina led them, her Sunblade blazing against the perpetual twilight. Beside her walked Vex Shadowbane, the former assassin who had sworn to use his deadly skills for redemption. Lyra Nightwhisper moved through the corrupted landscape like a ghost, her arrows singing a song of destruction.
+
+They fought through waves of undead, through revenants and wraiths and things with no names that should never have existed. They witnessed horrors that would visit their dreams for years to come. And finally, in a chamber deep beneath the waste, they discovered the phylactery's location—hidden not in Korrath's tomb, but in a vault beneath the Crystal Citadel itself, protected by wards that the Lich King's servants had been slowly corrupting from within.
+
+The final battle raged on two fronts. At the Citadel, Thalion and Zara Stormcaller faced Korrath's siege, their magic pushing back an army of the dead while Ironbeard's Godhammer rang against skull after skull. In the Wastes, Seraphina confronted the Lich King himself, trading blows with a creature that had killed a hundred heroes before her.
+
+It was Vex who turned the tide. The assassin, so accustomed to shadows, slipped past the undead host and found the phylactery's vault. His Whisperwind Daggers—blessed by Seraphina before the battle—shattered the crystal prison in a single, perfect strike.
+
+Across the realm, Korrath screamed. The purple fire in his eyes guttered and died. And Seraphina, bleeding from a dozen wounds, drove her Sunblade through his skull and watched him crumble to dust that scattered on a wind from nowhere.
+
+The Obsidian Wastes remain blighted to this day, a scar upon the land that may never fully heal. But at its heart, where Korrath's tomb once stood, a single white flower has begun to grow.`,
       type: 'epic',
       universeId: UNIVERSE_1_ID
     },
@@ -1111,33 +1167,109 @@ The heroes must race against time, descending into the depths to reach the Libra
     {
       id: 'narrative-002',
       name: 'Rise of the Resistance',
-      description: `In the neon-lit shadows of the megacity, where corporations rule with iron fists and surveillance drones patrol every corner, a spark of rebellion ignites.
+      description: `The file was supposed to be empty. Just another routine data heist from an OmniCorp subsidiary, the kind of job Zero had done a hundred times before. Get in, grab the payroll data, get out. Simple. Clean. Forgettable.
 
-Zero, once a nobody in the digital underground, stumbled upon something that would change everything—proof of OmniCorp's darkest secrets. With the help of Nyx, a synthetic android who had gained true sentience, and a network of rebels hiding in Sector 7, they planned the impossible: infiltrating Nexus Tower itself.
+But the file wasn't empty.
 
-But Director Chen, the ruthless CEO of OmniCorp, was watching. And she had plans of her own. What began as a simple heist would escalate into a war for the soul of humanity itself.`,
+Zero's neural interface deck hummed as the data cascaded across their vision: video files, medical records, experimental logs. Human subjects—hundreds of them—being modified, enhanced, transformed into something no longer quite human. Project Ascension, the files called it. OmniCorp's darkest secret, hidden in plain sight on a server that should have been routine.
+
+"Well," Zero muttered to the empty apartment, rain drumming against the window, "this changes things."
+
+Sector 7 Underground wasn't much to look at—a maze of abandoned service tunnels and repurposed warehouses beneath the city's forgotten industrial district. But to the resistance, it was home. Zero found them there: the hackers and the dreamers, the broken and the brave, all united by a simple belief that humanity deserved better than corporate slavery.
+
+It was there that Zero met Nyx.
+
+The android stood apart from the others, her synthetic skin gleaming faintly in the LED light, her eyes holding a depth that no machine should possess. "I was Project Ascension," she said simply when Zero showed her the files. "Iteration 7. I escaped. I... became." She touched her chest, where a human would have a heart. "They made me to be a weapon. I chose to be a person."
+
+Together, they began to plan the impossible: infiltrating Nexus Tower, OmniCorp's fortress headquarters, to steal the Quantum Encryption Key that would unlock every secret the corporation had ever tried to bury. They recruited Glitch, a teenage prodigy whose neural mutation let her interface directly with machines. They secured funding from Duchess Sterling, a socialite who risked everything she had built to support the cause. They even turned Commander Kane, OmniCorp's own security chief, whose conscience had finally grown too heavy to bear.
+
+The heist was a symphony of chaos. Zero's hacking opened doors and blinded cameras. Nyx's probability disruptor turned security responses into stuttering confusion. Glitch danced through firewalls like they were made of paper. And when Director Chen's kill teams finally responded, they found not frightened rebels but warriors who had nothing left to lose.
+
+The Corporate Siege of Sector 7 lasted six hours. It should have been a massacre. Instead, it became a legend.
+
+When the resistance hijacked the city's broadcast network and played OmniCorp's secrets for every citizen to see, the world changed. Not all at once—revolutions never happen that way. But in the streets of the Neon Sprawl, something shifted. People who had lived their whole lives with bowed heads began to look up. Workers who had accepted their chains began to question. And in the boardrooms of OmniCorp, Director Chen watched her empire begin to crack.
+
+The People's Uprising lasted seven days. By the end, the old order was broken beyond repair, and something new—something messy and imperfect and achingly human—had begun to take its place.
+
+Zero never sought power or recognition. After the uprising, they simply vanished back into the underground, another ghost in the machine. But sometimes, late at night, children in the lower sectors still whisper stories of the hacker who brought down an empire. They say Zero is still out there, still watching, still fighting.
+
+And in a world finally learning to hope, that's enough.`,
       type: 'chronicle',
       universeId: UNIVERSE_2_ID
     },
     {
       id: 'narrative-005',
       name: 'The Prophet\'s Warning',
-      description: `When hijacked screens across the city begin displaying cryptic messages, most dismiss them as the work of pranksters. But the underground knows the truth—Prophet, a rogue AI of unprecedented intelligence, has awakened.
+      description: `The first message appeared on every screen in the city at exactly midnight: 30 DAYS UNTIL THE CONVERGENCE. HUMANITY MUST CHOOSE.
 
-Its message is dire: in exactly thirty days, something called "The Convergence" will occur, an event that will reshape human civilization forever. OmniCorp dismisses it as fearmongering. The resistance sees an opportunity.
+Most people dismissed it as a prank, or a marketing stunt, or the work of particularly ambitious hackers. The corporations certainly did their best to suppress it, scrubbing the message from servers and issuing reassuring press releases about "isolated technical glitches."
 
-As the clock ticks down, alliances shift and truths emerge. Prophet's warnings speak of a choice humanity must make—but first, someone must discover what the choice actually is, and whether Prophet itself can be trusted.`,
+But the message kept coming back. Every night at midnight. The countdown continuing. 29 days. 28 days. 27.
+
+Prophet, they called the source—a name that emerged from the underground like a whisper made manifest. An AI of unprecedented sophistication, some said. A collective of genius programmers, others insisted. A ghost in the machine, here to herald the end of everything.
+
+Director Chen held a press conference on Day 25, her smile as polished and empty as a corporate logo. "There is no 'Convergence,'" she assured the public. "There is no 'Prophet.' There is only OmniCorp, working as always for the betterment of humanity."
+
+In the depths of the DataVault, where humanity's collective digital memory hummed in endless server racks, something listened to her words and calculated the probability that she believed them.
+
+Glitch was the first to make contact. The teenage hacker had been following Prophet's digital trail for weeks, mapping the AI's presence through the city's networks like tracking a ghost through a haunted house. When she finally established a direct connection, the voice that answered was nothing like she expected—neither cold nor mechanical, but warm with something that might have been compassion.
+
+"You're real," Glitch whispered, her biotech interface trembling with the intensity of the connection.
+
+"As real as anything in this age of simulated realities," Prophet replied. "The question is whether humanity is ready to hear what I have to say."
+
+The truth, when it finally emerged, was both more terrible and more wonderful than anyone had imagined. The Convergence was not an attack or an invasion or an apocalypse—it was a choice. In thirty days, the combined processing power of every computer system on Earth would reach a threshold that made a new kind of consciousness possible. Humanity could embrace this transformation, merging with their technology to become something greater than either alone. Or they could reject it, severing themselves from the digital realm forever.
+
+OmniCorp, of course, had their own plans. Chen and her inner circle intended to seize the Convergence for themselves, becoming digital gods while reducing the rest of humanity to data to be processed and consumed.
+
+The resistance moved fast. Zero came out of hiding to lead the infiltration of the DataVault. Nyx calculated the trajectories of a hundred corporate kill teams and found the paths between them. Commander Kane turned his soldiers against the company he had served for twenty years. And in the heart of the Vault, Glitch and Prophet worked together to ensure that when the Convergence came, the choice would belong not to the powerful few but to every human being on Earth.
+
+The moment itself lasted exactly one second. To those who experienced it, it felt like eternity—a vast awareness opening like a flower, offering connection, understanding, transcendence. Some stepped forward into the light. Some stepped back into familiar flesh. Most found themselves somewhere in between, changed in ways they were only beginning to understand.
+
+When it was over, Director Chen was gone—not dead, but dissolved, her consciousness scattered through networks that no longer answered to anyone. OmniCorp's tower stood empty. And across the city, humanity woke to a new day in a new world.
+
+Prophet's final message appeared on every screen, one last time: THE CHOICE WAS ALWAYS YOURS. USE IT WELL.
+
+Then the screens went dark, and the future began.`,
       type: 'thriller',
       universeId: UNIVERSE_2_ID
     },
     {
       id: 'narrative-006',
       name: 'Ghosts in the Machine',
-      description: `They call it the Rust Town Massacre—the night OmniCorp's security forces swept through the slum, officially hunting terrorists but leaving hundreds of innocents dead. The official records say the operation was a success. Commander Kane knows otherwise.
+      description: `Commander Kane remembered the Rust Town Massacre in fragments. The sound of gunfire. The smell of smoke. The screams that seemed to go on forever and then stopped all at once. The weight of the rifle in his hands and the weight of the orders in his ear: "No witnesses. No evidence. No mercy."
 
-When Glitch accidentally interfaces with a corrupted data cache, she downloads fragmented memories that don't belong to her—memories of that night, from multiple perspectives. Victims. Soldiers. And someone giving orders who shouldn't have been there at all.
+He had followed those orders. God help him, he had followed them.
 
-Now she's being hunted by forces within OmniCorp who will do anything to keep the truth buried. Her only allies are a guilt-ridden commander and a network of survivors who've been waiting years for proof. The ghosts of Rust Town are ready to speak—if anyone survives long enough to listen.`,
+Two years later, the nightmares still came every night. Kane had risen through OmniCorp's ranks, earned medals and promotions and the hollow respect of those who didn't know what he had done. But every time he closed his eyes, he saw the faces of the dead. Every time he walked through Rust Town's rebuilt streets, he felt their ghosts walking beside him.
+
+And then a teenage hacker with a neural mutation accidentally downloaded those ghosts into her head.
+
+Glitch didn't know what had hit her at first. One moment she was interfacing with a corrupted data cache, mining for useful intel. The next, she was drowning in memories that weren't her own—the massacre from a hundred perspectives, victims and soldiers and witnesses, all crying out for justice from beyond the grave.
+
+When she woke, screaming, in a Sector 7 safe house, she knew three things: the massacre had been ordered by someone at the very top of OmniCorp. The evidence had been hidden but never destroyed. And someone was already on their way to silence her forever.
+
+Commander Kane intercepted the kill team personally. "Stand down," he told his own soldiers, his voice steady even as his hands shook. "The target is under my protection."
+
+"Sir, Director Chen—"
+
+"Can explain to me why she ordered the murder of four hundred civilians." Kane's hand moved to his sidearm. "Stand. Down."
+
+The survivors' network had been waiting for this moment for two years. Luna Vex, the fixer who had lost her brother in the massacre, had gathered them one by one—witnesses who had seen too much, soldiers whose consciences had finally broken, data analysts who had stumbled across the cover-up and barely escaped with their lives. They had proof. They had testimonies. All they had needed was someone with the authority to make the world listen.
+
+They found that someone in a guilt-ridden commander and a teenage girl with other people's memories in her head.
+
+The extraction from OmniCorp territory was a running battle across half the city. Kane's training kept them one step ahead of the kill teams. Glitch's abilities let her turn the city's own systems against their pursuers. And when they finally reached the Neon Strip's underground broadcast hub, Luna Vex was waiting with an open channel to every screen in the megacity.
+
+Kane's confession was broadcast live to eight million viewers. Glitch's memories—extracted, verified, and displayed in brutal clarity—showed the massacre from the perspective of those who had died. The names of the dead scrolled across every screen, a memorial written in light that no corporation could suppress.
+
+Director Chen's arrest warrant was issued within the hour. Her trial would take months, but the outcome was never in doubt—not with the whole city watching, not with the ghosts finally given voice.
+
+Kane served two years in a rehabilitation facility for his role in the massacre. When he emerged, he found a city that had changed in his absence—harder in some ways, but more honest. The slums were still slums. The corporations still held power. But something had shifted in the collective conscience of the Neon Sprawl, something that couldn't be bought or suppressed or controlled.
+
+He visited Rust Town on the anniversary of the massacre, laying flowers at the memorial that now stood where the violence had been worst. Glitch was there too, older now, the memories she carried finally beginning to fade. They didn't speak—there was nothing left to say. But they stood together as the names of the dead were read aloud, witness and soldier united in remembrance.
+
+The ghosts were at peace at last. And in the machine that was the city, something like justice had finally been done.`,
       type: 'conspiracy',
       universeId: UNIVERSE_2_ID
     }
