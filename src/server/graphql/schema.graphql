@@ -1,14 +1,110 @@
 # Query type for fetching data
 type Query {
   hello: Hello
-  places: [Place!]!
+
+  # Entity queries - single and all
+  universe(obj: IdInput!): Entity
+  universes: [Entity!]!
+  place(obj: IdInput!): Entity
+  places: [Entity!]!
+  character(obj: IdInput!): Entity
+  characters: [Entity!]!
+  item(obj: IdInput!): Entity
+  items: [Entity!]!
+  tag(obj: IdInput!): Entity
+  tags: [Entity!]!
+  event(obj: IdInput!): Entity
+  events: [Entity!]!
+  narrative(obj: IdInput!): Entity
+  narratives: [Entity!]!
+
+  # Search entities by name
+  searchEntities(query: String!, type: String): [Entity!]!
+
+  # Product queries
+  product(obj: IdInput!): Product
+  products: [Product!]!
 }
 
 # Mutation type for modifying data
 type Mutation {
-  submitText(input: SubmitText!) : Response
+  submitText(input: SubmitText!): Response
+
+  # Universe mutations
+  addUniverse(universe: UniverseInput!): Response
+  editUniverse(universe: UniverseInput!): Response
+  removeUniverse(universe: UniverseInput!): Response
+
+  # Place mutations
+  addPlace(place: PlaceInput!): Response
+  editPlace(place: PlaceInput!): Response
+  removePlace(place: PlaceInput!): Response
+
+  # Character mutations
+  addCharacter(character: CharacterInput!): Response
+  editCharacter(character: CharacterInput!): Response
+  removeCharacter(character: CharacterInput!): Response
+
+  # Item mutations
+  addItem(item: ItemInput!): Response
+  editItem(item: ItemInput!): Response
+  removeItem(item: ItemInput!): Response
+
+  # Tag mutations
+  addTag(tag: TagInput!): Response
+  editTag(tag: TagInput!): Response
+  removeTag(tag: TagInput!): Response
+
+  # Event mutations
+  addEvent(event: EventInput!): Response
+  editEvent(event: EventInput!): Response
+  removeEvent(event: EventInput!): Response
+
+  # Narrative mutations
+  addNarrative(narrative: NarrativeInput!): Response
+  editNarrative(narrative: NarrativeInput!): Response
+  removeNarrative(narrative: NarrativeInput!): Response
+
+  # Relationship mutations
+  relateContains(relation: RelatableInput!): Response
+  relateTagged(relation: TagRelationInput!): Response
+
+  # Event relationship mutations
+  relateOccursAt(relation: EventLocationInput!): Response
+  relateInvolves(relation: EventParticipantsInput!): Response
+
+  # Image mutations
+  reorderImages(entityId: String!, imageIds: [String!]!): [Image!]!
+  removeImage(imageId: String!): Response
+
+  # Product mutations
+  addProduct(product: ProductInput!): Response
+  editProduct(product: ProductInput!): Response
+  removeProduct(product: ProductInput!): Response
+
+  # AttributeDefinition mutations
+  addAttributeDefinition(attr: AttributeDefinitionInput!): Response
+  editAttributeDefinition(attr: AttributeDefinitionInput!): Response
+  removeAttributeDefinition(attr: AttributeDefinitionInput!): Response
+
+  # MechanicDefinition mutations
+  addMechanicDefinition(mechanic: MechanicDefinitionInput!): Response
+  editMechanicDefinition(mechanic: MechanicDefinitionInput!): Response
+  removeMechanicDefinition(mechanic: MechanicDefinitionInput!): Response
+
+  # EntityAdaptation mutations
+  addEntityAdaptation(adaptation: EntityAdaptationInput!): Response
+  editEntityAdaptation(adaptation: EntityAdaptationInput!): Response
+  removeEntityAdaptation(adaptation: EntityAdaptationInput!): Response
+
+  # Section mutations (for passive media products)
+  addSection(section: SectionInput!): Response
+  editSection(section: SectionInput!): Response
+  removeSection(section: SectionInput!): Response
+  relateSectionEntities(relation: SectionEntitiesInput!): Response
 }
 
+# Common types
 type Hello {
   message: String!
 }
@@ -16,14 +112,286 @@ type Hello {
 type Response {
   message: String!
 }
+
+# Entity type returned from queries
+type Entity {
+  id: String!
+  properties: EntityProperties!
+  contents: [ContentItem!]!
+  allContents: [DescendantContent!]!
+  tags: [EntityProperties!]!
+  images: [Image!]!
+  allImages: [EntityImage!]!
+  # Event-specific fields (populated for Event entities)
+  locations: [EntityProperties!]
+  participants: [Participant!]
+  # Reverse lookup: events this entity is involved in
+  events: [EntityProperties!]
+  # For Events: their parent narrative
+  parentNarrative: EntityProperties
+}
+
+type EntityProperties {
+  id: String!
+  name: String!
+  description: String
+  type: String
+  # Event-specific properties
+  day: Int
+  startDate: String
+  endDate: String
+}
+
+# Participant type for event participants (characters and items)
+type Participant {
+  id: String!
+  name: String!
+  description: String
+  type: String
+  _nodeType: String!
+}
+
+type ContentItem {
+  _nodeType: String!
+  properties: EntityProperties!
+}
+
+# Content item with depth info (for descendant content)
+type DescendantContent {
+  _nodeType: String!
+  properties: EntityProperties!
+  parentId: String!
+  parentName: String!
+  depth: Int!
+}
+
+# Image type for entity images
+type Image {
+  id: String!
+  filename: String!
+  url: String!
+  mimeType: String!
+  size: Int!
+  rank: Int!
+  uploadedAt: String
+}
+
+# Image with source entity info (for descendant images)
+type EntityImage {
+  id: String!
+  filename: String!
+  url: String!
+  mimeType: String!
+  size: Int!
+  rank: Int!
+  uploadedAt: String
+  entityId: String!
+  entityName: String!
+  entityType: String!
+}
+
+# Input types
+input IdInput {
+  id: String!
+}
+
 input SubmitText {
   text: String!
 }
 
-##############################################################
-## Place
-type Place {
+input UniverseInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input PlaceInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input CharacterInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input ItemInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input TagInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input EventInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+  day: Int
+  startDate: String
+  endDate: String
+}
+
+input NarrativeInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input RelatableInput {
+  id: String!
+  childIds: [String!]!
+}
+
+input TagRelationInput {
+  id: String!
+  tagIds: [String!]!
+}
+
+input EventLocationInput {
+  eventId: String!
+  placeIds: [String!]!
+}
+
+input EventParticipantsInput {
+  eventId: String!
+  characterIds: [String!]
+  itemIds: [String!]
+}
+
+# ============================================
+# Product System Types
+# ============================================
+
+# Product - a game, book, movie, or other media based on universe IP
+type Product {
   id: String!
   name: String!
-  description: String!
+  description: String
+  type: String!                           # game, book, movie, comic
+  gameType: String                        # card, board, ttrpg, video (if type=game)
+  universe: EntityProperties              # Linked universe
+  attributes: [AttributeDefinition!]!     # User-defined stats
+  mechanics: [MechanicDefinition!]!       # User-defined abilities
+  sections: [Section!]!                   # For passive media (chapters, scenes)
+  adaptations: [EntityAdaptation!]!       # IP entity mappings
+  images: [Image!]!
+}
+
+# AttributeDefinition - user-defined stat type for a product
+type AttributeDefinition {
+  id: String!
+  name: String!
+  description: String
+  valueType: String!                      # number, text, boolean, enum
+  defaultValue: String
+  options: String                         # JSON array for enum options
+  min: Int
+  max: Int
+}
+
+# MechanicDefinition - user-defined ability/mechanic for a product
+type MechanicDefinition {
+  id: String!
+  name: String!
+  description: String
+  category: String                        # keyword, ability, action, passive
+  hasValue: Boolean
+  valueType: String                       # number, text (if hasValue)
+}
+
+# EntityAdaptation - maps an IP entity to a product with stats/mechanics
+type EntityAdaptation {
+  id: String!
+  sourceEntity: EntityProperties!         # The IP entity being adapted
+  sourceType: String!                     # character, item, place, event
+  cardName: String                        # Override name for this product
+  flavorText: String                      # Product-specific flavor text
+  attributeValues: String                 # JSON { attrId: value }
+  mechanicValues: String                  # JSON { mechId: value/true }
+  artDirection: String                    # Notes for AI/artist
+}
+
+# Section - for passive media (chapters, scenes, issues)
+type Section {
+  id: String!
+  name: String!
+  description: String
+  order: Int!                             # Sequence order
+  sectionType: String                     # chapter, scene, issue, page
+  locations: [EntityProperties!]          # Places referenced
+  participants: [Participant!]            # Characters/items referenced
+}
+
+# Product input types
+input ProductInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+  gameType: String
+  universeId: String
+}
+
+input AttributeDefinitionInput {
+  id: String!
+  productId: String!
+  name: String
+  description: String
+  valueType: String
+  defaultValue: String
+  options: String
+  min: Int
+  max: Int
+}
+
+input MechanicDefinitionInput {
+  id: String!
+  productId: String!
+  name: String
+  description: String
+  category: String
+  hasValue: Boolean
+  valueType: String
+}
+
+input EntityAdaptationInput {
+  id: String!
+  productId: String!
+  entityId: String!
+  entityType: String!
+  cardName: String
+  flavorText: String
+  attributeValues: String
+  mechanicValues: String
+  artDirection: String
+}
+
+input SectionInput {
+  id: String!
+  productId: String!
+  name: String
+  description: String
+  order: Int
+  sectionType: String
+}
+
+input SectionEntitiesInput {
+  sectionId: String!
+  placeIds: [String!]
+  characterIds: [String!]
+  itemIds: [String!]
 }
