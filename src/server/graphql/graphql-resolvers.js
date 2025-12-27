@@ -125,15 +125,18 @@ async function getAllContentsForEntity(entityId) {
     ORDER BY depth, descendant.name
   `, { entityId });
 
-  return result.records.map(record => ({
-    _nodeType: record.get('_nodeType'),
-    properties: record.get('properties'),
-    parentId: record.get('parentId'),
-    parentName: record.get('parentName'),
-    depth: typeof record.get('depth') === 'object'
-      ? record.get('depth').toNumber()
-      : record.get('depth')
-  }));
+  return result.records
+    .filter(record => record.get('_nodeType') !== null)
+    .map(record => {
+      const depth = record.get('depth');
+      return {
+        _nodeType: record.get('_nodeType'),
+        properties: record.get('properties'),
+        parentId: record.get('parentId'),
+        parentName: record.get('parentName'),
+        depth: depth === null ? 0 : (typeof depth === 'object' ? depth.toNumber() : depth)
+      };
+    });
 }
 
 // Helper to get single entity with contents and tags

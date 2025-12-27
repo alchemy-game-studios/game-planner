@@ -63,6 +63,7 @@ export function EditableNodeList({
   };
 
   const handleClick = (id: string, type: string) => {
+    console.log('EntityCard clicked:', id, type);
     navigate(`/edit/${type}/${id}`);
   };
 
@@ -178,16 +179,12 @@ export function EditableNodeList({
 
           return (
             <li key={contentId} className="relative group">
-              <div
-                className="cursor-pointer"
+              <EntityCard
+                name={contentData.name}
+                avatarUrl={getEntityImage(contentId, "avatar")}
+                fallbackText="CN"
                 onClick={() => handleClick(contentId, contentType)}
-              >
-                <EntityCard
-                  name={contentData.name}
-                  avatarUrl={getEntityImage(contentId, "avatar")}
-                  fallbackText="CN"
-                />
-              </div>
+              />
               <button
                 onClick={(e) => {
                   e.stopPropagation();

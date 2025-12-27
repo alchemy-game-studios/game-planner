@@ -191,10 +191,10 @@ export function EditEntityComponent({id, type, isEdit}) {
     return (
         <>
         <div
-            className="absolute fixed scale-150 inset-0 pointer-events-none z-negative bg-cover bg-center opacity-5"
+            className="fixed scale-150 inset-0 pointer-events-none -z-10 bg-cover bg-center opacity-5"
             style={{ backgroundImage: `url(${getEntityImage(id, "hero")})` }}
         />
-        <div className="z-10">
+        <div className="relative z-10">
             <div className="fixed top-10 left-0 w-full bg-gray-900 z-50">
                 <div className="flex">
                     <Avatar className="size-15 ml-9 mb-3.5 mt-6.5">
@@ -277,7 +277,7 @@ export function EditEntityComponent({id, type, isEdit}) {
           </div> */}
           </div>
           
-        <div id="related-contains" className="w-72 flex-shrink-0 flex flex-col gap-4 mt-5">
+        <div id="related-contains" className="w-72 flex-shrink-0 flex flex-col gap-4 mt-5 relative z-10">
             {/* Show all descendant entity types with max 5 items each */}
             {allRelationGroups['place'] && allRelationGroups['place'].length > 0 && (
                 <EditableNodeList
