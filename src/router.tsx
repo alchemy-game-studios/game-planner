@@ -4,6 +4,9 @@ import HomePage from "@/pages/home"
 import EditEntityPage from "@/pages/edit-entity"
 import ProductsPage from "@/pages/products"
 import ProductPage from "@/pages/product"
+import LoginPage from "@/pages/login"
+import AccountPage from "@/pages/account"
+import { ProtectedRoute } from "@/components/protected-route"
 
 const router = createBrowserRouter([
   {
@@ -13,6 +16,18 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />,
+      },
+      {
+        path: "login",
+        element: <LoginPage />,
+      },
+      {
+        path: "account",
+        element: (
+          <ProtectedRoute>
+            <AccountPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "edit/:type/:id",

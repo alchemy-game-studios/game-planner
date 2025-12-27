@@ -22,7 +22,24 @@ const IMG_PLACE_1_AVATAR = 'img-p1-avatar';
 const IMG_PLACE_2_HERO = 'img-p2-hero';
 const IMG_PLACE_2_AVATAR = 'img-p2-avatar';
 
+// Seed user ID (demo account that owns all seed data)
+const SEED_USER_ID = 'seed-user-001';
+
 const seedData = {
+  // Seed user that owns all demo entities
+  seedUser: {
+    id: SEED_USER_ID,
+    email: 'demo@gameplanner.dev',
+    googleId: 'demo-google-id',
+    displayName: 'Demo User',
+    avatarUrl: null,
+    subscriptionTier: 'studio',
+    subscriptionStatus: 'active',
+    stripeCustomerId: null,
+    stripeSubscriptionId: null,
+    credits: 5000,
+    entityCount: 0, // Will be calculated
+  },
   universes: [
     {
       id: UNIVERSE_1_ID,
@@ -2164,6 +2181,11 @@ async function createConstraints(session) {
     'CREATE CONSTRAINT event_id IF NOT EXISTS FOR (e:Event) REQUIRE e.id IS UNIQUE',
     'CREATE CONSTRAINT narrative_id IF NOT EXISTS FOR (n:Narrative) REQUIRE n.id IS UNIQUE',
     'CREATE CONSTRAINT image_id IF NOT EXISTS FOR (i:Image) REQUIRE i.id IS UNIQUE',
+    // User system constraints
+    'CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE',
+    'CREATE CONSTRAINT user_email IF NOT EXISTS FOR (u:User) REQUIRE u.email IS UNIQUE',
+    'CREATE CONSTRAINT user_google_id IF NOT EXISTS FOR (u:User) REQUIRE u.googleId IS UNIQUE',
+    'CREATE CONSTRAINT credit_transaction_id IF NOT EXISTS FOR (t:CreditTransaction) REQUIRE t.id IS UNIQUE',
     // Product system constraints
     'CREATE CONSTRAINT product_id IF NOT EXISTS FOR (p:Product) REQUIRE p.id IS UNIQUE',
     'CREATE CONSTRAINT attribute_def_id IF NOT EXISTS FOR (a:AttributeDefinition) REQUIRE a.id IS UNIQUE',
@@ -2451,6 +2473,70 @@ async function seedSectionRelations(session) {
   }
 }
 
+async function seedUser(session) {
+  console.log('Seeding user...');
+  const user = seedData.seedUser;
+  const now = new Date().toISOString();
+
+  // Calculate entity count
+  const entityCount =
+    seedData.universes.length +
+    seedData.places.length +
+    seedData.characters.length +
+    seedData.items.length +
+    seedData.tags.length +
+    seedData.narratives.length +
+    seedData.events.length +
+    seedData.products.length;
+
+  // Calculate credits reset date (1 month from now)
+  const creditsResetAt = new Date();
+  creditsResetAt.setMonth(creditsResetAt.getMonth() + 1);
+
+  await session.run(
+    `CREATE (u:User {
+      id: $id,
+      email: $email,
+      googleId: $googleId,
+      displayName: $displayName,
+      avatarUrl: $avatarUrl,
+      subscriptionTier: $subscriptionTier,
+      subscriptionStatus: $subscriptionStatus,
+      stripeCustomerId: $stripeCustomerId,
+      stripeSubscriptionId: $stripeSubscriptionId,
+      credits: $credits,
+      creditsResetAt: $creditsResetAt,
+      entityCount: $entityCount,
+      createdAt: $createdAt,
+      lastLoginAt: $lastLoginAt
+    })`,
+    {
+      ...user,
+      entityCount,
+      creditsResetAt: creditsResetAt.toISOString(),
+      createdAt: now,
+      lastLoginAt: now
+    }
+  );
+}
+
+async function assignOwnership(session) {
+  console.log('Assigning entity ownership...');
+  const userId = SEED_USER_ID;
+
+  // Create OWNS relationships for all entity types
+  const entityTypes = ['Universe', 'Place', 'Character', 'Item', 'Tag', 'Narrative', 'Event', 'Product'];
+
+  for (const entityType of entityTypes) {
+    await session.run(
+      `MATCH (u:User {id: $userId}), (e:${entityType})
+       WHERE NOT (u)-[:OWNS]->(e)
+       CREATE (u)-[:OWNS]->(e)`,
+      { userId }
+    );
+  }
+}
+
 async function seed() {
   const session = driver.session();
 
@@ -2459,6 +2545,10 @@ async function seed() {
 
     await clearDatabase(session);
     await createConstraints(session);
+
+    // Create seed user first
+    await seedUser(session);
+
     await seedUniverses(session);
     await seedPlaces(session);
     await seedCharacters(session);
@@ -2478,7 +2568,11 @@ async function seed() {
     await seedSections(session);
     await seedSectionRelations(session);
 
+    // Assign ownership of all entities to seed user
+    await assignOwnership(session);
+
     console.log('Seeding complete!');
+    console.log(`Created: 1 user (${seedData.seedUser.email})`);
     console.log(`Created: ${seedData.universes.length} universes, ${seedData.places.length} places, ${seedData.characters.length} characters, ${seedData.items.length} items, ${seedData.tags.length} tags, ${seedData.narratives.length} narratives, ${seedData.events.length} events, ${seedData.images.length} images`);
     console.log(`Product system: ${seedData.products.length} products, ${seedData.attributeDefinitions.length} attributes, ${seedData.mechanicDefinitions.length} mechanics, ${seedData.entityAdaptations.length} adaptations, ${seedData.sections.length} sections`);
 

@@ -7,12 +7,13 @@ import reportWebVitals from './reportWebVitals';
 
 import { ApolloProvider, InMemoryCache, ApolloClient } from '@apollo/client';
 import { BreadcrumbProvider } from '@/context/breadcrumb-context';
+import { AuthProvider } from '@/context/auth-context';
 
 // Create an Apollo Client instance
 const client = new ApolloClient({
-  uri: 'http://localhost:3000/graphql', // Replace with your GraphQL API endpoint
-  cache: new InMemoryCache(), // Enables caching for performance
-
+  uri: 'http://localhost:3000/graphql',
+  cache: new InMemoryCache(),
+  credentials: 'include' // Send cookies with requests
 });
 
 const root = ReactDOM.createRoot(
@@ -21,9 +22,11 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <ApolloProvider client={client}>
-      <BreadcrumbProvider>
-        <AppRouter />
-      </BreadcrumbProvider>
+      <AuthProvider>
+        <BreadcrumbProvider>
+          <AppRouter />
+        </BreadcrumbProvider>
+      </AuthProvider>
     </ApolloProvider>
   </React.StrictMode>
 );

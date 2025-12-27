@@ -24,6 +24,12 @@ type Query {
   # Product queries
   product(obj: IdInput!): Product
   products: [Product!]!
+
+  # User/Account queries
+  me: User
+  creditHistory(limit: Int): [CreditTransaction!]!
+  creditPackages: [CreditPackage!]!
+  subscriptionTiers: [TierInfo!]!
 }
 
 # Mutation type for modifying data
@@ -102,6 +108,13 @@ type Mutation {
   editSection(section: SectionInput!): Response
   removeSection(section: SectionInput!): Response
   relateSectionEntities(relation: SectionEntitiesInput!): Response
+
+  # User/Account mutations
+  updateProfile(displayName: String!): User!
+  createSubscriptionCheckout(tier: String!): CheckoutSession!
+  cancelSubscription: User!
+  purchaseCredits(packageId: String!): CheckoutSession!
+  useCredits(amount: Int!, description: String!): User!
 }
 
 # Common types
@@ -394,4 +407,63 @@ input SectionEntitiesInput {
   placeIds: [String!]
   characterIds: [String!]
   itemIds: [String!]
+}
+
+# ============================================
+# User & Account System Types
+# ============================================
+
+# User account
+type User {
+  id: String!
+  email: String!
+  displayName: String!
+  avatarUrl: String
+  subscriptionTier: String!
+  subscriptionStatus: String!
+  credits: Int!
+  creditsResetAt: String
+  entityCount: Int!
+  limits: TierLimits!
+  createdAt: String!
+  lastLoginAt: String
+}
+
+# Subscription tier limits
+type TierLimits {
+  maxEntities: Int!
+  maxUniverses: Int!
+  maxProducts: Int!
+  monthlyCredits: Int!
+}
+
+# Credit transaction history
+type CreditTransaction {
+  id: String!
+  type: String!
+  amount: Int!
+  description: String!
+  createdAt: String!
+}
+
+# Stripe checkout session
+type CheckoutSession {
+  url: String!
+}
+
+# Credit package for purchase
+type CreditPackage {
+  id: String!
+  amount: Int!
+  price: Int!
+  displayPrice: String!
+}
+
+# Subscription tier info
+type TierInfo {
+  id: String!
+  name: String!
+  price: Int!
+  displayPrice: String!
+  limits: TierLimits!
 }

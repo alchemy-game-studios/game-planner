@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useBreadcrumbs } from '@/context/breadcrumb-context';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { UserMenu } from '@/components/user-menu';
 
 export function Breadcrumbs() {
   const { breadcrumbs, navigateTo, canGoBack } = useBreadcrumbs();
@@ -45,48 +46,52 @@ export function Breadcrumbs() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] flex items-center gap-2 px-4 py-2 bg-black border-b border-border">
-      {/* Logo */}
-      <button
-        onClick={handleHome}
-        className="flex items-center gap-2 mr-2 hover:opacity-80 transition-opacity"
-      >
-        <img
-          src="/images/logo.png"
-          alt="CanonKiln"
-          className="h-8 w-auto"
-        />
-      </button>
+    <div className="fixed top-0 left-0 right-0 z-[60] flex items-center justify-between gap-2 px-4 py-2 bg-black border-b border-border">
+      <div className="flex items-center gap-2">
+        {/* Logo */}
+        <button
+          onClick={handleHome}
+          className="flex items-center gap-2 mr-2 hover:opacity-80 transition-opacity"
+        >
+          <img
+            src="/images/logo.png"
+            alt="CanonKiln"
+            className="h-8 w-auto"
+          />
+        </button>
 
-      <div className="h-4 w-px bg-border" />
+        <div className="h-4 w-px bg-border" />
 
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleBack}
-        disabled={isHome && !canGoBack}
-        className="text-muted-foreground hover:text-foreground disabled:opacity-50"
-      >
-        <ChevronLeft className="h-4 w-4 mr-1" />
-        Back
-      </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleBack}
+          disabled={isHome && !canGoBack}
+          className="text-muted-foreground hover:text-foreground disabled:opacity-50"
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Back
+        </Button>
 
-      {breadcrumbs.map((item, index) => (
-        <React.Fragment key={item.id}>
-          <ChevronRight className="h-4 w-4 text-border" />
-          <button
-            onClick={() => handleBreadcrumbClick(index)}
-            className={`text-sm transition-colors ${
-              index === breadcrumbs.length - 1
-                ? 'text-foreground font-medium cursor-default'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <span className="text-muted-foreground capitalize">{item.type}:</span>{' '}
-            {item.name}
-          </button>
-        </React.Fragment>
-      ))}
+        {breadcrumbs.map((item, index) => (
+          <React.Fragment key={item.id}>
+            <ChevronRight className="h-4 w-4 text-border" />
+            <button
+              onClick={() => handleBreadcrumbClick(index)}
+              className={`text-sm transition-colors ${
+                index === breadcrumbs.length - 1
+                  ? 'text-foreground font-medium cursor-default'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span className="text-muted-foreground capitalize">{item.type}:</span>{' '}
+              {item.name}
+            </button>
+          </React.Fragment>
+        ))}
+      </div>
+
+      <UserMenu />
     </div>
   );
 }

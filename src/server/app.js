@@ -7,12 +7,12 @@ import cors from "cors";
 import cookieParser from 'cookie-parser';
 import path from "path";
 import passport from "passport";
-import { GraphQLLocalStrategy } from "graphql-passport";
-import BasicGraphQLPassportCb from "./auth/basic-graphql-passport.js";
 import graphqlSchemaBuilder from "./graphql/graphql-schema-builder.js";
 import graphqlResolvers, { setDriver } from "./graphql/graphql-resolvers.js";
 import { ApolloServer } from "apollo-server-express";
 import neo4j from "neo4j-driver";
+import { configureGoogleAuth, setAuthDriver } from "./auth/google-strategy.js";
+import stripeWebhooks, { setWebhookDriver } from "./routes/stripe-webhooks.js";
 
 const port = process.env.PORT || 3000;
 
@@ -24,28 +24,43 @@ const NEO4J_PASSWORD = process.env.NEO4J_PASSWORD || 'password';
 // Initialize Neo4j driver
 const driver = neo4j.driver(NEO4J_URI, neo4j.auth.basic(NEO4J_USER, NEO4J_PASSWORD));
 
-// Inject driver into resolvers
+// Inject driver into resolvers and auth
 setDriver(driver);
 setUploadDriver(driver);
+setAuthDriver(driver);
+setWebhookDriver(driver);
 
 const app = express();
 const __dirname = import.meta.dirname;
+
+// Frontend URL for CORS and redirects
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
 
 // Networking & Session
 app.use(session({
   secret: process.env.SESSION_SECRET || 'ceda78df-e787-49f5-8e0d-a0f6bba8e0f2',
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  saveUninitialized: false, // Don't create session until user logs in
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    sameSite: 'lax'
+  }
 }));
+
+// Stripe webhook MUST be before express.json() to receive raw body
+app.use("/webhooks/stripe", stripeWebhooks);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 const corsOptions = {
-  origin: '*',
+  origin: FRONTEND_URL,
   methods: 'GET,POST,PUT,DELETE,OPTIONS',
-  allowedHeaders: '*',
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // Allow cookies to be sent
 };
 app.use(cors(corsOptions));
 
@@ -56,20 +71,64 @@ app.disable('x-powered-by');
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.use(
-  new GraphQLLocalStrategy(BasicGraphQLPassportCb)
-);
+// Configure Google OAuth
+configureGoogleAuth();
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
   try {
-    const session = driver.session();
-    await session.run('RETURN 1');
-    await session.close();
+    const dbSession = driver.session();
+    await dbSession.run('RETURN 1');
+    await dbSession.close();
     res.json({ status: 'healthy', database: 'connected' });
   } catch (error) {
     res.status(503).json({ status: 'unhealthy', database: 'disconnected', error: error.message });
   }
+});
+
+// ===================
+// Authentication Routes
+// ===================
+
+// Get current user
+app.get('/auth/me', (req, res) => {
+  if (req.isAuthenticated() && req.user) {
+    res.json({ user: req.user });
+  } else {
+    res.json({ user: null });
+  }
+});
+
+// Initiate Google OAuth
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+// Google OAuth callback
+app.get('/auth/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: `${FRONTEND_URL}/login?error=auth_failed`
+  }),
+  (req, res) => {
+    // Successful authentication, redirect to frontend
+    res.redirect(`${FRONTEND_URL}/`);
+  }
+);
+
+// Logout
+app.post('/auth/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Logout failed' });
+    }
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Session destruction failed' });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ success: true });
+    });
+  });
 });
 
 // GraphQL

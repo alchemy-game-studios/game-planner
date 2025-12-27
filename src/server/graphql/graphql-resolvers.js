@@ -1,5 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getImageUrl, deleteImage as deleteS3Image } from '../storage/s3-client.js';
+import { SUBSCRIPTION_TIERS, CREDIT_PACKAGES, getTierLimits, formatPrice, getCreditPackage } from '../config/tiers.js';
+import Stripe from 'stripe';
+
+// Initialize Stripe (will be null if no key configured)
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
 
 // Neo4j driver will be injected
 let driver = null;
@@ -846,6 +853,128 @@ async function deleteEntity(type, id) {
   return { message: `${type} deleted successfully` };
 }
 
+// ============================================
+// User & Account Helpers
+// ============================================
+
+// Get user with tier limits (checks for credit reset)
+async function getUserWithLimits(userId) {
+  if (!userId) return null;
+
+  const result = await runQuery(`
+    MATCH (u:User {id: $userId})
+    RETURN u
+  `, { userId });
+
+  if (result.records.length === 0) return null;
+
+  const user = result.records[0].get('u').properties;
+
+  // Check for credit reset (lazy reset)
+  const now = new Date();
+  const resetAt = user.creditsResetAt ? new Date(user.creditsResetAt) : null;
+
+  if (resetAt && now >= resetAt) {
+    const tierLimits = getTierLimits(user.subscriptionTier);
+    const newResetAt = new Date();
+    newResetAt.setMonth(newResetAt.getMonth() + 1);
+
+    await runQuery(`
+      MATCH (u:User {id: $userId})
+      SET u.credits = $monthlyCredits,
+          u.creditsResetAt = $newResetAt
+      RETURN u
+    `, {
+      userId,
+      monthlyCredits: tierLimits.monthlyCredits,
+      newResetAt: newResetAt.toISOString()
+    });
+
+    user.credits = tierLimits.monthlyCredits;
+    user.creditsResetAt = newResetAt.toISOString();
+  }
+
+  // Add limits to user object
+  const limits = getTierLimits(user.subscriptionTier);
+  return {
+    ...user,
+    credits: typeof user.credits === 'object' ? user.credits.toNumber() : user.credits,
+    entityCount: typeof user.entityCount === 'object' ? user.entityCount.toNumber() : user.entityCount,
+    limits: {
+      maxEntities: limits.maxEntities === Infinity ? -1 : limits.maxEntities,
+      maxUniverses: limits.maxUniverses === Infinity ? -1 : limits.maxUniverses,
+      maxProducts: limits.maxProducts === Infinity ? -1 : limits.maxProducts,
+      monthlyCredits: limits.monthlyCredits
+    }
+  };
+}
+
+// Get credit transaction history
+async function getCreditHistory(userId, limit = 50) {
+  const result = await runQuery(`
+    MATCH (u:User {id: $userId})-[:HAS_TRANSACTION]->(t:CreditTransaction)
+    RETURN t
+    ORDER BY t.createdAt DESC
+    LIMIT $limit
+  `, { userId, limit });
+
+  return result.records.map(r => {
+    const t = r.get('t').properties;
+    return {
+      ...t,
+      amount: typeof t.amount === 'object' ? t.amount.toNumber() : t.amount
+    };
+  });
+}
+
+// Record a credit transaction
+async function recordCreditTransaction(userId, type, amount, description) {
+  const transaction = {
+    id: uuidv4(),
+    type,
+    amount,
+    description,
+    createdAt: new Date().toISOString()
+  };
+
+  await runQuery(`
+    MATCH (u:User {id: $userId})
+    CREATE (t:CreditTransaction $transaction)
+    CREATE (u)-[:HAS_TRANSACTION]->(t)
+  `, { userId, transaction });
+
+  return transaction;
+}
+
+// Update user credits
+async function updateUserCredits(userId, amount, description, type = 'usage') {
+  // Get current user
+  const user = await getUserWithLimits(userId);
+  if (!user) throw new Error('User not found');
+
+  const newCredits = user.credits + amount;
+  if (newCredits < 0) throw new Error('Insufficient credits');
+
+  // Update credits
+  await runQuery(`
+    MATCH (u:User {id: $userId})
+    SET u.credits = $newCredits
+  `, { userId, newCredits });
+
+  // Record transaction
+  await recordCreditTransaction(userId, type, amount, description);
+
+  return { ...user, credits: newCredits };
+}
+
+// Ensure user is authenticated
+function requireAuth(context) {
+  if (!context.user) {
+    throw new Error('Authentication required');
+  }
+  return context.user;
+}
+
 export default {
   Query: {
     hello: () => ({ message: "Hello from Game Planner API!" }),
@@ -898,6 +1027,39 @@ export default {
       `, { pattern: `(?i).*${query}.*` });
 
       return result.records.map(r => r.get('entity'));
+    },
+
+    // User/Account queries
+    me: async (_, __, context) => {
+      if (!context.user) return null;
+      return getUserWithLimits(context.user.id);
+    },
+
+    creditHistory: async (_, { limit }, context) => {
+      const user = requireAuth(context);
+      return getCreditHistory(user.id, limit || 50);
+    },
+
+    creditPackages: () => {
+      return CREDIT_PACKAGES.map(pkg => ({
+        ...pkg,
+        displayPrice: formatPrice(pkg.price)
+      }));
+    },
+
+    subscriptionTiers: () => {
+      return Object.entries(SUBSCRIPTION_TIERS).map(([id, tier]) => ({
+        id,
+        name: tier.name,
+        price: tier.price,
+        displayPrice: formatPrice(tier.price),
+        limits: {
+          maxEntities: tier.limits.maxEntities === Infinity ? -1 : tier.limits.maxEntities,
+          maxUniverses: tier.limits.maxUniverses === Infinity ? -1 : tier.limits.maxUniverses,
+          maxProducts: tier.limits.maxProducts === Infinity ? -1 : tier.limits.maxProducts,
+          monthlyCredits: tier.limits.monthlyCredits
+        }
+      }));
     }
   },
 
@@ -1151,6 +1313,145 @@ export default {
       }
 
       return { message: 'Section entity relationships updated' };
+    },
+
+    // User/Account mutations
+    updateProfile: async (_, { displayName }, context) => {
+      const user = requireAuth(context);
+
+      await runQuery(`
+        MATCH (u:User {id: $userId})
+        SET u.displayName = $displayName
+      `, { userId: user.id, displayName });
+
+      return getUserWithLimits(user.id);
+    },
+
+    createSubscriptionCheckout: async (_, { tier }, context) => {
+      const user = requireAuth(context);
+
+      if (!stripe) {
+        throw new Error('Stripe is not configured');
+      }
+
+      const tierConfig = SUBSCRIPTION_TIERS[tier];
+      if (!tierConfig || !tierConfig.stripePriceId) {
+        throw new Error('Invalid subscription tier');
+      }
+
+      // Create or get Stripe customer
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { userId: user.id }
+        });
+        customerId = customer.id;
+
+        await runQuery(`
+          MATCH (u:User {id: $userId})
+          SET u.stripeCustomerId = $customerId
+        `, { userId: user.id, customerId });
+      }
+
+      // Create checkout session
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: 'subscription',
+        line_items: [{
+          price: tierConfig.stripePriceId,
+          quantity: 1
+        }],
+        success_url: `${process.env.FRONTEND_URL || 'http://localhost:3001'}/account?success=subscription`,
+        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3001'}/account?canceled=true`,
+        metadata: {
+          userId: user.id,
+          tier
+        }
+      });
+
+      return { url: session.url };
+    },
+
+    cancelSubscription: async (_, __, context) => {
+      const user = requireAuth(context);
+
+      if (!stripe) {
+        throw new Error('Stripe is not configured');
+      }
+
+      if (!user.stripeSubscriptionId) {
+        throw new Error('No active subscription found');
+      }
+
+      // Cancel at period end
+      await stripe.subscriptions.update(user.stripeSubscriptionId, {
+        cancel_at_period_end: true
+      });
+
+      await runQuery(`
+        MATCH (u:User {id: $userId})
+        SET u.subscriptionStatus = 'canceled'
+      `, { userId: user.id });
+
+      return getUserWithLimits(user.id);
+    },
+
+    purchaseCredits: async (_, { packageId }, context) => {
+      const user = requireAuth(context);
+
+      if (!stripe) {
+        throw new Error('Stripe is not configured');
+      }
+
+      const creditPkg = getCreditPackage(packageId);
+      if (!creditPkg) {
+        throw new Error('Invalid credit package');
+      }
+
+      // Create or get Stripe customer
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { userId: user.id }
+        });
+        customerId = customer.id;
+
+        await runQuery(`
+          MATCH (u:User {id: $userId})
+          SET u.stripeCustomerId = $customerId
+        `, { userId: user.id, customerId });
+      }
+
+      // Create checkout session for one-time purchase
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: 'payment',
+        line_items: [{
+          price: creditPkg.stripePriceId,
+          quantity: 1
+        }],
+        success_url: `${process.env.FRONTEND_URL || 'http://localhost:3001'}/account?success=credits`,
+        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3001'}/account?canceled=true`,
+        metadata: {
+          userId: user.id,
+          packageId,
+          creditAmount: creditPkg.amount
+        }
+      });
+
+      return { url: session.url };
+    },
+
+    useCredits: async (_, { amount, description }, context) => {
+      const user = requireAuth(context);
+
+      if (amount <= 0) {
+        throw new Error('Amount must be positive');
+      }
+
+      return updateUserCredits(user.id, -amount, description, 'usage');
     }
   }
 };

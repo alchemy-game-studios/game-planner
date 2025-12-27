@@ -253,3 +253,20 @@ kill -9 <PID>
 - Check Neo4j is running: `npm run db:wait`
 - Check health endpoint: `curl http://localhost:3000/health`
 - View Neo4j Browser: http://localhost:7474 (neo4j/password)
+
+## Stacked PRs
+
+We use stacked PRs for feature development. When creating a new feature branch:
+
+1. Branch from the previous feature branch, not main
+2. PRs should target the previous feature branch
+3. Merge in order: base PR first, then dependent PRs
+
+Example:
+```
+main
+  └── mechanics-1 (PR #7 → main)
+        └── account (PR → mechanics-1)
+```
+
+This allows incremental review while keeping related changes together.
