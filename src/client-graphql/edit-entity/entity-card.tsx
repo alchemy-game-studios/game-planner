@@ -1,7 +1,7 @@
 'use client'
 
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { getPlaceholderImage } from "@/media/util"
 
 interface EntityCardProps {
   name: string
@@ -13,9 +13,10 @@ interface EntityCardProps {
 export default function EntityCard({
   name,
   avatarUrl,
-  fallbackText = '??',
   onClick
 }: EntityCardProps) {
+  const placeholderUrl = getPlaceholderImage('avatar');
+
   return (
     <div onClick={onClick} className="gap-4 mt-4 w-full">
       <Badge
@@ -24,10 +25,16 @@ export default function EntityCard({
       >
         <div className="flex justify-start gap-4 w-full ">
           <div className="w-1/4">
-            <Avatar>
-              <AvatarImage src={avatarUrl} />
-              <AvatarFallback>{fallbackText}</AvatarFallback>
-            </Avatar>
+            <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gray-700">
+              <img
+                src={avatarUrl}
+                alt=""
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = placeholderUrl;
+                }}
+              />
+            </div>
           </div>
           <div className="text-2xl w-3/4 flex items-center justify-start text-center">
             <p className="m-0 leading-none font-primary">{name}</p>

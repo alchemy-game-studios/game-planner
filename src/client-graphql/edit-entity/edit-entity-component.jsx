@@ -11,10 +11,11 @@ import { EditableNodeList } from './editable-node-list.tsx';
 import { Textarea } from "@/components/ui/textarea"
 import { removeTypeName } from '../util.js'
 import { HoverEditableText } from './hover-editable-text.jsx';
-import { getEntityImage } from "@/media/util"
+import { getEntityImage, getPlaceholderImage } from "@/media/util"
 import { TagPills } from "@/components/tag-pills"
 import { ImageGallery } from "@/components/image-gallery"
 import { useBreadcrumbs } from "@/context/breadcrumb-context"
+import { Link } from 'react-router-dom';
 
 
 
@@ -48,7 +49,11 @@ export function EditEntityComponent({id, type, isEdit}) {
         allContents: [],
         tags: [],
         images: [],
-        allImages: []
+        allImages: [],
+        locations: [],
+        participants: [],
+        parentNarrative: null,
+        events: []
     }
     const [entity, setEntity] = useState(initEntity);
 
@@ -188,17 +193,26 @@ export function EditEntityComponent({id, type, isEdit}) {
         HandleEdit(); // save when the user clicks away or presses tab
     };
 
+    // Get the best background image - use placeholder if no images exist
+    const hasImages = entity.images && entity.images.length > 0;
+    const backgroundImageUrl = hasImages
+        ? getEntityImage(id, "hero")
+        : getPlaceholderImage("hero");
+    const avatarImageUrl = hasImages
+        ? getEntityImage(id, "avatar")
+        : getPlaceholderImage("avatar");
+
     return (
         <>
         <div
             className="fixed scale-150 inset-0 pointer-events-none -z-10 bg-cover bg-center opacity-5"
-            style={{ backgroundImage: `url(${getEntityImage(id, "hero")})` }}
+            style={{ backgroundImage: `url(${backgroundImageUrl})` }}
         />
         <div className="relative z-10">
             <div className="fixed top-10 left-0 w-full bg-gray-900 z-50">
                 <div className="flex">
                     <Avatar className="size-15 ml-9 mb-3.5 mt-6.5">
-                        <AvatarImage src={getEntityImage(id, "avatar")} />
+                        <AvatarImage src={avatarImageUrl} />
                         <AvatarFallback>{entity.properties.name}</AvatarFallback>
                     </Avatar>
                     
@@ -227,7 +241,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                                 console.log('Images updated - refetching');
                                 Get({ variables: { obj: { id } } });
                             }}
-                            fallbackImage={getEntityImage(id, "hero")}
+                            fallbackImage={backgroundImageUrl}
                         />
                 </div>
 
@@ -243,6 +257,19 @@ export function EditEntityComponent({id, type, isEdit}) {
                     />
                 </div>
 
+                {/* Parent Narrative link for Events */}
+                {type === 'event' && entity.parentNarrative && (
+                    <div className="mt-4 mb-2">
+                        <span className="text-gray-400 text-sm">Part of: </span>
+                        <Link
+                            to={`/edit/narrative/${entity.parentNarrative.id}`}
+                            className="text-blue-400 hover:text-blue-300 hover:underline font-medium"
+                        >
+                            {entity.parentNarrative.name}
+                        </Link>
+                    </div>
+                )}
+
                 {editMode && (
                     <>
                        <HoverEditableText
@@ -254,7 +281,20 @@ export function EditEntityComponent({id, type, isEdit}) {
                     )}
 
 
-        {!editMode && (
+        {!editMode && type === 'narrative' && (
+            <>
+              {/* Story-styled description for Narratives */}
+              <div className="flex w-full mt-9 pr-15">
+                    <div className="bg-gray-800/50 rounded-lg p-6 border-l-4 border-amber-600">
+                        <p className="text-2xl font-serif text-gray-100 leading-relaxed whitespace-pre-line italic">
+                            {entity.properties.description}
+                        </p>
+                    </div>
+                </div>
+            </>
+          )}
+
+        {!editMode && type !== 'narrative' && (
             <>
               <div className="flex w-full mt-9 pr-15">
                     <p className="text-xl font-book text-gray-200 leading-tight tracking-tight">
@@ -278,6 +318,56 @@ export function EditEntityComponent({id, type, isEdit}) {
           </div>
           
         <div id="related-contains" className="w-72 flex-shrink-0 flex flex-col gap-4 mt-5 relative z-10">
+            {/* Show narratives (for universes) */}
+            {allRelationGroups['narrative'] && allRelationGroups['narrative'].length > 0 && (
+                <EditableNodeList
+                    initContents={allRelationGroups['narrative']}
+                    parentId={id}
+                    parentType={type}
+                    entityType="narrative"
+                    maxItems={5}
+                    onUpdate={() => {
+                      Get({ variables: { obj: { id } } });
+                    }}
+                />
+            )}
+
+            {/* Show events (for narratives, and for places/characters/items) */}
+            {allRelationGroups['event'] && allRelationGroups['event'].length > 0 && (
+                <EditableNodeList
+                    initContents={allRelationGroups['event']}
+                    parentId={id}
+                    parentType={type}
+                    entityType="event"
+                    maxItems={5}
+                    onUpdate={() => {
+                      Get({ variables: { obj: { id } } });
+                    }}
+                />
+            )}
+
+            {/* Show events for places, characters, items (from 'events' field) */}
+            {entity.events && entity.events.length > 0 && !allRelationGroups['event'] && (
+                <div>
+                    <h3 className="text-sm font-medium text-gray-400 mb-2">Events</h3>
+                    <ol className="space-y-1">
+                        {entity.events.map((event) => (
+                            <li key={event.id}>
+                                <Link
+                                    to={`/edit/event/${event.id}`}
+                                    className="block p-2 rounded hover:bg-gray-800 transition-colors"
+                                >
+                                    <span className="text-sm text-gray-200">{event.name}</span>
+                                    {event.type && (
+                                        <span className="text-xs text-gray-500 ml-2">({event.type})</span>
+                                    )}
+                                </Link>
+                            </li>
+                        ))}
+                    </ol>
+                </div>
+            )}
+
             {/* Show all descendant entity types with max 5 items each */}
             {allRelationGroups['place'] && allRelationGroups['place'].length > 0 && (
                 <EditableNodeList
@@ -319,7 +409,10 @@ export function EditEntityComponent({id, type, isEdit}) {
             )}
 
             {/* Show empty state if no descendants at all */}
-            {(!allRelationGroups['place'] || allRelationGroups['place'].length === 0) &&
+            {(!allRelationGroups['narrative'] || allRelationGroups['narrative'].length === 0) &&
+             (!allRelationGroups['event'] || allRelationGroups['event'].length === 0) &&
+             (!entity.events || entity.events.length === 0) &&
+             (!allRelationGroups['place'] || allRelationGroups['place'].length === 0) &&
              (!allRelationGroups['character'] || allRelationGroups['character'].length === 0) &&
              (!allRelationGroups['item'] || allRelationGroups['item'].length === 0) && (
                 <div className="text-gray-500 text-sm text-center py-4">
@@ -393,6 +486,8 @@ function oneQuery(type) {
                     name
                     description
                     type
+                    startDate
+                    endDate
                 }
                 tags {
                     id
@@ -418,6 +513,32 @@ function oneQuery(type) {
                     entityId
                     entityName
                     entityType
+                }
+                locations {
+                    id
+                    name
+                    description
+                    type
+                }
+                participants {
+                    id
+                    name
+                    description
+                    type
+                }
+                parentNarrative {
+                    id
+                    name
+                    description
+                    type
+                }
+                events {
+                    id
+                    name
+                    description
+                    type
+                    startDate
+                    endDate
                 }
             }
     }

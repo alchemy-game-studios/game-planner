@@ -35,3 +35,24 @@ export const getRelateTaggedMutation = () => {
     }
   `;
 };
+
+// Event-specific relationship mutations
+export const getRelateOccursAtMutation = () => {
+  return gql`
+    mutation RelateOccursAt($relation: EventLocationInput!) {
+      relateOccursAt(relation: $relation) {
+        message
+      }
+    }
+  `;
+};
+
+export const getRelateInvolvesMutation = () => {
+  return gql`
+    mutation RelateInvolves($relation: EventParticipantsInput!) {
+      relateInvolves(relation: $relation) {
+        message
+      }
+    }
+  `;
+};

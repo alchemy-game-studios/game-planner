@@ -18,7 +18,7 @@ import { capitalizeFirst } from '../client-graphql/util';
 import { getCreateMutation } from '../utils/graphql-utils';
 
 interface AddEntityDialogProps {
-  entityType: 'place' | 'character' | 'item' | 'tag';
+  entityType: 'place' | 'character' | 'item' | 'tag' | 'event' | 'narrative';
   onEntityCreated: (entity: any) => void;
   triggerButton?: boolean;
 }
@@ -28,7 +28,9 @@ const getDefaultDescription = (type: string, name: string) => {
     place: `A new location called ${name}`,
     character: `A new character named ${name}`,
     item: `A new item called ${name}`,
-    tag: `A tag for ${name}`
+    tag: `A tag for ${name}`,
+    event: `A new event: ${name}`,
+    narrative: `A new narrative: ${name}`
   };
   return descriptions[type] || `A new ${type} called ${name}`;
 };

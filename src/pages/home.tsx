@@ -45,7 +45,9 @@ export default function HomePage() {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-4xl font-heading mb-8 text-white">Game Planner</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-4xl font-heading text-white">Game Planner</h1>
+      </div>
 
       <h2 className="text-2xl font-heading mb-4 text-white">Universes</h2>
 

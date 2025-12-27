@@ -6,7 +6,7 @@ import EntityCard from '../client-graphql/edit-entity/entity-card';
 import { capitalizeFirst } from '../client-graphql/util';
 
 interface EntitySearchProps {
-  entityType: 'place' | 'character' | 'item' | 'tag';
+  entityType: 'place' | 'character' | 'item' | 'tag' | 'event' | 'narrative';
   onSelect: (entity: any) => void;
   excludeIds?: string[];
   placeholder?: string;
@@ -55,6 +55,34 @@ const SEARCH_QUERIES = {
   tag: gql`
     query SearchTags {
       tags {
+        id
+        properties {
+          id
+          name
+          description
+          type
+        }
+      }
+    }
+  `,
+  event: gql`
+    query SearchEvents {
+      events {
+        id
+        properties {
+          id
+          name
+          description
+          type
+          startDate
+          endDate
+        }
+      }
+    }
+  `,
+  narrative: gql`
+    query SearchNarratives {
+      narratives {
         id
         properties {
           id

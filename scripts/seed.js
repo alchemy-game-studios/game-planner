@@ -12,6 +12,16 @@ const UNIVERSE_2_ID = '7198a74d-8939-4262-a69d-00192db9c9ff';
 const PLACE_1_ID = '9919e21f-d9e9-4449-9068-329ba5d2b50b';
 const PLACE_2_ID = 'db421343-1ce6-41e4-972c-b13b6dd06877';
 
+// Image IDs
+const IMG_UNIVERSE_1_HERO = 'img-u1-hero';
+const IMG_UNIVERSE_1_AVATAR = 'img-u1-avatar';
+const IMG_UNIVERSE_2_HERO = 'img-u2-hero';
+const IMG_UNIVERSE_2_AVATAR = 'img-u2-avatar';
+const IMG_PLACE_1_HERO = 'img-p1-hero';
+const IMG_PLACE_1_AVATAR = 'img-p1-avatar';
+const IMG_PLACE_2_HERO = 'img-p2-hero';
+const IMG_PLACE_2_AVATAR = 'img-p2-avatar';
+
 const seedData = {
   universes: [
     {
@@ -211,6 +221,93 @@ const seedData = {
     { entityId: 'char-002', tagId: 'tag-004' },
     { entityId: 'char-003', tagId: 'tag-003' },
     { entityId: 'char-004', tagId: 'tag-005' }
+  ],
+  narratives: [
+    {
+      id: 'narrative-001',
+      name: 'The Restoration of Eldoria',
+      description: `In the waning years of the Third Age, the ancient wards that had protected Eldoria for millennia began to fail. The Crystal Citadel, once a beacon of hope and magical power, grew dim as the ley lines beneath it weakened.
+
+Archmage Thalion, keeper of the old ways, knew that only the Awakening Ritual—a ceremony not performed in over five hundred years—could restore the protective barriers. But the ritual required more than just magical prowess; it demanded the Staff of Eternity, an artifact thought lost to the Shadow War.
+
+As dark forces sensed the realm's vulnerability, heroes rose to meet the challenge. What followed would become known as the greatest tale of sacrifice and triumph in Eldorian history.`,
+      type: 'saga',
+      universeId: UNIVERSE_1_ID
+    },
+    {
+      id: 'narrative-002',
+      name: 'Rise of the Resistance',
+      description: `In the neon-lit shadows of the megacity, where corporations rule with iron fists and surveillance drones patrol every corner, a spark of rebellion ignites.
+
+Zero, once a nobody in the digital underground, stumbled upon something that would change everything—proof of OmniCorp's darkest secrets. With the help of Nyx, a synthetic android who had gained true sentience, and a network of rebels hiding in Sector 7, they planned the impossible: infiltrating Nexus Tower itself.
+
+But Director Chen, the ruthless CEO of OmniCorp, was watching. And she had plans of her own. What began as a simple heist would escalate into a war for the soul of humanity itself.`,
+      type: 'chronicle',
+      universeId: UNIVERSE_2_ID
+    }
+  ],
+  events: [
+    {
+      id: 'event-001',
+      name: 'The Awakening Ritual',
+      description: 'Archmage Thalion performs the ancient ritual to restore the Crystal Citadel\'s protective wards after centuries of dormancy.',
+      type: 'ritual',
+      startDate: '2487-03-21T19:00:00Z',
+      endDate: '2487-03-21T23:30:00Z',
+      narrativeId: 'narrative-001'
+    },
+    {
+      id: 'event-002',
+      name: 'The Shadow War Begins',
+      description: 'Dark forces from beyond the veil launch their first assault, marking the beginning of a great conflict that would reshape Eldoria.',
+      type: 'battle',
+      startDate: '2450-01-01T00:00:00Z',
+      endDate: '2450-03-15T23:59:59Z',
+      narrativeId: 'narrative-001'
+    },
+    {
+      id: 'event-003',
+      name: 'The Great Heist',
+      description: 'Zero and the underground rebels infiltrate Nexus Tower to steal the Quantum Encryption Key.',
+      type: 'quest',
+      startDate: '2087-05-01T00:00:00Z',
+      endDate: '2087-05-01T06:00:00Z',
+      narrativeId: 'narrative-002'
+    },
+    {
+      id: 'event-004',
+      name: 'The Corporate Siege',
+      description: 'OmniCorp launches a coordinated assault on Sector 7 Underground, attempting to crush the resistance once and for all.',
+      type: 'battle',
+      startDate: '2087-06-15T02:00:00Z',
+      endDate: '2087-06-15T08:00:00Z',
+      narrativeId: 'narrative-002'
+    }
+  ],
+  eventRelations: [
+    // The Awakening Ritual - takes place in Crystal Citadel, involves Thalion and his staff
+    { eventId: 'event-001', placeIds: [PLACE_1_ID], characterIds: ['char-001'], itemIds: ['item-001'] },
+    // The Shadow War Begins - takes place in Shadowmere Forest, involves Lyra and Seraphina
+    { eventId: 'event-002', placeIds: [PLACE_2_ID], characterIds: ['char-002', 'char-005'], itemIds: ['item-002', 'item-007'] },
+    // The Great Heist - takes place in Nexus Tower, involves Zero
+    { eventId: 'event-003', placeIds: ['place-004'], characterIds: ['char-003'], itemIds: ['item-004', 'item-005'] },
+    // The Corporate Siege - takes place in Sector 7, involves Zero and Nyx
+    { eventId: 'event-004', placeIds: ['place-003'], characterIds: ['char-003', 'char-007'], itemIds: ['item-004', 'item-010'] }
+  ],
+  // Images stored in public/entity-images/ - use 'local:' prefix for local files
+  images: [
+    // Universe 1 - Eldoria
+    { id: IMG_UNIVERSE_1_HERO, entityId: UNIVERSE_1_ID, filename: 'hero.jpg', key: `local:${UNIVERSE_1_ID}/hero.jpg`, mimeType: 'image/jpeg', size: 100000, rank: 0 },
+    { id: IMG_UNIVERSE_1_AVATAR, entityId: UNIVERSE_1_ID, filename: 'avatar.jpg', key: `local:${UNIVERSE_1_ID}/avatar.jpg`, mimeType: 'image/jpeg', size: 50000, rank: 1 },
+    // Universe 2 - Neon Sprawl
+    { id: IMG_UNIVERSE_2_HERO, entityId: UNIVERSE_2_ID, filename: 'hero.jpg', key: `local:${UNIVERSE_2_ID}/hero.jpg`, mimeType: 'image/jpeg', size: 100000, rank: 0 },
+    { id: IMG_UNIVERSE_2_AVATAR, entityId: UNIVERSE_2_ID, filename: 'avatar.jpg', key: `local:${UNIVERSE_2_ID}/avatar.jpg`, mimeType: 'image/jpeg', size: 50000, rank: 1 },
+    // Place 1 - Crystal Citadel
+    { id: IMG_PLACE_1_HERO, entityId: PLACE_1_ID, filename: 'hero.jpg', key: `local:${PLACE_1_ID}/hero.jpg`, mimeType: 'image/jpeg', size: 100000, rank: 0 },
+    { id: IMG_PLACE_1_AVATAR, entityId: PLACE_1_ID, filename: 'avatar.jpg', key: `local:${PLACE_1_ID}/avatar.jpg`, mimeType: 'image/jpeg', size: 50000, rank: 1 },
+    // Place 2 - Shadowmere Forest
+    { id: IMG_PLACE_2_HERO, entityId: PLACE_2_ID, filename: 'hero.jpg', key: `local:${PLACE_2_ID}/hero.jpg`, mimeType: 'image/jpeg', size: 100000, rank: 0 },
+    { id: IMG_PLACE_2_AVATAR, entityId: PLACE_2_ID, filename: 'avatar.jpg', key: `local:${PLACE_2_ID}/avatar.jpg`, mimeType: 'image/jpeg', size: 50000, rank: 1 }
   ]
 };
 
@@ -226,7 +323,10 @@ async function createConstraints(session) {
     'CREATE CONSTRAINT place_id IF NOT EXISTS FOR (p:Place) REQUIRE p.id IS UNIQUE',
     'CREATE CONSTRAINT character_id IF NOT EXISTS FOR (c:Character) REQUIRE c.id IS UNIQUE',
     'CREATE CONSTRAINT item_id IF NOT EXISTS FOR (i:Item) REQUIRE i.id IS UNIQUE',
-    'CREATE CONSTRAINT tag_id IF NOT EXISTS FOR (t:Tag) REQUIRE t.id IS UNIQUE'
+    'CREATE CONSTRAINT tag_id IF NOT EXISTS FOR (t:Tag) REQUIRE t.id IS UNIQUE',
+    'CREATE CONSTRAINT event_id IF NOT EXISTS FOR (e:Event) REQUIRE e.id IS UNIQUE',
+    'CREATE CONSTRAINT narrative_id IF NOT EXISTS FOR (n:Narrative) REQUIRE n.id IS UNIQUE',
+    'CREATE CONSTRAINT image_id IF NOT EXISTS FOR (i:Image) REQUIRE i.id IS UNIQUE'
   ];
 
   for (const constraint of constraints) {
@@ -308,6 +408,75 @@ async function seedTagRelations(session) {
   }
 }
 
+async function seedNarratives(session) {
+  console.log('Seeding narratives...');
+  for (const narrative of seedData.narratives) {
+    await session.run(
+      `CREATE (n:Narrative {id: $id, name: $name, description: $description, type: $type})
+       WITH n
+       MATCH (u:Universe {id: $universeId})
+       CREATE (u)-[:CONTAINS]->(n)`,
+      narrative
+    );
+  }
+}
+
+async function seedEvents(session) {
+  console.log('Seeding events...');
+  for (const event of seedData.events) {
+    await session.run(
+      `CREATE (e:Event {id: $id, name: $name, description: $description, type: $type, startDate: $startDate, endDate: $endDate})
+       WITH e
+       MATCH (n:Narrative {id: $narrativeId})
+       CREATE (n)-[:CONTAINS]->(e)`,
+      event
+    );
+  }
+}
+
+async function seedEventRelations(session) {
+  console.log('Seeding event relations...');
+  for (const relation of seedData.eventRelations) {
+    // Create OCCURS_AT relationships (Event -> Place)
+    for (const placeId of relation.placeIds || []) {
+      await session.run(
+        `MATCH (e:Event {id: $eventId}), (p:Place {id: $placeId})
+         CREATE (e)-[:OCCURS_AT]->(p)`,
+        { eventId: relation.eventId, placeId }
+      );
+    }
+    // Create INVOLVES relationships for characters
+    for (const characterId of relation.characterIds || []) {
+      await session.run(
+        `MATCH (e:Event {id: $eventId}), (c:Character {id: $characterId})
+         CREATE (e)-[:INVOLVES]->(c)`,
+        { eventId: relation.eventId, characterId }
+      );
+    }
+    // Create INVOLVES relationships for items
+    for (const itemId of relation.itemIds || []) {
+      await session.run(
+        `MATCH (e:Event {id: $eventId}), (i:Item {id: $itemId})
+         CREATE (e)-[:INVOLVES]->(i)`,
+        { eventId: relation.eventId, itemId }
+      );
+    }
+  }
+}
+
+async function seedImages(session) {
+  console.log('Seeding images...');
+  for (const image of seedData.images) {
+    await session.run(
+      `CREATE (i:Image {id: $id, filename: $filename, key: $key, mimeType: $mimeType, size: $size})
+       WITH i
+       MATCH (e {id: $entityId})
+       CREATE (e)-[:HAS_IMAGE {rank: $rank}]->(i)`,
+      image
+    );
+  }
+}
+
 async function seed() {
   const session = driver.session();
 
@@ -322,9 +491,13 @@ async function seed() {
     await seedItems(session);
     await seedTags(session);
     await seedTagRelations(session);
+    await seedNarratives(session);
+    await seedEvents(session);
+    await seedEventRelations(session);
+    await seedImages(session);
 
     console.log('Seeding complete!');
-    console.log(`Created: ${seedData.universes.length} universes, ${seedData.places.length} places, ${seedData.characters.length} characters, ${seedData.items.length} items, ${seedData.tags.length} tags`);
+    console.log(`Created: ${seedData.universes.length} universes, ${seedData.places.length} places, ${seedData.characters.length} characters, ${seedData.items.length} items, ${seedData.tags.length} tags, ${seedData.narratives.length} narratives, ${seedData.events.length} events, ${seedData.images.length} images`);
 
   } catch (error) {
     console.error('Seeding failed:', error);

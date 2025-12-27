@@ -139,6 +139,58 @@ async function getAllContentsForEntity(entityId) {
     });
 }
 
+// Helper to get locations for an event (OCCURS_AT relationships)
+async function getLocationsForEvent(eventId) {
+  const result = await runQuery(`
+    MATCH (e:Event {id: $eventId})-[:OCCURS_AT]->(p:Place)
+    RETURN properties(p) AS place
+  `, { eventId });
+
+  return result.records.map(r => r.get('place'));
+}
+
+// Helper to get participants for an event (INVOLVES relationships)
+async function getParticipantsForEvent(eventId) {
+  const result = await runQuery(`
+    MATCH (e:Event {id: $eventId})-[:INVOLVES]->(p)
+    RETURN properties(p) AS participant, labels(p)[0] AS nodeType
+  `, { eventId });
+
+  return result.records.map(r => ({
+    ...r.get('participant'),
+    _nodeType: r.get('nodeType')?.toLowerCase()
+  }));
+}
+
+// Helper to get parent narrative for an event
+async function getParentNarrativeForEvent(eventId) {
+  const result = await runQuery(`
+    MATCH (n:Narrative)-[:CONTAINS]->(e:Event {id: $eventId})
+    RETURN properties(n) AS narrative
+  `, { eventId });
+
+  if (result.records.length === 0) return null;
+  return result.records[0].get('narrative');
+}
+
+// Helper to get events for an entity (reverse lookup: OCCURS_AT or INVOLVES)
+async function getEventsForEntity(entityId, entityType) {
+  let relationship;
+  if (entityType === 'Place') {
+    relationship = 'OCCURS_AT';
+  } else {
+    relationship = 'INVOLVES';
+  }
+
+  const result = await runQuery(`
+    MATCH (e:Event)-[:${relationship}]->(target {id: $entityId})
+    RETURN properties(e) AS event
+    ORDER BY e.startDate
+  `, { entityId });
+
+  return result.records.map(r => r.get('event'));
+}
+
 // Helper to get single entity with contents and tags
 async function getEntity(type, id) {
   const result = await runQuery(`
@@ -174,6 +226,19 @@ async function getEntity(type, id) {
   entity.allImages = await getAllImagesForEntity(id);
   // Fetch all descendant content entities
   entity.allContents = await getAllContentsForEntity(id);
+
+  // Event-specific: fetch locations, participants, and parent narrative
+  if (type === 'Event') {
+    entity.locations = await getLocationsForEvent(id);
+    entity.participants = await getParticipantsForEvent(id);
+    entity.parentNarrative = await getParentNarrativeForEvent(id);
+  }
+
+  // Reverse lookup: fetch events for Place, Character, Item
+  if (['Place', 'Character', 'Item'].includes(type)) {
+    entity.events = await getEventsForEntity(id, type);
+  }
+
   return entity;
 }
 
@@ -215,14 +280,28 @@ async function getAllEntities(type) {
 // Helper to create entity
 async function createEntity(type, input) {
   const id = input.id || uuidv4();
-  await runQuery(`
-    CREATE (e:${type} {id: $id, name: $name, description: $description, type: $type})
-  `, {
+
+  // Build properties dynamically based on entity type
+  const props = {
     id,
     name: input.name || '',
     description: input.description || '',
     type: input.type || ''
-  });
+  };
+
+  // Add Event-specific properties
+  if (type === 'Event') {
+    props.startDate = input.startDate || '';
+    props.endDate = input.endDate || '';
+  }
+
+  const propEntries = Object.entries(props);
+  const propString = propEntries.map(([key]) => `${key}: $${key}`).join(', ');
+
+  await runQuery(`
+    CREATE (e:${type} {${propString}})
+  `, props);
+
   return { message: `${type} created successfully` };
 }
 
@@ -242,6 +321,16 @@ async function updateEntity(type, input) {
   if (input.type !== undefined) {
     updates.push('e.type = $type');
     params.type = input.type;
+  }
+
+  // Event-specific properties
+  if (input.startDate !== undefined) {
+    updates.push('e.startDate = $startDate');
+    params.startDate = input.startDate;
+  }
+  if (input.endDate !== undefined) {
+    updates.push('e.endDate = $endDate');
+    params.endDate = input.endDate;
   }
 
   if (updates.length > 0) {
@@ -286,6 +375,14 @@ export default {
     // Tag queries
     tag: async (_, { obj }) => getEntity('Tag', obj.id),
     tags: async () => getAllEntities('Tag'),
+
+    // Event queries
+    event: async (_, { obj }) => getEntity('Event', obj.id),
+    events: async () => getAllEntities('Event'),
+
+    // Narrative queries
+    narrative: async (_, { obj }) => getEntity('Narrative', obj.id),
+    narratives: async () => getAllEntities('Narrative'),
 
     // Search
     searchEntities: async (_, { query, type }) => {
@@ -336,6 +433,16 @@ export default {
     editTag: async (_, { tag }) => updateEntity('Tag', tag),
     removeTag: async (_, { tag }) => deleteEntity('Tag', tag.id),
 
+    // Event mutations
+    addEvent: async (_, { event }) => createEntity('Event', event),
+    editEvent: async (_, { event }) => updateEntity('Event', event),
+    removeEvent: async (_, { event }) => deleteEntity('Event', event.id),
+
+    // Narrative mutations
+    addNarrative: async (_, { narrative }) => createEntity('Narrative', narrative),
+    editNarrative: async (_, { narrative }) => updateEntity('Narrative', narrative),
+    removeNarrative: async (_, { narrative }) => deleteEntity('Narrative', narrative.id),
+
     // Relationship: CONTAINS
     relateContains: async (_, { relation }) => {
       // First, remove existing CONTAINS relationships
@@ -376,6 +483,58 @@ export default {
       }
 
       return { message: 'Tag relationships updated' };
+    },
+
+    // Event relationship: OCCURS_AT (Event -> Place)
+    relateOccursAt: async (_, { relation }) => {
+      // First, remove existing OCCURS_AT relationships
+      await runQuery(`
+        MATCH (e:Event {id: $eventId})-[r:OCCURS_AT]->()
+        DELETE r
+      `, { eventId: relation.eventId });
+
+      // Then create new relationships
+      if (relation.placeIds && relation.placeIds.length > 0) {
+        await runQuery(`
+          MATCH (e:Event {id: $eventId})
+          UNWIND $placeIds AS placeId
+          MATCH (p:Place {id: placeId})
+          CREATE (e)-[:OCCURS_AT]->(p)
+        `, { eventId: relation.eventId, placeIds: relation.placeIds });
+      }
+
+      return { message: 'Event location relationships updated' };
+    },
+
+    // Event relationship: INVOLVES (Event -> Character/Item)
+    relateInvolves: async (_, { relation }) => {
+      // First, remove existing INVOLVES relationships
+      await runQuery(`
+        MATCH (e:Event {id: $eventId})-[r:INVOLVES]->()
+        DELETE r
+      `, { eventId: relation.eventId });
+
+      // Create character relationships
+      if (relation.characterIds && relation.characterIds.length > 0) {
+        await runQuery(`
+          MATCH (e:Event {id: $eventId})
+          UNWIND $characterIds AS charId
+          MATCH (c:Character {id: charId})
+          CREATE (e)-[:INVOLVES]->(c)
+        `, { eventId: relation.eventId, characterIds: relation.characterIds });
+      }
+
+      // Create item relationships
+      if (relation.itemIds && relation.itemIds.length > 0) {
+        await runQuery(`
+          MATCH (e:Event {id: $eventId})
+          UNWIND $itemIds AS itemId
+          MATCH (i:Item {id: itemId})
+          CREATE (e)-[:INVOLVES]->(i)
+        `, { eventId: relation.eventId, itemIds: relation.itemIds });
+      }
+
+      return { message: 'Event participant relationships updated' };
     },
 
     // Image mutations

@@ -71,10 +71,17 @@ export async function getImageSignedUrl(key, expiresIn = 3600) {
 /**
  * Get the public URL for an image (for MinIO with public access)
  * Uses /s3 proxy path in development for browser access
+ * Supports local: prefix for files in public/entity-images/
  * @param {string} key - Object key
  * @returns {string}
  */
 export function getImageUrl(key) {
+  // Handle local files stored in public/entity-images/
+  if (key.startsWith('local:')) {
+    const localPath = key.replace('local:', '');
+    return `/entity-images/${localPath}`;
+  }
+
   // In development, use the /s3 proxy path (handled by Vite)
   // In production, use the actual S3 endpoint
   const isProduction = process.env.NODE_ENV === 'production';

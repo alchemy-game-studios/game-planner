@@ -13,6 +13,10 @@ type Query {
   items: [Entity!]!
   tag(obj: IdInput!): Entity
   tags: [Entity!]!
+  event(obj: IdInput!): Entity
+  events: [Entity!]!
+  narrative(obj: IdInput!): Entity
+  narratives: [Entity!]!
 
   # Search entities by name
   searchEntities(query: String!, type: String): [Entity!]!
@@ -47,9 +51,23 @@ type Mutation {
   editTag(tag: TagInput!): Response
   removeTag(tag: TagInput!): Response
 
+  # Event mutations
+  addEvent(event: EventInput!): Response
+  editEvent(event: EventInput!): Response
+  removeEvent(event: EventInput!): Response
+
+  # Narrative mutations
+  addNarrative(narrative: NarrativeInput!): Response
+  editNarrative(narrative: NarrativeInput!): Response
+  removeNarrative(narrative: NarrativeInput!): Response
+
   # Relationship mutations
   relateContains(relation: RelatableInput!): Response
   relateTagged(relation: TagRelationInput!): Response
+
+  # Event relationship mutations
+  relateOccursAt(relation: EventLocationInput!): Response
+  relateInvolves(relation: EventParticipantsInput!): Response
 
   # Image mutations
   reorderImages(entityId: String!, imageIds: [String!]!): [Image!]!
@@ -74,6 +92,13 @@ type Entity {
   tags: [EntityProperties!]!
   images: [Image!]!
   allImages: [EntityImage!]!
+  # Event-specific fields (populated for Event entities)
+  locations: [EntityProperties!]
+  participants: [EntityProperties!]
+  # Reverse lookup: events this entity is involved in
+  events: [EntityProperties!]
+  # For Events: their parent narrative
+  parentNarrative: EntityProperties
 }
 
 type EntityProperties {
@@ -81,6 +106,9 @@ type EntityProperties {
   name: String!
   description: String
   type: String
+  # Event-specific properties
+  startDate: String
+  endDate: String
 }
 
 type ContentItem {
@@ -166,6 +194,22 @@ input TagInput {
   type: String
 }
 
+input EventInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+  startDate: String
+  endDate: String
+}
+
+input NarrativeInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
 input RelatableInput {
   id: String!
   childIds: [String!]!
@@ -174,4 +218,15 @@ input RelatableInput {
 input TagRelationInput {
   id: String!
   tagIds: [String!]!
+}
+
+input EventLocationInput {
+  eventId: String!
+  placeIds: [String!]!
+}
+
+input EventParticipantsInput {
+  eventId: String!
+  characterIds: [String!]
+  itemIds: [String!]
 }

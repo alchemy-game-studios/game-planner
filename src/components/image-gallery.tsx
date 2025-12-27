@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ImageEditorDrawer } from './image-editor-drawer';
+import { getPlaceholderImage } from '@/media/util';
 
 interface Image {
   id: string;
@@ -93,19 +94,18 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   };
 
   if (displayImages.length === 0) {
+    const placeholderSrc = getPlaceholderImage('hero');
     return (
       <div className="relative rounded-lg overflow-hidden bg-gray-800 aspect-[2/1]">
-        {fallbackImage ? (
-          <img
-            src={fallbackImage}
-            alt="Entity"
-            className="w-full h-full object-cover opacity-50"
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            No images
-          </div>
-        )}
+        <img
+          src={fallbackImage || placeholderSrc}
+          alt={entityType}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            // If fallback fails, use placeholder
+            (e.target as HTMLImageElement).src = placeholderSrc;
+          }}
+        />
         <Button
           variant="ghost"
           size="sm"

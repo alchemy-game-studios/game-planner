@@ -15,7 +15,7 @@ interface EditableNodeListProps {
   initContents: any[];
   parentId: string;
   parentType: string;
-  entityType: 'place' | 'character' | 'item' | 'tag';
+  entityType: 'place' | 'character' | 'item' | 'tag' | 'event' | 'narrative';
   isTagRelation?: boolean;
   maxItems?: number;
   onUpdate?: () => void;
