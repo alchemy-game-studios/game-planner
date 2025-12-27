@@ -2,9 +2,10 @@ import { useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { Link } from 'react-router-dom';
 import { useBreadcrumbs } from '@/context/breadcrumb-context';
+import { ArrowRight, Package } from 'lucide-react';
 
-const GET_UNIVERSES = gql`
-  query Universes {
+const GET_HOME_DATA = gql`
+  query HomeData {
     universes {
       id
       properties {
@@ -14,11 +15,17 @@ const GET_UNIVERSES = gql`
         type
       }
     }
+    products {
+      id
+      name
+      type
+      gameType
+    }
   }
 `;
 
 export default function HomePage() {
-  const { loading, error, data } = useQuery(GET_UNIVERSES);
+  const { loading, error, data } = useQuery(GET_HOME_DATA);
   const { clear } = useBreadcrumbs();
 
   // Clear breadcrumbs when navigating to home
@@ -49,7 +56,30 @@ export default function HomePage() {
         <h1 className="text-4xl font-heading text-white">Game Planner</h1>
       </div>
 
-      <h2 className="text-2xl font-heading mb-4 text-white">Universes</h2>
+      {/* Products Section */}
+      <Link
+        to="/products"
+        className="block mb-8 p-6 rounded-lg border border-purple-500/30 bg-purple-900/20 hover:bg-purple-900/30 transition-colors group"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-lg bg-purple-600/20">
+              <Package className="h-6 w-6 text-purple-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-white">Products</h2>
+              <p className="text-gray-400 text-sm">
+                {data.products.length} {data.products.length === 1 ? 'product' : 'products'} - Games, books, and media based on your universes
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="h-5 w-5 text-purple-400 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </Link>
+
+      {/* Universes Section */}
+      <h2 className="text-2xl font-heading mb-4 text-white">IP Building</h2>
+      <p className="text-gray-400 mb-4 text-sm">Create and manage your universes, characters, places, and stories</p>
 
       <div className="grid gap-4">
         {data.universes.map((universe: any) => (

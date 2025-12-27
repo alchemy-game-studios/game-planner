@@ -226,6 +226,454 @@ async function getEventsForEntity(entityId, entityType) {
   return result.records.map(r => r.get('event'));
 }
 
+// ============================================
+// Product System Helpers
+// ============================================
+
+// Helper to get a single product with all related data
+async function getProduct(id) {
+  const result = await runQuery(`
+    MATCH (p:Product {id: $id})
+
+    // Get linked universe
+    OPTIONAL MATCH (p)-[:USES_IP]->(u:Universe)
+
+    // Get attribute definitions
+    OPTIONAL MATCH (p)-[:CONTAINS]->(attr:AttributeDefinition)
+    WITH p, u, collect(properties(attr)) AS attributes
+
+    // Get mechanic definitions
+    OPTIONAL MATCH (p)-[:CONTAINS]->(mech:MechanicDefinition)
+    WITH p, u, attributes, collect(properties(mech)) AS mechanics
+
+    // Get sections (for passive media)
+    OPTIONAL MATCH (p)-[:CONTAINS]->(sec:Section)
+    WITH p, u, attributes, mechanics, collect(properties(sec)) AS sections
+
+    // Get entity adaptations with source entity info
+    OPTIONAL MATCH (p)<-[:FOR_PRODUCT]-(adapt:EntityAdaptation)-[:ADAPTS]->(entity)
+    WITH p, u, attributes, mechanics, sections,
+         collect({
+           id: adapt.id,
+           cardName: adapt.cardName,
+           flavorText: adapt.flavorText,
+           attributeValues: adapt.attributeValues,
+           mechanicValues: adapt.mechanicValues,
+           artDirection: adapt.artDirection,
+           sourceEntity: properties(entity),
+           sourceType: toLower(labels(entity)[0])
+         }) AS adaptations
+
+    RETURN {
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      type: p.type,
+      gameType: p.gameType,
+      universe: CASE WHEN u IS NOT NULL THEN properties(u) ELSE NULL END,
+      attributes: attributes,
+      mechanics: mechanics,
+      sections: sections,
+      adaptations: [a IN adaptations WHERE a.id IS NOT NULL]
+    } AS product
+  `, { id });
+
+  if (result.records.length === 0) return null;
+
+  const product = result.records[0].get('product');
+  product.images = await getImagesForEntity(id);
+  return product;
+}
+
+// Helper to get all products
+async function getAllProducts() {
+  const result = await runQuery(`
+    MATCH (p:Product)
+
+    // Get linked universe
+    OPTIONAL MATCH (p)-[:USES_IP]->(u:Universe)
+
+    RETURN {
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      type: p.type,
+      gameType: p.gameType,
+      universe: CASE WHEN u IS NOT NULL THEN properties(u) ELSE NULL END,
+      attributes: [],
+      mechanics: [],
+      sections: [],
+      adaptations: []
+    } AS product
+  `);
+
+  return result.records.map(r => ({
+    ...r.get('product'),
+    images: []
+  }));
+}
+
+// Helper to create a product
+async function createProduct(input) {
+  const id = input.id || uuidv4();
+
+  await runQuery(`
+    CREATE (p:Product {
+      id: $id,
+      name: $name,
+      description: $description,
+      type: $type,
+      gameType: $gameType
+    })
+  `, {
+    id,
+    name: input.name || '',
+    description: input.description || '',
+    type: input.type || 'game',
+    gameType: input.gameType || ''
+  });
+
+  // Link to universe if provided
+  if (input.universeId) {
+    await runQuery(`
+      MATCH (p:Product {id: $productId})
+      MATCH (u:Universe {id: $universeId})
+      CREATE (p)-[:USES_IP]->(u)
+    `, { productId: id, universeId: input.universeId });
+  }
+
+  return { message: 'Product created successfully' };
+}
+
+// Helper to update a product
+async function updateProduct(input) {
+  const updates = [];
+  const params = { id: input.id };
+
+  if (input.name !== undefined) {
+    updates.push('p.name = $name');
+    params.name = input.name;
+  }
+  if (input.description !== undefined) {
+    updates.push('p.description = $description');
+    params.description = input.description;
+  }
+  if (input.type !== undefined) {
+    updates.push('p.type = $type');
+    params.type = input.type;
+  }
+  if (input.gameType !== undefined) {
+    updates.push('p.gameType = $gameType');
+    params.gameType = input.gameType;
+  }
+
+  if (updates.length > 0) {
+    await runQuery(`
+      MATCH (p:Product {id: $id})
+      SET ${updates.join(', ')}
+    `, params);
+  }
+
+  // Update universe link if provided
+  if (input.universeId !== undefined) {
+    // Remove existing link
+    await runQuery(`
+      MATCH (p:Product {id: $id})-[r:USES_IP]->()
+      DELETE r
+    `, { id: input.id });
+
+    // Create new link if universeId is provided
+    if (input.universeId) {
+      await runQuery(`
+        MATCH (p:Product {id: $id})
+        MATCH (u:Universe {id: $universeId})
+        CREATE (p)-[:USES_IP]->(u)
+      `, { id: input.id, universeId: input.universeId });
+    }
+  }
+
+  return { message: 'Product updated successfully' };
+}
+
+// Helper to delete a product
+async function deleteProduct(id) {
+  // Delete all related entities first
+  await runQuery(`
+    MATCH (p:Product {id: $id})
+    OPTIONAL MATCH (p)-[:CONTAINS]->(child)
+    OPTIONAL MATCH (adapt:EntityAdaptation)-[:FOR_PRODUCT]->(p)
+    DETACH DELETE child, adapt, p
+  `, { id });
+  return { message: 'Product deleted successfully' };
+}
+
+// Helper to create AttributeDefinition
+async function createAttributeDefinition(input) {
+  const id = input.id || uuidv4();
+
+  await runQuery(`
+    MATCH (p:Product {id: $productId})
+    CREATE (a:AttributeDefinition {
+      id: $id,
+      name: $name,
+      description: $description,
+      valueType: $valueType,
+      defaultValue: $defaultValue,
+      options: $options,
+      min: $min,
+      max: $max
+    })
+    CREATE (p)-[:CONTAINS]->(a)
+  `, {
+    productId: input.productId,
+    id,
+    name: input.name || '',
+    description: input.description || '',
+    valueType: input.valueType || 'text',
+    defaultValue: input.defaultValue || '',
+    options: input.options || '',
+    min: input.min || null,
+    max: input.max || null
+  });
+
+  return { message: 'Attribute definition created successfully' };
+}
+
+// Helper to update AttributeDefinition
+async function updateAttributeDefinition(input) {
+  const updates = [];
+  const params = { id: input.id };
+
+  if (input.name !== undefined) { updates.push('a.name = $name'); params.name = input.name; }
+  if (input.description !== undefined) { updates.push('a.description = $description'); params.description = input.description; }
+  if (input.valueType !== undefined) { updates.push('a.valueType = $valueType'); params.valueType = input.valueType; }
+  if (input.defaultValue !== undefined) { updates.push('a.defaultValue = $defaultValue'); params.defaultValue = input.defaultValue; }
+  if (input.options !== undefined) { updates.push('a.options = $options'); params.options = input.options; }
+  if (input.min !== undefined) { updates.push('a.min = $min'); params.min = input.min; }
+  if (input.max !== undefined) { updates.push('a.max = $max'); params.max = input.max; }
+
+  if (updates.length > 0) {
+    await runQuery(`
+      MATCH (a:AttributeDefinition {id: $id})
+      SET ${updates.join(', ')}
+    `, params);
+  }
+
+  return { message: 'Attribute definition updated successfully' };
+}
+
+// Helper to delete AttributeDefinition
+async function deleteAttributeDefinition(id) {
+  await runQuery(`
+    MATCH (a:AttributeDefinition {id: $id})
+    DETACH DELETE a
+  `, { id });
+  return { message: 'Attribute definition deleted successfully' };
+}
+
+// Helper to create MechanicDefinition
+async function createMechanicDefinition(input) {
+  const id = input.id || uuidv4();
+
+  await runQuery(`
+    MATCH (p:Product {id: $productId})
+    CREATE (m:MechanicDefinition {
+      id: $id,
+      name: $name,
+      description: $description,
+      category: $category,
+      hasValue: $hasValue,
+      valueType: $valueType
+    })
+    CREATE (p)-[:CONTAINS]->(m)
+  `, {
+    productId: input.productId,
+    id,
+    name: input.name || '',
+    description: input.description || '',
+    category: input.category || '',
+    hasValue: input.hasValue || false,
+    valueType: input.valueType || ''
+  });
+
+  return { message: 'Mechanic definition created successfully' };
+}
+
+// Helper to update MechanicDefinition
+async function updateMechanicDefinition(input) {
+  const updates = [];
+  const params = { id: input.id };
+
+  if (input.name !== undefined) { updates.push('m.name = $name'); params.name = input.name; }
+  if (input.description !== undefined) { updates.push('m.description = $description'); params.description = input.description; }
+  if (input.category !== undefined) { updates.push('m.category = $category'); params.category = input.category; }
+  if (input.hasValue !== undefined) { updates.push('m.hasValue = $hasValue'); params.hasValue = input.hasValue; }
+  if (input.valueType !== undefined) { updates.push('m.valueType = $valueType'); params.valueType = input.valueType; }
+
+  if (updates.length > 0) {
+    await runQuery(`
+      MATCH (m:MechanicDefinition {id: $id})
+      SET ${updates.join(', ')}
+    `, params);
+  }
+
+  return { message: 'Mechanic definition updated successfully' };
+}
+
+// Helper to delete MechanicDefinition
+async function deleteMechanicDefinition(id) {
+  await runQuery(`
+    MATCH (m:MechanicDefinition {id: $id})
+    DETACH DELETE m
+  `, { id });
+  return { message: 'Mechanic definition deleted successfully' };
+}
+
+// Helper to create EntityAdaptation
+async function createEntityAdaptation(input) {
+  const id = input.id || uuidv4();
+  const entityLabel = input.entityType.charAt(0).toUpperCase() + input.entityType.slice(1);
+
+  await runQuery(`
+    MATCH (p:Product {id: $productId})
+    MATCH (e:${entityLabel} {id: $entityId})
+    CREATE (a:EntityAdaptation {
+      id: $id,
+      cardName: $cardName,
+      flavorText: $flavorText,
+      attributeValues: $attributeValues,
+      mechanicValues: $mechanicValues,
+      artDirection: $artDirection
+    })
+    CREATE (a)-[:FOR_PRODUCT]->(p)
+    CREATE (a)-[:ADAPTS]->(e)
+  `, {
+    productId: input.productId,
+    entityId: input.entityId,
+    id,
+    cardName: input.cardName || '',
+    flavorText: input.flavorText || '',
+    attributeValues: input.attributeValues || '{}',
+    mechanicValues: input.mechanicValues || '{}',
+    artDirection: input.artDirection || ''
+  });
+
+  return { message: 'Entity adaptation created successfully' };
+}
+
+// Helper to update EntityAdaptation
+async function updateEntityAdaptation(input) {
+  const updates = [];
+  const params = { id: input.id };
+
+  if (input.cardName !== undefined) { updates.push('a.cardName = $cardName'); params.cardName = input.cardName; }
+  if (input.flavorText !== undefined) { updates.push('a.flavorText = $flavorText'); params.flavorText = input.flavorText; }
+  if (input.attributeValues !== undefined) { updates.push('a.attributeValues = $attributeValues'); params.attributeValues = input.attributeValues; }
+  if (input.mechanicValues !== undefined) { updates.push('a.mechanicValues = $mechanicValues'); params.mechanicValues = input.mechanicValues; }
+  if (input.artDirection !== undefined) { updates.push('a.artDirection = $artDirection'); params.artDirection = input.artDirection; }
+
+  if (updates.length > 0) {
+    await runQuery(`
+      MATCH (a:EntityAdaptation {id: $id})
+      SET ${updates.join(', ')}
+    `, params);
+  }
+
+  return { message: 'Entity adaptation updated successfully' };
+}
+
+// Helper to delete EntityAdaptation
+async function deleteEntityAdaptation(id) {
+  await runQuery(`
+    MATCH (a:EntityAdaptation {id: $id})
+    DETACH DELETE a
+  `, { id });
+  return { message: 'Entity adaptation deleted successfully' };
+}
+
+// Helper to create Section
+async function createSection(input) {
+  const id = input.id || uuidv4();
+
+  await runQuery(`
+    MATCH (p:Product {id: $productId})
+    CREATE (s:Section {
+      id: $id,
+      name: $name,
+      description: $description,
+      order: $order,
+      sectionType: $sectionType
+    })
+    CREATE (p)-[:CONTAINS]->(s)
+  `, {
+    productId: input.productId,
+    id,
+    name: input.name || '',
+    description: input.description || '',
+    order: input.order || 0,
+    sectionType: input.sectionType || ''
+  });
+
+  return { message: 'Section created successfully' };
+}
+
+// Helper to update Section
+async function updateSection(input) {
+  const updates = [];
+  const params = { id: input.id };
+
+  if (input.name !== undefined) { updates.push('s.name = $name'); params.name = input.name; }
+  if (input.description !== undefined) { updates.push('s.description = $description'); params.description = input.description; }
+  if (input.order !== undefined) { updates.push('s.order = $order'); params.order = input.order; }
+  if (input.sectionType !== undefined) { updates.push('s.sectionType = $sectionType'); params.sectionType = input.sectionType; }
+
+  if (updates.length > 0) {
+    await runQuery(`
+      MATCH (s:Section {id: $id})
+      SET ${updates.join(', ')}
+    `, params);
+  }
+
+  return { message: 'Section updated successfully' };
+}
+
+// Helper to delete Section
+async function deleteSection(id) {
+  await runQuery(`
+    MATCH (s:Section {id: $id})
+    DETACH DELETE s
+  `, { id });
+  return { message: 'Section deleted successfully' };
+}
+
+// Helper to get locations for a section
+async function getLocationsForSection(sectionId) {
+  const result = await runQuery(`
+    MATCH (s:Section {id: $sectionId})-[:OCCURS_AT]->(p:Place)
+    RETURN properties(p) AS place
+  `, { sectionId });
+
+  return result.records.map(r => r.get('place'));
+}
+
+// Helper to get participants for a section
+async function getParticipantsForSection(sectionId) {
+  const result = await runQuery(`
+    MATCH (s:Section {id: $sectionId})-[:INVOLVES]->(p)
+    RETURN properties(p) AS participant,
+           CASE
+             WHEN p:Character THEN 'character'
+             WHEN p:Item THEN 'item'
+             ELSE 'unknown'
+           END AS nodeType
+  `, { sectionId });
+
+  return result.records.map(r => ({
+    ...r.get('participant'),
+    _nodeType: r.get('nodeType')
+  }));
+}
+
 // Helper to get single entity with contents and tags
 async function getEntity(type, id) {
   const result = await runQuery(`
@@ -430,6 +878,10 @@ export default {
     narrative: async (_, { obj }) => getEntity('Narrative', obj.id),
     narratives: async () => getAllEntities('Narrative'),
 
+    // Product queries
+    product: async (_, { obj }) => getProduct(obj.id),
+    products: async () => getAllProducts(),
+
     // Search
     searchEntities: async (_, { query, type }) => {
       const typeFilter = type ? `:${type.charAt(0).toUpperCase() + type.slice(1)}` : '';
@@ -627,6 +1079,78 @@ export default {
       `, { imageId });
 
       return { message: 'Image deleted successfully' };
+    },
+
+    // ============================================
+    // Product System Mutations
+    // ============================================
+
+    // Product mutations
+    addProduct: async (_, { product }) => createProduct(product),
+    editProduct: async (_, { product }) => updateProduct(product),
+    removeProduct: async (_, { product }) => deleteProduct(product.id),
+
+    // AttributeDefinition mutations
+    addAttributeDefinition: async (_, { attr }) => createAttributeDefinition(attr),
+    editAttributeDefinition: async (_, { attr }) => updateAttributeDefinition(attr),
+    removeAttributeDefinition: async (_, { attr }) => deleteAttributeDefinition(attr.id),
+
+    // MechanicDefinition mutations
+    addMechanicDefinition: async (_, { mechanic }) => createMechanicDefinition(mechanic),
+    editMechanicDefinition: async (_, { mechanic }) => updateMechanicDefinition(mechanic),
+    removeMechanicDefinition: async (_, { mechanic }) => deleteMechanicDefinition(mechanic.id),
+
+    // EntityAdaptation mutations
+    addEntityAdaptation: async (_, { adaptation }) => createEntityAdaptation(adaptation),
+    editEntityAdaptation: async (_, { adaptation }) => updateEntityAdaptation(adaptation),
+    removeEntityAdaptation: async (_, { adaptation }) => deleteEntityAdaptation(adaptation.id),
+
+    // Section mutations
+    addSection: async (_, { section }) => createSection(section),
+    editSection: async (_, { section }) => updateSection(section),
+    removeSection: async (_, { section }) => deleteSection(section.id),
+
+    // Section relationship: OCCURS_AT and INVOLVES (like Events)
+    relateSectionEntities: async (_, { relation }) => {
+      const sectionId = relation.sectionId;
+
+      // Remove existing relationships
+      await runQuery(`
+        MATCH (s:Section {id: $sectionId})-[r:OCCURS_AT|INVOLVES]->()
+        DELETE r
+      `, { sectionId });
+
+      // Create place relationships
+      if (relation.placeIds && relation.placeIds.length > 0) {
+        await runQuery(`
+          MATCH (s:Section {id: $sectionId})
+          UNWIND $placeIds AS placeId
+          MATCH (p:Place {id: placeId})
+          CREATE (s)-[:OCCURS_AT]->(p)
+        `, { sectionId, placeIds: relation.placeIds });
+      }
+
+      // Create character relationships
+      if (relation.characterIds && relation.characterIds.length > 0) {
+        await runQuery(`
+          MATCH (s:Section {id: $sectionId})
+          UNWIND $characterIds AS charId
+          MATCH (c:Character {id: charId})
+          CREATE (s)-[:INVOLVES]->(c)
+        `, { sectionId, characterIds: relation.characterIds });
+      }
+
+      // Create item relationships
+      if (relation.itemIds && relation.itemIds.length > 0) {
+        await runQuery(`
+          MATCH (s:Section {id: $sectionId})
+          UNWIND $itemIds AS itemId
+          MATCH (i:Item {id: itemId})
+          CREATE (s)-[:INVOLVES]->(i)
+        `, { sectionId, itemIds: relation.itemIds });
+      }
+
+      return { message: 'Section entity relationships updated' };
     }
   }
 };

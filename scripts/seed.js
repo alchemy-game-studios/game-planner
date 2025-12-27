@@ -1898,6 +1898,253 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
     // Place 2 - Shadowmere Forest
     { id: IMG_PLACE_2_HERO, entityId: PLACE_2_ID, filename: 'hero.jpg', key: `local:${PLACE_2_ID}/hero.jpg`, mimeType: 'image/jpeg', size: 100000, rank: 0 },
     { id: IMG_PLACE_2_AVATAR, entityId: PLACE_2_ID, filename: 'avatar.jpg', key: `local:${PLACE_2_ID}/avatar.jpg`, mimeType: 'image/jpeg', size: 50000, rank: 1 }
+  ],
+
+  // ============================================
+  // Product System Seed Data
+  // ============================================
+  products: [
+    {
+      id: 'product-001',
+      name: 'Eldoria: Legends',
+      description: 'A collectible card game set in the world of Eldoria. Build decks featuring heroes, creatures, and magical artifacts from across the realm.',
+      type: 'game',
+      gameType: 'card',
+      universeId: UNIVERSE_1_ID
+    },
+    {
+      id: 'product-002',
+      name: 'Chronicles of Eldoria',
+      description: 'An epic fantasy novel series exploring the rich lore and characters of Eldoria.',
+      type: 'book',
+      gameType: '',
+      universeId: UNIVERSE_1_ID
+    }
+  ],
+
+  // Attribute definitions for Eldoria: Legends card game
+  attributeDefinitions: [
+    {
+      id: 'attr-001',
+      productId: 'product-001',
+      name: 'Mana Cost',
+      description: 'The amount of mana required to play this card.',
+      valueType: 'number',
+      defaultValue: '0',
+      options: '',
+      min: 0,
+      max: 15
+    },
+    {
+      id: 'attr-002',
+      productId: 'product-001',
+      name: 'Power',
+      description: 'The attack strength of a creature.',
+      valueType: 'number',
+      defaultValue: '0',
+      options: '',
+      min: 0,
+      max: 20
+    },
+    {
+      id: 'attr-003',
+      productId: 'product-001',
+      name: 'Toughness',
+      description: 'The amount of damage a creature can take before being destroyed.',
+      valueType: 'number',
+      defaultValue: '0',
+      options: '',
+      min: 0,
+      max: 20
+    },
+    {
+      id: 'attr-004',
+      productId: 'product-001',
+      name: 'Card Type',
+      description: 'The category of this card.',
+      valueType: 'enum',
+      defaultValue: 'Creature',
+      options: '["Creature", "Spell", "Artifact", "Enchantment", "Land"]',
+      min: null,
+      max: null
+    },
+    {
+      id: 'attr-005',
+      productId: 'product-001',
+      name: 'Rarity',
+      description: 'How rare this card is in packs.',
+      valueType: 'enum',
+      defaultValue: 'Common',
+      options: '["Common", "Uncommon", "Rare", "Mythic"]',
+      min: null,
+      max: null
+    }
+  ],
+
+  // Mechanic definitions for Eldoria: Legends card game
+  mechanicDefinitions: [
+    {
+      id: 'mech-001',
+      productId: 'product-001',
+      name: 'Flying',
+      description: 'This creature can only be blocked by creatures with Flying or Reach.',
+      category: 'keyword',
+      hasValue: false,
+      valueType: ''
+    },
+    {
+      id: 'mech-002',
+      productId: 'product-001',
+      name: 'First Strike',
+      description: 'This creature deals combat damage before creatures without First Strike.',
+      category: 'keyword',
+      hasValue: false,
+      valueType: ''
+    },
+    {
+      id: 'mech-003',
+      productId: 'product-001',
+      name: 'Haste',
+      description: 'This creature can attack and use abilities the turn it enters the battlefield.',
+      category: 'keyword',
+      hasValue: false,
+      valueType: ''
+    },
+    {
+      id: 'mech-004',
+      productId: 'product-001',
+      name: 'Vigilance',
+      description: 'Attacking doesn\'t cause this creature to tap.',
+      category: 'keyword',
+      hasValue: false,
+      valueType: ''
+    },
+    {
+      id: 'mech-005',
+      productId: 'product-001',
+      name: 'Lifelink',
+      description: 'Damage dealt by this creature also causes you to gain that much life.',
+      category: 'keyword',
+      hasValue: false,
+      valueType: ''
+    },
+    {
+      id: 'mech-006',
+      productId: 'product-001',
+      name: 'Draw Cards',
+      description: 'Draw a number of cards from your library.',
+      category: 'ability',
+      hasValue: true,
+      valueType: 'number'
+    },
+    {
+      id: 'mech-007',
+      productId: 'product-001',
+      name: 'Deal Damage',
+      description: 'Deal damage to any target.',
+      category: 'ability',
+      hasValue: true,
+      valueType: 'number'
+    }
+  ],
+
+  // Entity adaptations - mapping IP entities to product-specific stats
+  entityAdaptations: [
+    // Lyra Nightwhisper as a card
+    {
+      id: 'adapt-001',
+      productId: 'product-001',
+      entityId: 'char-001',
+      entityType: 'character',
+      cardName: 'Lyra, Shadow Dancer',
+      flavorText: 'The shadows are not darkness - they are possibility.',
+      attributeValues: JSON.stringify({ 'attr-001': 3, 'attr-002': 2, 'attr-003': 3, 'attr-004': 'Creature', 'attr-005': 'Rare' }),
+      mechanicValues: JSON.stringify({ 'mech-001': true, 'mech-002': true }),
+      artDirection: 'Lyra emerging from shadows with dual daggers, ethereal purple mist surrounding her.'
+    },
+    // Theron Brightblade as a card
+    {
+      id: 'adapt-002',
+      productId: 'product-001',
+      entityId: 'char-002',
+      entityType: 'character',
+      cardName: 'Theron, Paladin of Light',
+      flavorText: 'His oath to protect burns brighter than any flame.',
+      attributeValues: JSON.stringify({ 'attr-001': 4, 'attr-002': 4, 'attr-003': 4, 'attr-004': 'Creature', 'attr-005': 'Rare' }),
+      mechanicValues: JSON.stringify({ 'mech-004': true, 'mech-005': true }),
+      artDirection: 'Theron in gleaming armor, sword raised, divine light emanating from behind.'
+    },
+    // Zara the Windweaver as a card
+    {
+      id: 'adapt-003',
+      productId: 'product-001',
+      entityId: 'char-003',
+      entityType: 'character',
+      cardName: 'Zara, Master of Winds',
+      flavorText: 'She speaks, and the storm answers.',
+      attributeValues: JSON.stringify({ 'attr-001': 5, 'attr-002': 3, 'attr-003': 3, 'attr-004': 'Creature', 'attr-005': 'Mythic' }),
+      mechanicValues: JSON.stringify({ 'mech-001': true, 'mech-006': 2 }),
+      artDirection: 'Zara floating mid-air surrounded by swirling winds and arcane runes.'
+    },
+    // Grimjaw the Unyielding as a card
+    {
+      id: 'adapt-004',
+      productId: 'product-001',
+      entityId: 'char-004',
+      entityType: 'character',
+      cardName: 'Grimjaw, Stone Sentinel',
+      flavorText: 'Mountains crumble. Grimjaw stands.',
+      attributeValues: JSON.stringify({ 'attr-001': 6, 'attr-002': 6, 'attr-003': 8, 'attr-004': 'Creature', 'attr-005': 'Rare' }),
+      mechanicValues: JSON.stringify({ 'mech-004': true }),
+      artDirection: 'Massive stone giant with moss-covered shoulders, standing before a mountain pass.'
+    },
+    // Starshard as a card (item)
+    {
+      id: 'adapt-005',
+      productId: 'product-001',
+      entityId: 'item-001',
+      entityType: 'item',
+      cardName: 'Starshard Crystal',
+      flavorText: 'A fragment of the heavens, fallen to mortal hands.',
+      attributeValues: JSON.stringify({ 'attr-001': 2, 'attr-004': 'Artifact', 'attr-005': 'Uncommon' }),
+      mechanicValues: JSON.stringify({ 'mech-006': 1 }),
+      artDirection: 'A glowing crystalline shard floating above an outstretched hand, starlight refracting through it.'
+    }
+  ],
+
+  // Sections for the book product
+  sections: [
+    {
+      id: 'section-001',
+      productId: 'product-002',
+      name: 'The Shadow\'s Awakening',
+      description: 'Lyra discovers her shadow powers during an attack on Thornhaven.',
+      order: 1,
+      sectionType: 'chapter'
+    },
+    {
+      id: 'section-002',
+      productId: 'product-002',
+      name: 'The Road to the Citadel',
+      description: 'Our heroes journey through Shadowmere Forest toward the Crystal Citadel.',
+      order: 2,
+      sectionType: 'chapter'
+    },
+    {
+      id: 'section-003',
+      productId: 'product-002',
+      name: 'Secrets of the Sunken Library',
+      description: 'Zara leads an expedition to retrieve forbidden knowledge.',
+      order: 3,
+      sectionType: 'chapter'
+    }
+  ],
+
+  // Section entity relations (which places/characters appear in each section)
+  sectionRelations: [
+    { sectionId: 'section-001', placeIds: ['place-007'], characterIds: ['char-001', 'char-010'], itemIds: [] },
+    { sectionId: 'section-002', placeIds: [PLACE_2_ID, PLACE_1_ID], characterIds: ['char-001', 'char-002', 'char-003'], itemIds: ['item-001'] },
+    { sectionId: 'section-003', placeIds: ['place-006'], characterIds: ['char-003', 'char-005'], itemIds: ['item-007'] }
   ]
 };
 
@@ -1916,7 +2163,13 @@ async function createConstraints(session) {
     'CREATE CONSTRAINT tag_id IF NOT EXISTS FOR (t:Tag) REQUIRE t.id IS UNIQUE',
     'CREATE CONSTRAINT event_id IF NOT EXISTS FOR (e:Event) REQUIRE e.id IS UNIQUE',
     'CREATE CONSTRAINT narrative_id IF NOT EXISTS FOR (n:Narrative) REQUIRE n.id IS UNIQUE',
-    'CREATE CONSTRAINT image_id IF NOT EXISTS FOR (i:Image) REQUIRE i.id IS UNIQUE'
+    'CREATE CONSTRAINT image_id IF NOT EXISTS FOR (i:Image) REQUIRE i.id IS UNIQUE',
+    // Product system constraints
+    'CREATE CONSTRAINT product_id IF NOT EXISTS FOR (p:Product) REQUIRE p.id IS UNIQUE',
+    'CREATE CONSTRAINT attribute_def_id IF NOT EXISTS FOR (a:AttributeDefinition) REQUIRE a.id IS UNIQUE',
+    'CREATE CONSTRAINT mechanic_def_id IF NOT EXISTS FOR (m:MechanicDefinition) REQUIRE m.id IS UNIQUE',
+    'CREATE CONSTRAINT entity_adaptation_id IF NOT EXISTS FOR (e:EntityAdaptation) REQUIRE e.id IS UNIQUE',
+    'CREATE CONSTRAINT section_id IF NOT EXISTS FOR (s:Section) REQUIRE s.id IS UNIQUE'
   ];
 
   for (const constraint of constraints) {
@@ -2067,6 +2320,137 @@ async function seedImages(session) {
   }
 }
 
+// ============================================
+// Product System Seed Functions
+// ============================================
+
+async function seedProducts(session) {
+  console.log('Seeding products...');
+  for (const product of seedData.products) {
+    await session.run(
+      `CREATE (p:Product {id: $id, name: $name, description: $description, type: $type, gameType: $gameType})
+       WITH p
+       MATCH (u:Universe {id: $universeId})
+       CREATE (p)-[:USES_IP]->(u)`,
+      product
+    );
+  }
+}
+
+async function seedAttributeDefinitions(session) {
+  console.log('Seeding attribute definitions...');
+  for (const attr of seedData.attributeDefinitions) {
+    await session.run(
+      `CREATE (a:AttributeDefinition {
+        id: $id,
+        name: $name,
+        description: $description,
+        valueType: $valueType,
+        defaultValue: $defaultValue,
+        options: $options,
+        min: $min,
+        max: $max
+      })
+       WITH a
+       MATCH (p:Product {id: $productId})
+       CREATE (p)-[:CONTAINS]->(a)`,
+      attr
+    );
+  }
+}
+
+async function seedMechanicDefinitions(session) {
+  console.log('Seeding mechanic definitions...');
+  for (const mech of seedData.mechanicDefinitions) {
+    await session.run(
+      `CREATE (m:MechanicDefinition {
+        id: $id,
+        name: $name,
+        description: $description,
+        category: $category,
+        hasValue: $hasValue,
+        valueType: $valueType
+      })
+       WITH m
+       MATCH (p:Product {id: $productId})
+       CREATE (p)-[:CONTAINS]->(m)`,
+      mech
+    );
+  }
+}
+
+async function seedEntityAdaptations(session) {
+  console.log('Seeding entity adaptations...');
+  for (const adapt of seedData.entityAdaptations) {
+    const entityLabel = adapt.entityType.charAt(0).toUpperCase() + adapt.entityType.slice(1);
+    await session.run(
+      `CREATE (a:EntityAdaptation {
+        id: $id,
+        cardName: $cardName,
+        flavorText: $flavorText,
+        attributeValues: $attributeValues,
+        mechanicValues: $mechanicValues,
+        artDirection: $artDirection
+      })
+       WITH a
+       MATCH (p:Product {id: $productId})
+       MATCH (e:${entityLabel} {id: $entityId})
+       CREATE (a)-[:FOR_PRODUCT]->(p)
+       CREATE (a)-[:ADAPTS]->(e)`,
+      adapt
+    );
+  }
+}
+
+async function seedSections(session) {
+  console.log('Seeding sections...');
+  for (const section of seedData.sections) {
+    await session.run(
+      `CREATE (s:Section {
+        id: $id,
+        name: $name,
+        description: $description,
+        order: $order,
+        sectionType: $sectionType
+      })
+       WITH s
+       MATCH (p:Product {id: $productId})
+       CREATE (p)-[:CONTAINS]->(s)`,
+      section
+    );
+  }
+}
+
+async function seedSectionRelations(session) {
+  console.log('Seeding section relations...');
+  for (const relation of seedData.sectionRelations) {
+    // Create OCCURS_AT relationships (Section -> Place)
+    for (const placeId of relation.placeIds || []) {
+      await session.run(
+        `MATCH (s:Section {id: $sectionId}), (p:Place {id: $placeId})
+         CREATE (s)-[:OCCURS_AT]->(p)`,
+        { sectionId: relation.sectionId, placeId }
+      );
+    }
+    // Create INVOLVES relationships for characters
+    for (const characterId of relation.characterIds || []) {
+      await session.run(
+        `MATCH (s:Section {id: $sectionId}), (c:Character {id: $characterId})
+         CREATE (s)-[:INVOLVES]->(c)`,
+        { sectionId: relation.sectionId, characterId }
+      );
+    }
+    // Create INVOLVES relationships for items
+    for (const itemId of relation.itemIds || []) {
+      await session.run(
+        `MATCH (s:Section {id: $sectionId}), (i:Item {id: $itemId})
+         CREATE (s)-[:INVOLVES]->(i)`,
+        { sectionId: relation.sectionId, itemId }
+      );
+    }
+  }
+}
+
 async function seed() {
   const session = driver.session();
 
@@ -2086,8 +2470,17 @@ async function seed() {
     await seedEventRelations(session);
     await seedImages(session);
 
+    // Product system seeding
+    await seedProducts(session);
+    await seedAttributeDefinitions(session);
+    await seedMechanicDefinitions(session);
+    await seedEntityAdaptations(session);
+    await seedSections(session);
+    await seedSectionRelations(session);
+
     console.log('Seeding complete!');
     console.log(`Created: ${seedData.universes.length} universes, ${seedData.places.length} places, ${seedData.characters.length} characters, ${seedData.items.length} items, ${seedData.tags.length} tags, ${seedData.narratives.length} narratives, ${seedData.events.length} events, ${seedData.images.length} images`);
+    console.log(`Product system: ${seedData.products.length} products, ${seedData.attributeDefinitions.length} attributes, ${seedData.mechanicDefinitions.length} mechanics, ${seedData.entityAdaptations.length} adaptations, ${seedData.sections.length} sections`);
 
   } catch (error) {
     console.error('Seeding failed:', error);

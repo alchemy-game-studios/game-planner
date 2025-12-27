@@ -2,6 +2,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom"
 import App from "./App"
 import HomePage from "@/pages/home"
 import EditEntityPage from "@/pages/edit-entity"
+import ProductsPage from "@/pages/products"
+import ProductPage from "@/pages/product"
 
 const router = createBrowserRouter([
   {
@@ -15,6 +17,14 @@ const router = createBrowserRouter([
       {
         path: "edit/:type/:id",
         element: <EditEntityPage />,
+      },
+      {
+        path: "products",
+        element: <ProductsPage />,
+      },
+      {
+        path: "product/:id",
+        element: <ProductPage />,
       },
     ],
   },

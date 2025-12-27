@@ -20,6 +20,10 @@ type Query {
 
   # Search entities by name
   searchEntities(query: String!, type: String): [Entity!]!
+
+  # Product queries
+  product(obj: IdInput!): Product
+  products: [Product!]!
 }
 
 # Mutation type for modifying data
@@ -72,6 +76,32 @@ type Mutation {
   # Image mutations
   reorderImages(entityId: String!, imageIds: [String!]!): [Image!]!
   removeImage(imageId: String!): Response
+
+  # Product mutations
+  addProduct(product: ProductInput!): Response
+  editProduct(product: ProductInput!): Response
+  removeProduct(product: ProductInput!): Response
+
+  # AttributeDefinition mutations
+  addAttributeDefinition(attr: AttributeDefinitionInput!): Response
+  editAttributeDefinition(attr: AttributeDefinitionInput!): Response
+  removeAttributeDefinition(attr: AttributeDefinitionInput!): Response
+
+  # MechanicDefinition mutations
+  addMechanicDefinition(mechanic: MechanicDefinitionInput!): Response
+  editMechanicDefinition(mechanic: MechanicDefinitionInput!): Response
+  removeMechanicDefinition(mechanic: MechanicDefinitionInput!): Response
+
+  # EntityAdaptation mutations
+  addEntityAdaptation(adaptation: EntityAdaptationInput!): Response
+  editEntityAdaptation(adaptation: EntityAdaptationInput!): Response
+  removeEntityAdaptation(adaptation: EntityAdaptationInput!): Response
+
+  # Section mutations (for passive media products)
+  addSection(section: SectionInput!): Response
+  editSection(section: SectionInput!): Response
+  removeSection(section: SectionInput!): Response
+  relateSectionEntities(relation: SectionEntitiesInput!): Response
 }
 
 # Common types
@@ -238,6 +268,130 @@ input EventLocationInput {
 
 input EventParticipantsInput {
   eventId: String!
+  characterIds: [String!]
+  itemIds: [String!]
+}
+
+# ============================================
+# Product System Types
+# ============================================
+
+# Product - a game, book, movie, or other media based on universe IP
+type Product {
+  id: String!
+  name: String!
+  description: String
+  type: String!                           # game, book, movie, comic
+  gameType: String                        # card, board, ttrpg, video (if type=game)
+  universe: EntityProperties              # Linked universe
+  attributes: [AttributeDefinition!]!     # User-defined stats
+  mechanics: [MechanicDefinition!]!       # User-defined abilities
+  sections: [Section!]!                   # For passive media (chapters, scenes)
+  adaptations: [EntityAdaptation!]!       # IP entity mappings
+  images: [Image!]!
+}
+
+# AttributeDefinition - user-defined stat type for a product
+type AttributeDefinition {
+  id: String!
+  name: String!
+  description: String
+  valueType: String!                      # number, text, boolean, enum
+  defaultValue: String
+  options: String                         # JSON array for enum options
+  min: Int
+  max: Int
+}
+
+# MechanicDefinition - user-defined ability/mechanic for a product
+type MechanicDefinition {
+  id: String!
+  name: String!
+  description: String
+  category: String                        # keyword, ability, action, passive
+  hasValue: Boolean
+  valueType: String                       # number, text (if hasValue)
+}
+
+# EntityAdaptation - maps an IP entity to a product with stats/mechanics
+type EntityAdaptation {
+  id: String!
+  sourceEntity: EntityProperties!         # The IP entity being adapted
+  sourceType: String!                     # character, item, place, event
+  cardName: String                        # Override name for this product
+  flavorText: String                      # Product-specific flavor text
+  attributeValues: String                 # JSON { attrId: value }
+  mechanicValues: String                  # JSON { mechId: value/true }
+  artDirection: String                    # Notes for AI/artist
+}
+
+# Section - for passive media (chapters, scenes, issues)
+type Section {
+  id: String!
+  name: String!
+  description: String
+  order: Int!                             # Sequence order
+  sectionType: String                     # chapter, scene, issue, page
+  locations: [EntityProperties!]          # Places referenced
+  participants: [Participant!]            # Characters/items referenced
+}
+
+# Product input types
+input ProductInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+  gameType: String
+  universeId: String
+}
+
+input AttributeDefinitionInput {
+  id: String!
+  productId: String!
+  name: String
+  description: String
+  valueType: String
+  defaultValue: String
+  options: String
+  min: Int
+  max: Int
+}
+
+input MechanicDefinitionInput {
+  id: String!
+  productId: String!
+  name: String
+  description: String
+  category: String
+  hasValue: Boolean
+  valueType: String
+}
+
+input EntityAdaptationInput {
+  id: String!
+  productId: String!
+  entityId: String!
+  entityType: String!
+  cardName: String
+  flavorText: String
+  attributeValues: String
+  mechanicValues: String
+  artDirection: String
+}
+
+input SectionInput {
+  id: String!
+  productId: String!
+  name: String
+  description: String
+  order: Int
+  sectionType: String
+}
+
+input SectionEntitiesInput {
+  sectionId: String!
+  placeIds: [String!]
   characterIds: [String!]
   itemIds: [String!]
 }
