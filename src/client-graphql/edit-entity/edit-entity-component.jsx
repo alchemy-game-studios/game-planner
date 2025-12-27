@@ -209,7 +209,7 @@ export function EditEntityComponent({id, type, isEdit}) {
             style={{ backgroundImage: `url(${backgroundImageUrl})` }}
         />
         <div className="relative z-10">
-            <div className="fixed top-10 left-0 w-full bg-gray-900 z-50">
+            <div className="fixed top-10 left-0 w-full bg-background z-50">
                 <div className="flex">
                     <Avatar className="size-15 ml-9 mb-3.5 mt-6.5">
                         <AvatarImage src={avatarImageUrl} />
@@ -224,7 +224,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                             />
                             
                     </div>
-                    <Badge className=" bg-yellow-700 font-heading text-2xl size-14 pl-20 pr-20 pt-3 pb-3 justify-center text-center m-auto mb-7.5 mr-8">{capitalizeFirst(type)}</Badge>
+                    <Badge className="bg-ck-forge text-foreground font-heading text-2xl size-14 pl-20 pr-20 pt-3 pb-3 justify-center text-center m-auto mb-7.5 mr-8">{capitalizeFirst(type)}</Badge>
                 </div>
                 <Separator />
             </div>
@@ -260,10 +260,10 @@ export function EditEntityComponent({id, type, isEdit}) {
                 {/* Parent Narrative link for Events */}
                 {type === 'event' && entity.parentNarrative && (
                     <div className="mt-4 mb-2">
-                        <span className="text-gray-400 text-sm">Part of: </span>
+                        <span className="text-muted-foreground text-sm">Part of: </span>
                         <Link
                             to={`/edit/narrative/${entity.parentNarrative.id}`}
-                            className="text-blue-400 hover:text-blue-300 hover:underline font-medium"
+                            className="text-secondary hover:text-ck-gold hover:underline font-medium"
                         >
                             {entity.parentNarrative.name}
                         </Link>
@@ -273,8 +273,8 @@ export function EditEntityComponent({id, type, isEdit}) {
                 {/* Event Day (Timeline) */}
                 {type === 'event' && entity.properties.day !== undefined && entity.properties.day !== null && (
                     <div className="mt-4 mb-2">
-                        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-900/50 border border-indigo-700/50">
-                            <span className="text-indigo-300 text-sm font-medium">Day {entity.properties.day}</span>
+                        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/20 border border-secondary/30">
+                            <span className="text-secondary text-sm font-medium">Day {entity.properties.day}</span>
                         </span>
                     </div>
                 )}
@@ -282,15 +282,15 @@ export function EditEntityComponent({id, type, isEdit}) {
                 {/* Event Locations */}
                 {type === 'event' && entity.locations && entity.locations.length > 0 && (
                     <div className="mt-4 mb-2">
-                        <h3 className="text-sm font-medium text-gray-400 mb-2">Locations</h3>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-2">Locations</h3>
                         <div className="flex flex-wrap gap-2">
                             {entity.locations.map((location) => (
                                 <Link
                                     key={location.id}
                                     to={`/edit/place/${location.id}`}
-                                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-900/50 hover:bg-emerald-800/50 border border-emerald-700/50 transition-colors"
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ck-teal/20 hover:bg-ck-teal/30 border border-ck-teal/30 transition-colors"
                                 >
-                                    <span className="text-emerald-400 text-sm">
+                                    <span className="text-secondary text-sm">
                                         {location.name}
                                     </span>
                                 </Link>
@@ -302,7 +302,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                 {/* Event Participants (Characters and Items) */}
                 {type === 'event' && entity.participants && entity.participants.length > 0 && (
                     <div className="mt-4 mb-2">
-                        <h3 className="text-sm font-medium text-gray-400 mb-2">Participants</h3>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-2">Participants</h3>
                         <div className="flex flex-wrap gap-2">
                             {entity.participants.map((participant) => {
                                 const isCharacter = participant._nodeType === 'character';
@@ -310,9 +310,9 @@ export function EditEntityComponent({id, type, isEdit}) {
                                     ? `/edit/character/${participant.id}`
                                     : `/edit/item/${participant.id}`;
                                 const bgClass = isCharacter
-                                    ? 'bg-purple-900/50 hover:bg-purple-800/50 border-purple-700/50'
-                                    : 'bg-amber-900/50 hover:bg-amber-800/50 border-amber-700/50';
-                                const textClass = isCharacter ? 'text-purple-400' : 'text-amber-400';
+                                    ? 'bg-ck-rare/20 hover:bg-ck-rare/30 border-ck-rare/30'
+                                    : 'bg-ck-gold/20 hover:bg-ck-gold/30 border-ck-gold/30';
+                                const textClass = isCharacter ? 'text-ck-rare' : 'text-ck-gold';
 
                                 return (
                                     <Link
@@ -323,7 +323,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                                         <span className={`text-sm ${textClass}`}>
                                             {participant.name}
                                         </span>
-                                        <span className="text-xs text-gray-500">
+                                        <span className="text-xs text-muted-foreground">
                                             {isCharacter ? 'Character' : 'Item'}
                                         </span>
                                     </Link>
@@ -348,8 +348,8 @@ export function EditEntityComponent({id, type, isEdit}) {
             <>
               {/* Story-styled description for Narratives */}
               <div className="flex w-full mt-9 pr-15">
-                    <div className="bg-gray-800/50 rounded-lg p-6 border-l-4 border-amber-600">
-                        <p className="text-2xl font-serif text-gray-100 leading-relaxed whitespace-pre-line italic">
+                    <div className="bg-card/50 rounded-lg p-6 border-l-4 border-primary">
+                        <p className="text-2xl font-serif text-foreground leading-relaxed whitespace-pre-line italic">
                             {entity.properties.description}
                         </p>
                     </div>
@@ -358,15 +358,15 @@ export function EditEntityComponent({id, type, isEdit}) {
                 {/* Narrative Locations (aggregated from events) */}
                 {entity.locations && entity.locations.length > 0 && (
                     <div className="mt-6 mb-2">
-                        <h3 className="text-lg font-medium text-gray-300 mb-3">Places in this Story</h3>
+                        <h3 className="text-lg font-medium text-card-foreground mb-3">Places in this Story</h3>
                         <div className="flex flex-wrap gap-2">
                             {entity.locations.map((location) => (
                                 <Link
                                     key={location.id}
                                     to={`/edit/place/${location.id}`}
-                                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-900/50 hover:bg-emerald-800/50 border border-emerald-700/50 transition-colors"
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ck-teal/20 hover:bg-ck-teal/30 border border-ck-teal/30 transition-colors"
                                 >
-                                    <span className="text-emerald-400 text-sm">
+                                    <span className="text-secondary text-sm">
                                         {location.name}
                                     </span>
                                 </Link>
@@ -378,7 +378,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                 {/* Narrative Participants (aggregated from events) */}
                 {entity.participants && entity.participants.length > 0 && (
                     <div className="mt-4 mb-2">
-                        <h3 className="text-lg font-medium text-gray-300 mb-3">Characters & Items</h3>
+                        <h3 className="text-lg font-medium text-card-foreground mb-3">Characters & Items</h3>
                         <div className="flex flex-wrap gap-2">
                             {entity.participants.map((participant) => {
                                 const isCharacter = participant._nodeType === 'character';
@@ -386,9 +386,9 @@ export function EditEntityComponent({id, type, isEdit}) {
                                     ? `/edit/character/${participant.id}`
                                     : `/edit/item/${participant.id}`;
                                 const bgClass = isCharacter
-                                    ? 'bg-purple-900/50 hover:bg-purple-800/50 border-purple-700/50'
-                                    : 'bg-amber-900/50 hover:bg-amber-800/50 border-amber-700/50';
-                                const textClass = isCharacter ? 'text-purple-400' : 'text-amber-400';
+                                    ? 'bg-ck-rare/20 hover:bg-ck-rare/30 border-ck-rare/30'
+                                    : 'bg-ck-gold/20 hover:bg-ck-gold/30 border-ck-gold/30';
+                                const textClass = isCharacter ? 'text-ck-rare' : 'text-ck-gold';
 
                                 return (
                                     <Link
@@ -399,7 +399,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                                         <span className={`text-sm ${textClass}`}>
                                             {participant.name}
                                         </span>
-                                        <span className="text-xs text-gray-500">
+                                        <span className="text-xs text-muted-foreground">
                                             {isCharacter ? 'Character' : 'Item'}
                                         </span>
                                     </Link>
@@ -414,7 +414,7 @@ export function EditEntityComponent({id, type, isEdit}) {
         {!editMode && type !== 'narrative' && (
             <>
               <div className="flex w-full mt-9 pr-15">
-                    <p className="text-xl font-book text-gray-200 leading-tight tracking-tight">
+                    <p className="text-xl font-book text-card-foreground leading-tight tracking-tight">
                         {entity.properties.description}
                     </p>
                 </div>
@@ -466,17 +466,17 @@ export function EditEntityComponent({id, type, isEdit}) {
             {/* Show events for places, characters, items (from 'events' field) */}
             {entity.events && entity.events.length > 0 && !allRelationGroups['event'] && (
                 <div>
-                    <h3 className="text-sm font-medium text-gray-400 mb-2">Events</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Events</h3>
                     <ol className="space-y-1">
                         {entity.events.map((event) => (
                             <li key={event.id}>
                                 <Link
                                     to={`/edit/event/${event.id}`}
-                                    className="block p-2 rounded hover:bg-gray-800 transition-colors"
+                                    className="block p-2 rounded hover:bg-card transition-colors"
                                 >
-                                    <span className="text-sm text-gray-200">{event.name}</span>
+                                    <span className="text-sm text-card-foreground">{event.name}</span>
                                     {event.type && (
-                                        <span className="text-xs text-gray-500 ml-2">({event.type})</span>
+                                        <span className="text-xs text-muted-foreground ml-2">({event.type})</span>
                                     )}
                                 </Link>
                             </li>
@@ -532,7 +532,7 @@ export function EditEntityComponent({id, type, isEdit}) {
              (!allRelationGroups['place'] || allRelationGroups['place'].length === 0) &&
              (!allRelationGroups['character'] || allRelationGroups['character'].length === 0) &&
              (!allRelationGroups['item'] || allRelationGroups['item'].length === 0) && (
-                <div className="text-gray-500 text-sm text-center py-4">
+                <div className="text-muted-foreground text-sm text-center py-4">
                     No related entities
                 </div>
             )}

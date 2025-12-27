@@ -154,14 +154,14 @@ export function EditableNodeList({
   return (
     <>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-gray-400">
+        <h3 className="text-sm font-medium text-muted-foreground">
           {entityType.charAt(0).toUpperCase() + entityType.slice(1)}s
         </h3>
         <Button
           variant="ghost"
           size="sm"
           onClick={handleEditMode}
-          className="text-gray-400 hover:text-white"
+          className="text-muted-foreground hover:text-foreground"
         >
           <Plus className="h-4 w-4 mr-1" />
           Add
@@ -192,7 +192,7 @@ export function EditableNodeList({
                   e.stopPropagation();
                   handleRemoveEntity(contentId);
                 }}
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 rounded p-1 hover:bg-gray-700"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-card rounded p-1 hover:bg-muted"
                 aria-label="Remove"
               >
                 <X className="h-3 w-3" />
@@ -202,7 +202,7 @@ export function EditableNodeList({
         })}
       </ol>
       {maxItems > 0 && normalizedContents.length > maxItems && (
-        <div className="text-xs text-gray-500 mt-1 text-center">
+        <div className="text-xs text-muted-foreground mt-1 text-center">
           Scroll for more ({normalizedContents.length} total)
         </div>
       )}

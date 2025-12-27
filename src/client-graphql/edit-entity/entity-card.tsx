@@ -23,11 +23,11 @@ export default function EntityCard({
     <div onClick={onClick} className="gap-4 mt-4 w-full">
       <Badge
         variant="secondary"
-        className="pl-4 w-full min-h-15 hover:bg-gray-700 hover:text-gray-200 cursor-pointer transition-colors duration-200 p-3 "
+        className="pl-4 w-full min-h-15 hover:bg-muted hover:text-foreground cursor-pointer transition-colors duration-200 p-3 "
       >
         <div className="flex justify-start gap-4 w-full ">
           <div className="w-1/4">
-            <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gray-700">
+            <div className="relative h-10 w-10 rounded-full overflow-hidden bg-muted">
               <img
                 src={avatarUrl}
                 alt=""
@@ -42,7 +42,7 @@ export default function EntityCard({
             <div className="flex flex-col items-start">
               <p className="m-0 leading-none font-primary">{name}</p>
               {day !== undefined && day !== null && (
-                <span className="text-xs text-indigo-400 mt-1">Day {day}</span>
+                <span className="text-xs text-secondary mt-1">Day {day}</span>
               )}
             </div>
           </div>

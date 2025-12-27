@@ -96,7 +96,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   if (displayImages.length === 0) {
     const placeholderSrc = getPlaceholderImage('hero');
     return (
-      <div className="relative rounded-lg overflow-hidden bg-gray-800 aspect-[2/1]">
+      <div className="relative rounded-lg overflow-hidden bg-card aspect-[2/1]">
         <img
           src={fallbackImage || placeholderSrc}
           alt={entityType}
@@ -110,7 +110,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => setEditorOpen(true)}
-          className="absolute top-2 right-2 bg-gray-900/80 hover:bg-gray-800"
+          className="absolute top-2 right-2 bg-background/80 hover:bg-card"
         >
           <Pencil className="h-4 w-4 mr-1" />
           Add Images
@@ -142,7 +142,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => setEditorOpen(true)}
-          className="absolute top-2 right-2 bg-gray-900/80 hover:bg-gray-800"
+          className="absolute top-2 right-2 bg-background/80 hover:bg-card"
         >
           <Pencil className="h-4 w-4" />
         </Button>
@@ -190,8 +190,8 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     if (!image.entityId || image.entityId === entityId) return null;
 
     return (
-      <div className="absolute top-2 left-2 bg-black/80 rounded px-2 py-1 text-xs text-white border border-white/20 z-10">
-        <span className="text-gray-400 capitalize">{image.entityType}: </span>
+      <div className="absolute top-2 left-2 bg-background/80 rounded px-2 py-1 text-xs text-foreground border border-border z-10">
+        <span className="text-muted-foreground capitalize">{image.entityType}: </span>
         <span className="font-medium">{image.entityName}</span>
       </div>
     );
@@ -230,7 +230,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => setEditorOpen(true)}
-          className="absolute top-2 right-2 bg-gray-900/80 hover:bg-gray-800 z-10"
+          className="absolute top-2 right-2 bg-background/80 hover:bg-card z-10"
         >
           <Pencil className="h-4 w-4" />
         </Button>
@@ -292,7 +292,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => setEditorOpen(true)}
-          className="absolute top-2 right-2 bg-gray-900/80 hover:bg-gray-800 z-10"
+          className="absolute top-2 right-2 bg-background/80 hover:bg-card z-10"
         >
           <Pencil className="h-4 w-4" />
         </Button>
@@ -383,7 +383,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
         variant="ghost"
         size="sm"
         onClick={() => setEditorOpen(true)}
-        className="absolute top-2 right-2 bg-gray-900/80 hover:bg-gray-800 z-10"
+        className="absolute top-2 right-2 bg-background/80 hover:bg-card z-10"
       >
         <Pencil className="h-4 w-4" />
       </Button>

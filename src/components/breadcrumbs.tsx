@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useBreadcrumbs } from '@/context/breadcrumb-context';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Home } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export function Breadcrumbs() {
   const { breadcrumbs, navigateTo, canGoBack } = useBreadcrumbs();
@@ -10,6 +10,11 @@ export function Breadcrumbs() {
   const location = useLocation();
 
   const isHome = location.pathname === '/';
+
+  // Hide breadcrumbs on home page
+  if (isHome) {
+    return null;
+  }
 
   const handleBack = () => {
     if (breadcrumbs.length > 1) {
@@ -40,39 +45,44 @@ export function Breadcrumbs() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700">
+    <div className="fixed top-0 left-0 right-0 z-[60] flex items-center gap-2 px-4 py-2 bg-black border-b border-border">
+      {/* Logo */}
+      <button
+        onClick={handleHome}
+        className="flex items-center gap-2 mr-2 hover:opacity-80 transition-opacity"
+      >
+        <img
+          src="/images/logo.png"
+          alt="CanonKiln"
+          className="h-8 w-auto"
+        />
+      </button>
+
+      <div className="h-4 w-px bg-border" />
+
       <Button
         variant="ghost"
         size="sm"
         onClick={handleBack}
         disabled={isHome && !canGoBack}
-        className="text-gray-400 hover:text-white disabled:opacity-50"
+        className="text-muted-foreground hover:text-foreground disabled:opacity-50"
       >
         <ChevronLeft className="h-4 w-4 mr-1" />
         Back
       </Button>
 
-      <div className="h-4 w-px bg-gray-600" />
-
-      <button
-        onClick={handleHome}
-        className={`transition-colors ${isHome ? 'text-white' : 'text-gray-400 hover:text-white'}`}
-      >
-        <Home className="h-4 w-4" />
-      </button>
-
       {breadcrumbs.map((item, index) => (
         <React.Fragment key={item.id}>
-          <ChevronRight className="h-4 w-4 text-gray-600" />
+          <ChevronRight className="h-4 w-4 text-border" />
           <button
             onClick={() => handleBreadcrumbClick(index)}
             className={`text-sm transition-colors ${
               index === breadcrumbs.length - 1
-                ? 'text-white font-medium cursor-default'
-                : 'text-gray-400 hover:text-white'
+                ? 'text-foreground font-medium cursor-default'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <span className="text-gray-500 capitalize">{item.type}:</span>{' '}
+            <span className="text-muted-foreground capitalize">{item.type}:</span>{' '}
             {item.name}
           </button>
         </React.Fragment>

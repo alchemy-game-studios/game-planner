@@ -123,7 +123,7 @@ export default function ProductPage() {
 
   if (loading) {
     return (
-      <div className="p-8 text-center text-white">
+      <div className="p-8 text-center text-foreground">
         <h1 className="text-2xl">Loading...</h1>
       </div>
     );
@@ -132,7 +132,7 @@ export default function ProductPage() {
   if (error) {
     return (
       <div className="p-8 text-center">
-        <h1 className="text-2xl text-red-500">Error: {error.message}</h1>
+        <h1 className="text-2xl text-destructive">Error: {error.message}</h1>
       </div>
     );
   }
@@ -140,7 +140,7 @@ export default function ProductPage() {
   if (!data?.product) {
     return (
       <div className="p-8 text-center">
-        <h1 className="text-2xl text-gray-400">Product not found</h1>
+        <h1 className="text-2xl text-muted-foreground">Product not found</h1>
       </div>
     );
   }
@@ -155,14 +155,14 @@ export default function ProductPage() {
       <div className="mb-8">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-4xl font-heading text-white">{product.name}</h1>
-            <p className="text-gray-400 mt-2">{product.description}</p>
+            <h1 className="text-4xl font-heading text-foreground">{product.name}</h1>
+            <p className="text-muted-foreground mt-2">{product.description}</p>
             <div className="flex items-center gap-4 mt-4">
               <Badge variant="outline">{getProductTypeLabel(product.type, product.gameType)}</Badge>
               {product.universe && (
                 <Link
                   to={`/edit/universe/${product.universe.id}`}
-                  className="text-sm text-indigo-400 hover:text-indigo-300"
+                  className="text-sm text-secondary hover:text-ck-gold"
                 >
                   Based on: {product.universe.name}
                 </Link>
@@ -178,7 +178,7 @@ export default function ProductPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-gray-800 border border-gray-700">
+        <TabsList className="bg-card border border-border">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           {isGame && <TabsTrigger value="attributes">Attributes ({product.attributes.length})</TabsTrigger>}
           {isGame && <TabsTrigger value="mechanics">Mechanics ({product.mechanics.length})</TabsTrigger>}
@@ -192,30 +192,30 @@ export default function ProductPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {isGame && (
               <>
-                <div className="p-6 rounded-lg border border-gray-700 bg-gray-800/50">
-                  <h3 className="text-lg font-semibold text-white mb-2">Attributes</h3>
-                  <p className="text-3xl font-bold text-indigo-400">{product.attributes.length}</p>
-                  <p className="text-sm text-gray-400 mt-1">User-defined stats</p>
+                <div className="p-6 rounded-lg border border-border bg-card/50">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Attributes</h3>
+                  <p className="text-3xl font-bold text-secondary">{product.attributes.length}</p>
+                  <p className="text-sm text-muted-foreground mt-1">User-defined stats</p>
                 </div>
-                <div className="p-6 rounded-lg border border-gray-700 bg-gray-800/50">
-                  <h3 className="text-lg font-semibold text-white mb-2">Mechanics</h3>
-                  <p className="text-3xl font-bold text-indigo-400">{product.mechanics.length}</p>
-                  <p className="text-sm text-gray-400 mt-1">Keywords & abilities</p>
+                <div className="p-6 rounded-lg border border-border bg-card/50">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Mechanics</h3>
+                  <p className="text-3xl font-bold text-secondary">{product.mechanics.length}</p>
+                  <p className="text-sm text-muted-foreground mt-1">Keywords & abilities</p>
                 </div>
               </>
             )}
-            <div className="p-6 rounded-lg border border-gray-700 bg-gray-800/50">
-              <h3 className="text-lg font-semibold text-white mb-2">
+            <div className="p-6 rounded-lg border border-border bg-card/50">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 {getAdaptationLabel()}
               </h3>
-              <p className="text-3xl font-bold text-indigo-400">{product.adaptations.length}</p>
-              <p className="text-sm text-gray-400 mt-1">IP entities mapped</p>
+              <p className="text-3xl font-bold text-secondary">{product.adaptations.length}</p>
+              <p className="text-sm text-muted-foreground mt-1">IP entities mapped</p>
             </div>
             {isPassiveMedia && (
-              <div className="p-6 rounded-lg border border-gray-700 bg-gray-800/50">
-                <h3 className="text-lg font-semibold text-white mb-2">Sections</h3>
-                <p className="text-3xl font-bold text-indigo-400">{product.sections.length}</p>
-                <p className="text-sm text-gray-400 mt-1">Chapters/scenes</p>
+              <div className="p-6 rounded-lg border border-border bg-card/50">
+                <h3 className="text-lg font-semibold text-foreground mb-2">Sections</h3>
+                <p className="text-3xl font-bold text-secondary">{product.sections.length}</p>
+                <p className="text-sm text-muted-foreground mt-1">Chapters/scenes</p>
               </div>
             )}
           </div>
@@ -223,7 +223,7 @@ export default function ProductPage() {
 
         <TabsContent value="attributes" className="space-y-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white">Attribute Definitions</h2>
+            <h2 className="text-xl font-semibold text-foreground">Attribute Definitions</h2>
             <Button variant="outline" size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
               Add Attribute
@@ -231,35 +231,35 @@ export default function ProductPage() {
           </div>
           <div className="grid gap-3">
             {product.attributes.map((attr: any) => (
-              <div key={attr.id} className="p-4 rounded-lg border border-gray-700 bg-gray-800/50">
+              <div key={attr.id} className="p-4 rounded-lg border border-border bg-card/50">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-semibold text-white">{attr.name}</h3>
-                    <p className="text-sm text-gray-400 mt-1">{attr.description}</p>
+                    <h3 className="font-semibold text-foreground">{attr.name}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{attr.description}</p>
                   </div>
                   <Badge variant="secondary">{attr.valueType}</Badge>
                 </div>
                 {attr.valueType === 'number' && (attr.min !== null || attr.max !== null) && (
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     Range: {attr.min ?? 0} - {attr.max ?? '∞'}
                   </p>
                 )}
                 {attr.valueType === 'enum' && attr.options && (
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     Options: {JSON.parse(attr.options).join(', ')}
                   </p>
                 )}
               </div>
             ))}
             {product.attributes.length === 0 && (
-              <p className="text-gray-400 text-center py-8">No attributes defined yet</p>
+              <p className="text-muted-foreground text-center py-8">No attributes defined yet</p>
             )}
           </div>
         </TabsContent>
 
         <TabsContent value="mechanics" className="space-y-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white">Mechanic Definitions</h2>
+            <h2 className="text-xl font-semibold text-foreground">Mechanic Definitions</h2>
             <Button variant="outline" size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
               Add Mechanic
@@ -267,11 +267,11 @@ export default function ProductPage() {
           </div>
           <div className="grid gap-3">
             {product.mechanics.map((mech: any) => (
-              <div key={mech.id} className="p-4 rounded-lg border border-gray-700 bg-gray-800/50">
+              <div key={mech.id} className="p-4 rounded-lg border border-border bg-card/50">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-semibold text-white">{mech.name}</h3>
-                    <p className="text-sm text-gray-400 mt-1">{mech.description}</p>
+                    <h3 className="font-semibold text-foreground">{mech.name}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{mech.description}</p>
                   </div>
                   <div className="flex gap-2">
                     {mech.category && <Badge variant="secondary">{mech.category}</Badge>}
@@ -281,14 +281,14 @@ export default function ProductPage() {
               </div>
             ))}
             {product.mechanics.length === 0 && (
-              <p className="text-gray-400 text-center py-8">No mechanics defined yet</p>
+              <p className="text-muted-foreground text-center py-8">No mechanics defined yet</p>
             )}
           </div>
         </TabsContent>
 
         <TabsContent value="adaptations" className="space-y-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               {getAdaptationLabel()}
             </h2>
             <Button variant="outline" size="sm" className="gap-2">
@@ -302,15 +302,15 @@ export default function ProductPage() {
               const mechValues = adapt.mechanicValues ? JSON.parse(adapt.mechanicValues) : {};
 
               return (
-                <div key={adapt.id} className="p-4 rounded-lg border border-gray-700 bg-gray-800/50">
+                <div key={adapt.id} className="p-4 rounded-lg border border-border bg-card/50">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="font-semibold text-white">
+                      <h3 className="font-semibold text-foreground">
                         {adapt.cardName || adapt.sourceEntity.name}
                       </h3>
                       {adapt.cardName && (
-                        <p className="text-sm text-gray-400">
-                          from: <Link to={`/edit/${adapt.sourceType}/${adapt.sourceEntity.id}`} className="text-indigo-400 hover:text-indigo-300">
+                        <p className="text-sm text-muted-foreground">
+                          from: <Link to={`/edit/${adapt.sourceType}/${adapt.sourceEntity.id}`} className="text-secondary hover:text-ck-gold">
                             {adapt.sourceEntity.name}
                           </Link>
                         </p>
@@ -319,7 +319,7 @@ export default function ProductPage() {
                     <Badge variant="secondary">{adapt.sourceType}</Badge>
                   </div>
                   {adapt.flavorText && (
-                    <p className="text-sm italic text-gray-300 mb-3">"{adapt.flavorText}"</p>
+                    <p className="text-sm italic text-card-foreground mb-3">"{adapt.flavorText}"</p>
                   )}
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(attrValues).map(([attrId, value]) => {
@@ -333,7 +333,7 @@ export default function ProductPage() {
                     {Object.entries(mechValues).map(([mechId, value]) => {
                       const mech = product.mechanics.find((m: any) => m.id === mechId);
                       return mech ? (
-                        <Badge key={mechId} className="bg-purple-600">
+                        <Badge key={mechId} className="bg-ck-rare">
                           {mech.name}{value !== true ? `: ${value}` : ''}
                         </Badge>
                       ) : null;
@@ -343,14 +343,14 @@ export default function ProductPage() {
               );
             })}
             {product.adaptations.length === 0 && (
-              <p className="text-gray-400 text-center py-8">No adaptations yet</p>
+              <p className="text-muted-foreground text-center py-8">No adaptations yet</p>
             )}
           </div>
         </TabsContent>
 
         <TabsContent value="sections" className="space-y-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white">Sections</h2>
+            <h2 className="text-xl font-semibold text-foreground">Sections</h2>
             <Button variant="outline" size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
               Add Section
@@ -360,13 +360,13 @@ export default function ProductPage() {
             {[...product.sections]
               .sort((a: any, b: any) => a.order - b.order)
               .map((section: any) => (
-                <div key={section.id} className="p-4 rounded-lg border border-gray-700 bg-gray-800/50">
+                <div key={section.id} className="p-4 rounded-lg border border-border bg-card/50">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl font-bold text-indigo-400">{section.order}</span>
+                      <span className="text-2xl font-bold text-secondary">{section.order}</span>
                       <div>
-                        <h3 className="font-semibold text-white">{section.name}</h3>
-                        <p className="text-sm text-gray-400 mt-1">{section.description}</p>
+                        <h3 className="font-semibold text-foreground">{section.name}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{section.description}</p>
                       </div>
                     </div>
                     {section.sectionType && <Badge variant="secondary">{section.sectionType}</Badge>}
@@ -374,14 +374,14 @@ export default function ProductPage() {
                 </div>
               ))}
             {product.sections.length === 0 && (
-              <p className="text-gray-400 text-center py-8">No sections defined yet</p>
+              <p className="text-muted-foreground text-center py-8">No sections defined yet</p>
             )}
           </div>
         </TabsContent>
       </Tabs>
 
-      <div className="mt-8 pt-8 border-t border-gray-700">
-        <Link to="/products" className="text-indigo-400 hover:text-indigo-300">
+      <div className="mt-8 pt-8 border-t border-border">
+        <Link to="/products" className="text-secondary hover:text-ck-gold">
           &larr; Back to Products
         </Link>
       </div>

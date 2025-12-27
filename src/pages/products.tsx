@@ -41,12 +41,12 @@ function getProductTypeLabel(type: string, gameType?: string): string {
 
 function getProductTypeColor(type: string): string {
   const colors: Record<string, string> = {
-    game: 'bg-purple-600',
-    book: 'bg-blue-600',
-    movie: 'bg-red-600',
-    comic: 'bg-yellow-600'
+    game: 'bg-ck-rare',
+    book: 'bg-ck-teal',
+    movie: 'bg-ck-danger',
+    comic: 'bg-ck-gold text-ck-obsidian'
   };
-  return colors[type] || 'bg-gray-600';
+  return colors[type] || 'bg-muted';
 }
 
 export default function ProductsPage() {
@@ -65,7 +65,7 @@ export default function ProductsPage() {
 
   if (loading) {
     return (
-      <div className="p-8 text-center text-white">
+      <div className="p-8 text-center text-foreground">
         <h1 className="text-2xl">Loading...</h1>
       </div>
     );
@@ -74,8 +74,8 @@ export default function ProductsPage() {
   if (error) {
     return (
       <div className="p-8 text-center">
-        <h1 className="text-2xl text-red-500">Error: {error.message}</h1>
-        <pre className="mt-4 text-left text-sm text-gray-400">{JSON.stringify(error, null, 2)}</pre>
+        <h1 className="text-2xl text-destructive">Error: {error.message}</h1>
+        <pre className="mt-4 text-left text-sm text-muted-foreground">{JSON.stringify(error, null, 2)}</pre>
       </div>
     );
   }
@@ -84,15 +84,15 @@ export default function ProductsPage() {
     <div className="p-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-heading text-white">Products</h1>
-          <p className="text-gray-400 mt-1">Games, books, and media based on your universes</p>
+          <h1 className="text-4xl font-heading text-foreground">Products</h1>
+          <p className="text-muted-foreground mt-1">Games, books, and media based on your universes</p>
         </div>
         <AddProductDialog onProductCreated={handleProductCreated} />
       </div>
 
       <div className="grid gap-4">
         {data.products.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-muted-foreground">
             <p className="text-lg">No products yet</p>
             <p className="text-sm mt-2">Create a product to start building games, books, or other media from your universes.</p>
           </div>
@@ -101,19 +101,19 @@ export default function ProductsPage() {
             <Link
               key={product.id}
               to={`/product/${product.id}`}
-              className="block p-6 rounded-lg border border-gray-600 bg-gray-800 hover:bg-gray-700 transition-colors"
+              className="block p-6 rounded-lg border border-border bg-card hover:bg-muted transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold mb-2 text-white">{product.name}</h3>
-                  <p className="text-gray-300">{product.description}</p>
+                  <h3 className="text-xl font-semibold mb-2 text-foreground">{product.name}</h3>
+                  <p className="text-card-foreground">{product.description}</p>
                   {product.universe && (
-                    <p className="text-sm text-gray-400 mt-2">
-                      Based on: <span className="text-indigo-400">{product.universe.name}</span>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Based on: <span className="text-secondary">{product.universe.name}</span>
                     </p>
                   )}
                 </div>
-                <span className={`inline-block px-3 py-1 text-xs rounded-full text-white ${getProductTypeColor(product.type)}`}>
+                <span className={`inline-block px-3 py-1 text-xs rounded-full text-foreground ${getProductTypeColor(product.type)}`}>
                   {getProductTypeLabel(product.type, product.gameType)}
                 </span>
               </div>
@@ -122,8 +122,8 @@ export default function ProductsPage() {
         )}
       </div>
 
-      <div className="mt-8 pt-8 border-t border-gray-700">
-        <Link to="/" className="text-indigo-400 hover:text-indigo-300">
+      <div className="mt-8 pt-8 border-t border-border">
+        <Link to="/" className="text-secondary hover:text-ck-gold">
           &larr; Back to IP Building
         </Link>
       </div>
