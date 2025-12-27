@@ -428,141 +428,649 @@ const seedData = {
     }
   ],
   tags: [
-    // Descriptive tags
-    { id: 'tag-001', name: 'Magic', description: 'Related to magical abilities or artifacts', type: 'theme' },
-    { id: 'tag-003', name: 'Technology', description: 'Related to advanced technology', type: 'theme' },
-    { id: 'tag-005', name: 'Political', description: 'Involved in power struggles', type: 'theme' },
-    { id: 'tag-006', name: 'Ancient', description: 'From a bygone era', type: 'theme' },
-    { id: 'tag-007', name: 'Sacred', description: 'Holy or spiritually significant', type: 'theme' },
-    { id: 'tag-008', name: 'Corrupted', description: 'Tainted by dark forces', type: 'theme' },
-    { id: 'tag-009', name: 'Hidden', description: 'Secret or concealed from most', type: 'theme' },
-    { id: 'tag-010', name: 'Legendary', description: 'Known throughout the realm', type: 'theme' },
-    // Mood/feeling tags
-    { id: 'tag-002', name: 'Dangerous', description: 'Poses significant threat', type: 'mood' },
-    { id: 'tag-004', name: 'Mysterious', description: 'Has unknown or hidden aspects', type: 'mood' },
-    { id: 'tag-011', name: 'Peaceful', description: 'Calm and serene', type: 'mood' },
-    { id: 'tag-012', name: 'Ominous', description: 'Foreboding or threatening', type: 'mood' },
-    { id: 'tag-013', name: 'Chaotic', description: 'Unpredictable and turbulent', type: 'mood' },
-    { id: 'tag-014', name: 'Hopeful', description: 'Inspiring optimism', type: 'mood' },
-    // Character trait tags
-    { id: 'tag-015', name: 'Wise', description: 'Possessing great knowledge', type: 'trait' },
-    { id: 'tag-016', name: 'Ruthless', description: 'Without mercy or compassion', type: 'trait' },
-    { id: 'tag-017', name: 'Heroic', description: 'Brave and selfless', type: 'trait' },
-    { id: 'tag-018', name: 'Cunning', description: 'Clever and deceptive', type: 'trait' },
-    { id: 'tag-019', name: 'Tormented', description: 'Haunted by past actions', type: 'trait' },
-    { id: 'tag-020', name: 'Visionary', description: 'Sees beyond the present', type: 'trait' },
-    // Gameplay tags
-    { id: 'tag-021', name: 'Quest Giver', description: 'Can provide missions', type: 'gameplay' },
-    { id: 'tag-022', name: 'Boss', description: 'Major antagonist', type: 'gameplay' },
-    { id: 'tag-023', name: 'Ally', description: 'Potential companion', type: 'gameplay' },
-    { id: 'tag-024', name: 'Merchant', description: 'Trades goods or services', type: 'gameplay' }
+    // Descriptor tags - describe what something IS
+    { id: 'tag-001', name: 'Magic', description: 'Related to magical abilities or artifacts', type: 'descriptor' },
+    { id: 'tag-003', name: 'Technology', description: 'Related to advanced technology', type: 'descriptor' },
+    { id: 'tag-005', name: 'Political', description: 'Involved in power struggles', type: 'descriptor' },
+    { id: 'tag-006', name: 'Ancient', description: 'From a bygone era', type: 'descriptor' },
+    { id: 'tag-007', name: 'Sacred', description: 'Holy or spiritually significant', type: 'descriptor' },
+    { id: 'tag-008', name: 'Corrupted', description: 'Tainted by dark forces', type: 'descriptor' },
+    { id: 'tag-009', name: 'Hidden', description: 'Secret or concealed from most', type: 'descriptor' },
+    { id: 'tag-010', name: 'Legendary', description: 'Known throughout the realm', type: 'descriptor' },
+    { id: 'tag-015', name: 'Wise', description: 'Possessing great knowledge', type: 'descriptor' },
+    { id: 'tag-018', name: 'Cunning', description: 'Clever and deceptive', type: 'descriptor' },
+    { id: 'tag-020', name: 'Visionary', description: 'Sees beyond the present', type: 'descriptor' },
+    { id: 'tag-021', name: 'Quest Giver', description: 'Can provide missions', type: 'descriptor' },
+    { id: 'tag-022', name: 'Boss', description: 'Major antagonist', type: 'descriptor' },
+    { id: 'tag-023', name: 'Ally', description: 'Potential companion', type: 'descriptor' },
+    { id: 'tag-024', name: 'Merchant', description: 'Trades goods or services', type: 'descriptor' },
+    // Feeling tags - emotions to invoke in reader/player
+    { id: 'tag-002', name: 'Dangerous', description: 'Evokes fear and caution', type: 'feeling' },
+    { id: 'tag-004', name: 'Mysterious', description: 'Evokes curiosity and intrigue', type: 'feeling' },
+    { id: 'tag-011', name: 'Peaceful', description: 'Evokes calm and serenity', type: 'feeling' },
+    { id: 'tag-012', name: 'Ominous', description: 'Evokes dread and foreboding', type: 'feeling' },
+    { id: 'tag-013', name: 'Chaotic', description: 'Evokes tension and unpredictability', type: 'feeling' },
+    { id: 'tag-014', name: 'Hopeful', description: 'Evokes optimism and inspiration', type: 'feeling' },
+    { id: 'tag-016', name: 'Ruthless', description: 'Evokes fear and revulsion', type: 'feeling' },
+    { id: 'tag-017', name: 'Heroic', description: 'Evokes admiration and courage', type: 'feeling' },
+    { id: 'tag-019', name: 'Tormented', description: 'Evokes sympathy and sadness', type: 'feeling' }
   ],
   tagRelations: [
-    // Universe tags
-    { entityId: UNIVERSE_1_ID, tagId: 'tag-001' },
-    { entityId: UNIVERSE_1_ID, tagId: 'tag-006' },
-    { entityId: UNIVERSE_1_ID, tagId: 'tag-010' },
-    { entityId: UNIVERSE_2_ID, tagId: 'tag-003' },
-    { entityId: UNIVERSE_2_ID, tagId: 'tag-002' },
-    { entityId: UNIVERSE_2_ID, tagId: 'tag-013' },
-    // Eldoria place tags
-    { entityId: PLACE_1_ID, tagId: 'tag-001' },
-    { entityId: PLACE_1_ID, tagId: 'tag-005' },
-    { entityId: PLACE_1_ID, tagId: 'tag-007' },
-    { entityId: PLACE_2_ID, tagId: 'tag-004' },
-    { entityId: PLACE_2_ID, tagId: 'tag-002' },
-    { entityId: PLACE_2_ID, tagId: 'tag-006' },
-    { entityId: 'place-005', tagId: 'tag-002' },
-    { entityId: 'place-005', tagId: 'tag-006' },
-    { entityId: 'place-005', tagId: 'tag-010' },
-    { entityId: 'place-006', tagId: 'tag-009' },
-    { entityId: 'place-006', tagId: 'tag-006' },
-    { entityId: 'place-006', tagId: 'tag-001' },
-    { entityId: 'place-007', tagId: 'tag-011' },
-    { entityId: 'place-007', tagId: 'tag-014' },
-    { entityId: 'place-008', tagId: 'tag-008' },
-    { entityId: 'place-008', tagId: 'tag-002' },
-    { entityId: 'place-008', tagId: 'tag-012' },
-    // Neon Sprawl place tags
-    { entityId: 'place-003', tagId: 'tag-002' },
-    { entityId: 'place-003', tagId: 'tag-009' },
-    { entityId: 'place-003', tagId: 'tag-013' },
-    { entityId: 'place-004', tagId: 'tag-003' },
-    { entityId: 'place-004', tagId: 'tag-005' },
-    { entityId: 'place-004', tagId: 'tag-012' },
-    { entityId: 'place-009', tagId: 'tag-013' },
-    { entityId: 'place-009', tagId: 'tag-003' },
-    { entityId: 'place-010', tagId: 'tag-002' },
-    { entityId: 'place-010', tagId: 'tag-014' },
-    { entityId: 'place-011', tagId: 'tag-003' },
-    { entityId: 'place-011', tagId: 'tag-009' },
-    { entityId: 'place-012', tagId: 'tag-005' },
-    { entityId: 'place-012', tagId: 'tag-011' },
-    // Eldoria character tags
-    { entityId: 'char-001', tagId: 'tag-001' },
-    { entityId: 'char-001', tagId: 'tag-015' },
-    { entityId: 'char-001', tagId: 'tag-021' },
-    { entityId: 'char-002', tagId: 'tag-004' },
-    { entityId: 'char-002', tagId: 'tag-017' },
-    { entityId: 'char-002', tagId: 'tag-023' },
-    { entityId: 'char-005', tagId: 'tag-017' },
-    { entityId: 'char-005', tagId: 'tag-010' },
-    { entityId: 'char-005', tagId: 'tag-023' },
-    { entityId: 'char-006', tagId: 'tag-018' },
-    { entityId: 'char-006', tagId: 'tag-024' },
-    { entityId: 'char-009', tagId: 'tag-019' },
-    { entityId: 'char-009', tagId: 'tag-002' },
-    { entityId: 'char-010', tagId: 'tag-015' },
-    { entityId: 'char-010', tagId: 'tag-020' },
-    { entityId: 'char-010', tagId: 'tag-021' },
-    { entityId: 'char-011', tagId: 'tag-022' },
-    { entityId: 'char-011', tagId: 'tag-008' },
-    { entityId: 'char-011', tagId: 'tag-006' },
-    { entityId: 'char-012', tagId: 'tag-014' },
-    { entityId: 'char-012', tagId: 'tag-023' },
-    { entityId: 'char-013', tagId: 'tag-001' },
-    { entityId: 'char-013', tagId: 'tag-002' },
-    { entityId: 'char-014', tagId: 'tag-010' },
-    { entityId: 'char-014', tagId: 'tag-024' },
-    // Neon Sprawl character tags
-    { entityId: 'char-003', tagId: 'tag-003' },
-    { entityId: 'char-003', tagId: 'tag-017' },
-    { entityId: 'char-003', tagId: 'tag-023' },
-    { entityId: 'char-004', tagId: 'tag-016' },
-    { entityId: 'char-004', tagId: 'tag-005' },
-    { entityId: 'char-004', tagId: 'tag-022' },
-    { entityId: 'char-007', tagId: 'tag-003' },
-    { entityId: 'char-007', tagId: 'tag-020' },
-    { entityId: 'char-007', tagId: 'tag-023' },
-    { entityId: 'char-008', tagId: 'tag-015' },
-    { entityId: 'char-008', tagId: 'tag-009' },
-    { entityId: 'char-015', tagId: 'tag-002' },
-    { entityId: 'char-015', tagId: 'tag-016' },
-    { entityId: 'char-016', tagId: 'tag-018' },
-    { entityId: 'char-016', tagId: 'tag-021' },
-    { entityId: 'char-017', tagId: 'tag-020' },
-    { entityId: 'char-017', tagId: 'tag-004' },
-    { entityId: 'char-018', tagId: 'tag-009' },
-    { entityId: 'char-018', tagId: 'tag-014' },
-    { entityId: 'char-019', tagId: 'tag-003' },
-    { entityId: 'char-019', tagId: 'tag-023' },
-    { entityId: 'char-020', tagId: 'tag-019' },
-    { entityId: 'char-020', tagId: 'tag-017' },
-    // Item tags
-    { entityId: 'item-001', tagId: 'tag-001' },
-    { entityId: 'item-001', tagId: 'tag-006' },
-    { entityId: 'item-001', tagId: 'tag-010' },
-    { entityId: 'item-007', tagId: 'tag-007' },
-    { entityId: 'item-007', tagId: 'tag-010' },
-    { entityId: 'item-012', tagId: 'tag-020' },
-    { entityId: 'item-012', tagId: 'tag-004' },
-    { entityId: 'item-013', tagId: 'tag-008' },
-    { entityId: 'item-013', tagId: 'tag-002' },
-    { entityId: 'item-016', tagId: 'tag-010' },
-    { entityId: 'item-016', tagId: 'tag-006' },
-    { entityId: 'item-004', tagId: 'tag-003' },
-    { entityId: 'item-019', tagId: 'tag-003' },
-    { entityId: 'item-019', tagId: 'tag-004' }
+    // =====================
+    // UNIVERSE TAGS (4-6 each)
+    // =====================
+    // Eldoria - fantasy realm
+    { entityId: UNIVERSE_1_ID, tagId: 'tag-001' },  // Magic
+    { entityId: UNIVERSE_1_ID, tagId: 'tag-006' },  // Ancient
+    { entityId: UNIVERSE_1_ID, tagId: 'tag-010' }, // Legendary
+    { entityId: UNIVERSE_1_ID, tagId: 'tag-004' },  // Mysterious
+    { entityId: UNIVERSE_1_ID, tagId: 'tag-007' },  // Sacred
+    // Neon Sprawl - cyberpunk megacity
+    { entityId: UNIVERSE_2_ID, tagId: 'tag-003' },  // Technology
+    { entityId: UNIVERSE_2_ID, tagId: 'tag-002' },  // Dangerous
+    { entityId: UNIVERSE_2_ID, tagId: 'tag-013' }, // Chaotic
+    { entityId: UNIVERSE_2_ID, tagId: 'tag-005' },  // Political
+    { entityId: UNIVERSE_2_ID, tagId: 'tag-012' }, // Ominous
+
+    // =====================
+    // PLACE TAGS (4-6 each)
+    // =====================
+    // Crystal Citadel
+    { entityId: PLACE_1_ID, tagId: 'tag-001' },  // Magic
+    { entityId: PLACE_1_ID, tagId: 'tag-005' },  // Political
+    { entityId: PLACE_1_ID, tagId: 'tag-007' },  // Sacred
+    { entityId: PLACE_1_ID, tagId: 'tag-010' }, // Legendary
+    { entityId: PLACE_1_ID, tagId: 'tag-006' },  // Ancient
+    // Shadowmere Forest
+    { entityId: PLACE_2_ID, tagId: 'tag-004' },  // Mysterious
+    { entityId: PLACE_2_ID, tagId: 'tag-002' },  // Dangerous
+    { entityId: PLACE_2_ID, tagId: 'tag-006' },  // Ancient
+    { entityId: PLACE_2_ID, tagId: 'tag-009' },  // Hidden
+    { entityId: PLACE_2_ID, tagId: 'tag-012' }, // Ominous
+    // Dragon's Spine Mountains
+    { entityId: 'place-005', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'place-005', tagId: 'tag-006' },  // Ancient
+    { entityId: 'place-005', tagId: 'tag-010' }, // Legendary
+    { entityId: 'place-005', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'place-005', tagId: 'tag-007' },  // Sacred
+    // Sunken Library
+    { entityId: 'place-006', tagId: 'tag-009' },  // Hidden
+    { entityId: 'place-006', tagId: 'tag-006' },  // Ancient
+    { entityId: 'place-006', tagId: 'tag-001' },  // Magic
+    { entityId: 'place-006', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'place-006', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'place-006', tagId: 'tag-010' }, // Legendary
+    // Thornhaven Village
+    { entityId: 'place-007', tagId: 'tag-011' }, // Peaceful
+    { entityId: 'place-007', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'place-007', tagId: 'tag-009' },  // Hidden (secrets)
+    { entityId: 'place-007', tagId: 'tag-004' },  // Mysterious
+    // Obsidian Wastes
+    { entityId: 'place-008', tagId: 'tag-008' },  // Corrupted
+    { entityId: 'place-008', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'place-008', tagId: 'tag-012' }, // Ominous
+    { entityId: 'place-008', tagId: 'tag-006' },  // Ancient
+    { entityId: 'place-008', tagId: 'tag-004' },  // Mysterious
+    // Sector 7 Underground
+    { entityId: 'place-003', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'place-003', tagId: 'tag-009' },  // Hidden
+    { entityId: 'place-003', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'place-003', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'place-003', tagId: 'tag-003' },  // Technology
+    // Nexus Tower
+    { entityId: 'place-004', tagId: 'tag-003' },  // Technology
+    { entityId: 'place-004', tagId: 'tag-005' },  // Political
+    { entityId: 'place-004', tagId: 'tag-012' }, // Ominous
+    { entityId: 'place-004', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'place-004', tagId: 'tag-010' }, // Legendary
+    // Neon Strip
+    { entityId: 'place-009', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'place-009', tagId: 'tag-003' },  // Technology
+    { entityId: 'place-009', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'place-009', tagId: 'tag-009' },  // Hidden
+    // Rust Town
+    { entityId: 'place-010', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'place-010', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'place-010', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'place-010', tagId: 'tag-019' }, // Tormented
+    { entityId: 'place-010', tagId: 'tag-009' },  // Hidden
+    // DataVault
+    { entityId: 'place-011', tagId: 'tag-003' },  // Technology
+    { entityId: 'place-011', tagId: 'tag-009' },  // Hidden
+    { entityId: 'place-011', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'place-011', tagId: 'tag-010' }, // Legendary
+    // Sky Gardens
+    { entityId: 'place-012', tagId: 'tag-005' },  // Political
+    { entityId: 'place-012', tagId: 'tag-011' }, // Peaceful
+    { entityId: 'place-012', tagId: 'tag-009' },  // Hidden
+    { entityId: 'place-012', tagId: 'tag-003' },  // Technology
+
+    // =====================
+    // CHARACTER TAGS (5-8 each)
+    // =====================
+    // Archmage Thalion
+    { entityId: 'char-001', tagId: 'tag-001' },  // Magic
+    { entityId: 'char-001', tagId: 'tag-015' }, // Wise
+    { entityId: 'char-001', tagId: 'tag-021' }, // Quest Giver
+    { entityId: 'char-001', tagId: 'tag-006' },  // Ancient
+    { entityId: 'char-001', tagId: 'tag-010' }, // Legendary
+    { entityId: 'char-001', tagId: 'tag-020' }, // Visionary
+    // Lyra Nightwhisper
+    { entityId: 'char-002', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'char-002', tagId: 'tag-017' }, // Heroic
+    { entityId: 'char-002', tagId: 'tag-023' }, // Ally
+    { entityId: 'char-002', tagId: 'tag-018' }, // Cunning
+    { entityId: 'char-002', tagId: 'tag-002' },  // Dangerous
+    // Seraphina the Bold
+    { entityId: 'char-005', tagId: 'tag-017' }, // Heroic
+    { entityId: 'char-005', tagId: 'tag-010' }, // Legendary
+    { entityId: 'char-005', tagId: 'tag-023' }, // Ally
+    { entityId: 'char-005', tagId: 'tag-007' },  // Sacred
+    { entityId: 'char-005', tagId: 'tag-014' }, // Hopeful
+    // Grimjaw the Merchant
+    { entityId: 'char-006', tagId: 'tag-018' }, // Cunning
+    { entityId: 'char-006', tagId: 'tag-024' }, // Merchant
+    { entityId: 'char-006', tagId: 'tag-009' },  // Hidden
+    { entityId: 'char-006', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'char-006', tagId: 'tag-021' }, // Quest Giver
+    // Vex Shadowbane
+    { entityId: 'char-009', tagId: 'tag-019' }, // Tormented
+    { entityId: 'char-009', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'char-009', tagId: 'tag-018' }, // Cunning
+    { entityId: 'char-009', tagId: 'tag-009' },  // Hidden
+    { entityId: 'char-009', tagId: 'tag-023' }, // Ally
+    // Elder Moira
+    { entityId: 'char-010', tagId: 'tag-015' }, // Wise
+    { entityId: 'char-010', tagId: 'tag-020' }, // Visionary
+    { entityId: 'char-010', tagId: 'tag-021' }, // Quest Giver
+    { entityId: 'char-010', tagId: 'tag-006' },  // Ancient
+    { entityId: 'char-010', tagId: 'tag-004' },  // Mysterious
+    // Korrath the Undying
+    { entityId: 'char-011', tagId: 'tag-022' }, // Boss
+    { entityId: 'char-011', tagId: 'tag-008' },  // Corrupted
+    { entityId: 'char-011', tagId: 'tag-006' },  // Ancient
+    { entityId: 'char-011', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'char-011', tagId: 'tag-010' }, // Legendary
+    { entityId: 'char-011', tagId: 'tag-016' }, // Ruthless
+    // Finnegan Brightwater
+    { entityId: 'char-012', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'char-012', tagId: 'tag-023' }, // Ally
+    { entityId: 'char-012', tagId: 'tag-018' }, // Cunning
+    { entityId: 'char-012', tagId: 'tag-009' },  // Hidden
+    { entityId: 'char-012', tagId: 'tag-021' }, // Quest Giver
+    // Zara Stormcaller
+    { entityId: 'char-013', tagId: 'tag-001' },  // Magic
+    { entityId: 'char-013', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'char-013', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'char-013', tagId: 'tag-023' }, // Ally
+    { entityId: 'char-013', tagId: 'tag-014' }, // Hopeful
+    // Ironbeard the Smith
+    { entityId: 'char-014', tagId: 'tag-010' }, // Legendary
+    { entityId: 'char-014', tagId: 'tag-024' }, // Merchant
+    { entityId: 'char-014', tagId: 'tag-015' }, // Wise
+    { entityId: 'char-014', tagId: 'tag-006' },  // Ancient
+    { entityId: 'char-014', tagId: 'tag-021' }, // Quest Giver
+    // Zero
+    { entityId: 'char-003', tagId: 'tag-003' },  // Technology
+    { entityId: 'char-003', tagId: 'tag-017' }, // Heroic
+    { entityId: 'char-003', tagId: 'tag-023' }, // Ally
+    { entityId: 'char-003', tagId: 'tag-018' }, // Cunning
+    { entityId: 'char-003', tagId: 'tag-009' },  // Hidden
+    { entityId: 'char-003', tagId: 'tag-014' }, // Hopeful
+    // Director Chen
+    { entityId: 'char-004', tagId: 'tag-016' }, // Ruthless
+    { entityId: 'char-004', tagId: 'tag-005' },  // Political
+    { entityId: 'char-004', tagId: 'tag-022' }, // Boss
+    { entityId: 'char-004', tagId: 'tag-003' },  // Technology
+    { entityId: 'char-004', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'char-004', tagId: 'tag-018' }, // Cunning
+    // Nyx
+    { entityId: 'char-007', tagId: 'tag-003' },  // Technology
+    { entityId: 'char-007', tagId: 'tag-020' }, // Visionary
+    { entityId: 'char-007', tagId: 'tag-023' }, // Ally
+    { entityId: 'char-007', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'char-007', tagId: 'tag-014' }, // Hopeful
+    // Dr. Yuki Tanaka
+    { entityId: 'char-008', tagId: 'tag-015' }, // Wise
+    { entityId: 'char-008', tagId: 'tag-009' },  // Hidden
+    { entityId: 'char-008', tagId: 'tag-003' },  // Technology
+    { entityId: 'char-008', tagId: 'tag-017' }, // Heroic
+    { entityId: 'char-008', tagId: 'tag-023' }, // Ally
+    // Razor
+    { entityId: 'char-015', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'char-015', tagId: 'tag-016' }, // Ruthless
+    { entityId: 'char-015', tagId: 'tag-003' },  // Technology
+    { entityId: 'char-015', tagId: 'tag-018' }, // Cunning
+    { entityId: 'char-015', tagId: 'tag-022' }, // Boss
+    // Luna Vex
+    { entityId: 'char-016', tagId: 'tag-018' }, // Cunning
+    { entityId: 'char-016', tagId: 'tag-021' }, // Quest Giver
+    { entityId: 'char-016', tagId: 'tag-009' },  // Hidden
+    { entityId: 'char-016', tagId: 'tag-005' },  // Political
+    { entityId: 'char-016', tagId: 'tag-024' }, // Merchant
+    // Prophet
+    { entityId: 'char-017', tagId: 'tag-020' }, // Visionary
+    { entityId: 'char-017', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'char-017', tagId: 'tag-003' },  // Technology
+    { entityId: 'char-017', tagId: 'tag-010' }, // Legendary
+    { entityId: 'char-017', tagId: 'tag-012' }, // Ominous
+    { entityId: 'char-017', tagId: 'tag-021' }, // Quest Giver
+    // Duchess Sterling
+    { entityId: 'char-018', tagId: 'tag-009' },  // Hidden
+    { entityId: 'char-018', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'char-018', tagId: 'tag-005' },  // Political
+    { entityId: 'char-018', tagId: 'tag-017' }, // Heroic
+    { entityId: 'char-018', tagId: 'tag-021' }, // Quest Giver
+    // Glitch
+    { entityId: 'char-019', tagId: 'tag-003' },  // Technology
+    { entityId: 'char-019', tagId: 'tag-023' }, // Ally
+    { entityId: 'char-019', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'char-019', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'char-019', tagId: 'tag-017' }, // Heroic
+    // Commander Kane
+    { entityId: 'char-020', tagId: 'tag-019' }, // Tormented
+    { entityId: 'char-020', tagId: 'tag-017' }, // Heroic
+    { entityId: 'char-020', tagId: 'tag-009' },  // Hidden
+    { entityId: 'char-020', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'char-020', tagId: 'tag-023' }, // Ally
+
+    // =====================
+    // ITEM TAGS (4-6 each)
+    // =====================
+    // Staff of Eternity
+    { entityId: 'item-001', tagId: 'tag-001' },  // Magic
+    { entityId: 'item-001', tagId: 'tag-006' },  // Ancient
+    { entityId: 'item-001', tagId: 'tag-010' }, // Legendary
+    { entityId: 'item-001', tagId: 'tag-007' },  // Sacred
+    { entityId: 'item-001', tagId: 'tag-002' },  // Dangerous
+    // Cloak of Shadows
+    { entityId: 'item-002', tagId: 'tag-001' },  // Magic
+    { entityId: 'item-002', tagId: 'tag-009' },  // Hidden
+    { entityId: 'item-002', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'item-002', tagId: 'tag-018' }, // Cunning
+    // Moonbow
+    { entityId: 'item-003', tagId: 'tag-001' },  // Magic
+    { entityId: 'item-003', tagId: 'tag-007' },  // Sacred
+    { entityId: 'item-003', tagId: 'tag-010' }, // Legendary
+    { entityId: 'item-003', tagId: 'tag-006' },  // Ancient
+    // Sunblade
+    { entityId: 'item-007', tagId: 'tag-007' },  // Sacred
+    { entityId: 'item-007', tagId: 'tag-010' }, // Legendary
+    { entityId: 'item-007', tagId: 'tag-001' },  // Magic
+    { entityId: 'item-007', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'item-007', tagId: 'tag-017' }, // Heroic
+    // Shield of the Dawn
+    { entityId: 'item-008', tagId: 'tag-007' },  // Sacred
+    { entityId: 'item-008', tagId: 'tag-010' }, // Legendary
+    { entityId: 'item-008', tagId: 'tag-001' },  // Magic
+    { entityId: 'item-008', tagId: 'tag-006' },  // Ancient
+    // Bag of Infinite Holdings
+    { entityId: 'item-009', tagId: 'tag-001' },  // Magic
+    { entityId: 'item-009', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'item-009', tagId: 'tag-009' },  // Hidden
+    { entityId: 'item-009', tagId: 'tag-018' }, // Cunning
+    // Whisperwind Daggers
+    { entityId: 'item-011', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'item-011', tagId: 'tag-009' },  // Hidden
+    { entityId: 'item-011', tagId: 'tag-001' },  // Magic
+    { entityId: 'item-011', tagId: 'tag-018' }, // Cunning
+    // Prophecy Tome
+    { entityId: 'item-012', tagId: 'tag-020' }, // Visionary
+    { entityId: 'item-012', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'item-012', tagId: 'tag-001' },  // Magic
+    { entityId: 'item-012', tagId: 'tag-006' },  // Ancient
+    { entityId: 'item-012', tagId: 'tag-012' }, // Ominous
+    // Phylactery of Korrath
+    { entityId: 'item-013', tagId: 'tag-008' },  // Corrupted
+    { entityId: 'item-013', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'item-013', tagId: 'tag-006' },  // Ancient
+    { entityId: 'item-013', tagId: 'tag-001' },  // Magic
+    { entityId: 'item-013', tagId: 'tag-012' }, // Ominous
+    // Lute of Legends
+    { entityId: 'item-014', tagId: 'tag-001' },  // Magic
+    { entityId: 'item-014', tagId: 'tag-010' }, // Legendary
+    { entityId: 'item-014', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'item-014', tagId: 'tag-004' },  // Mysterious
+    // Storm Gauntlets
+    { entityId: 'item-015', tagId: 'tag-001' },  // Magic
+    { entityId: 'item-015', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'item-015', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'item-015', tagId: 'tag-010' }, // Legendary
+    // Godhammer
+    { entityId: 'item-016', tagId: 'tag-010' }, // Legendary
+    { entityId: 'item-016', tagId: 'tag-006' },  // Ancient
+    { entityId: 'item-016', tagId: 'tag-007' },  // Sacred
+    { entityId: 'item-016', tagId: 'tag-001' },  // Magic
+    // Neural Interface Deck
+    { entityId: 'item-004', tagId: 'tag-003' },  // Technology
+    { entityId: 'item-004', tagId: 'tag-009' },  // Hidden
+    { entityId: 'item-004', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'item-004', tagId: 'tag-018' }, // Cunning
+    // Quantum Encryption Key
+    { entityId: 'item-005', tagId: 'tag-003' },  // Technology
+    { entityId: 'item-005', tagId: 'tag-009' },  // Hidden
+    { entityId: 'item-005', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'item-005', tagId: 'tag-010' }, // Legendary
+    // Executive Override Chip
+    { entityId: 'item-006', tagId: 'tag-003' },  // Technology
+    { entityId: 'item-006', tagId: 'tag-005' },  // Political
+    { entityId: 'item-006', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'item-006', tagId: 'tag-016' }, // Ruthless
+    // Probability Disruptor
+    { entityId: 'item-010', tagId: 'tag-003' },  // Technology
+    { entityId: 'item-010', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'item-010', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'item-010', tagId: 'tag-010' }, // Legendary
+    // Nanoblade Katana
+    { entityId: 'item-017', tagId: 'tag-003' },  // Technology
+    { entityId: 'item-017', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'item-017', tagId: 'tag-010' }, // Legendary
+    { entityId: 'item-017', tagId: 'tag-016' }, // Ruthless
+    // BlackBook
+    { entityId: 'item-018', tagId: 'tag-009' },  // Hidden
+    { entityId: 'item-018', tagId: 'tag-018' }, // Cunning
+    { entityId: 'item-018', tagId: 'tag-005' },  // Political
+    { entityId: 'item-018', tagId: 'tag-002' },  // Dangerous
+    // Prophet's Core
+    { entityId: 'item-019', tagId: 'tag-003' },  // Technology
+    { entityId: 'item-019', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'item-019', tagId: 'tag-010' }, // Legendary
+    { entityId: 'item-019', tagId: 'tag-020' }, // Visionary
+    { entityId: 'item-019', tagId: 'tag-012' }, // Ominous
+    // Sterling Foundation Token
+    { entityId: 'item-020', tagId: 'tag-009' },  // Hidden
+    { entityId: 'item-020', tagId: 'tag-005' },  // Political
+    { entityId: 'item-020', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'item-020', tagId: 'tag-003' },  // Technology
+    // Biotech Interface
+    { entityId: 'item-021', tagId: 'tag-003' },  // Technology
+    { entityId: 'item-021', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'item-021', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'item-021', tagId: 'tag-009' },  // Hidden
+    // Conscience Chip
+    { entityId: 'item-022', tagId: 'tag-003' },  // Technology
+    { entityId: 'item-022', tagId: 'tag-009' },  // Hidden
+    { entityId: 'item-022', tagId: 'tag-019' }, // Tormented
+    { entityId: 'item-022', tagId: 'tag-017' }, // Heroic
+
+    // =====================
+    // NARRATIVE TAGS (5-7 each)
+    // =====================
+    // The Restoration of Eldoria
+    { entityId: 'narrative-001', tagId: 'tag-001' },  // Magic
+    { entityId: 'narrative-001', tagId: 'tag-010' }, // Legendary
+    { entityId: 'narrative-001', tagId: 'tag-017' }, // Heroic
+    { entityId: 'narrative-001', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'narrative-001', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'narrative-001', tagId: 'tag-006' },  // Ancient
+    // The Thornhaven Conspiracy
+    { entityId: 'narrative-003', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'narrative-003', tagId: 'tag-009' },  // Hidden
+    { entityId: 'narrative-003', tagId: 'tag-012' }, // Ominous
+    { entityId: 'narrative-003', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'narrative-003', tagId: 'tag-018' }, // Cunning
+    // The Lich King's Gambit
+    { entityId: 'narrative-004', tagId: 'tag-008' },  // Corrupted
+    { entityId: 'narrative-004', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'narrative-004', tagId: 'tag-012' }, // Ominous
+    { entityId: 'narrative-004', tagId: 'tag-006' },  // Ancient
+    { entityId: 'narrative-004', tagId: 'tag-017' }, // Heroic
+    { entityId: 'narrative-004', tagId: 'tag-010' }, // Legendary
+    // Rise of the Resistance
+    { entityId: 'narrative-002', tagId: 'tag-003' },  // Technology
+    { entityId: 'narrative-002', tagId: 'tag-017' }, // Heroic
+    { entityId: 'narrative-002', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'narrative-002', tagId: 'tag-005' },  // Political
+    { entityId: 'narrative-002', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'narrative-002', tagId: 'tag-013' }, // Chaotic
+    // The Prophet's Warning
+    { entityId: 'narrative-005', tagId: 'tag-003' },  // Technology
+    { entityId: 'narrative-005', tagId: 'tag-012' }, // Ominous
+    { entityId: 'narrative-005', tagId: 'tag-020' }, // Visionary
+    { entityId: 'narrative-005', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'narrative-005', tagId: 'tag-002' },  // Dangerous
+    // Ghosts in the Machine
+    { entityId: 'narrative-006', tagId: 'tag-019' }, // Tormented
+    { entityId: 'narrative-006', tagId: 'tag-009' },  // Hidden
+    { entityId: 'narrative-006', tagId: 'tag-017' }, // Heroic
+    { entityId: 'narrative-006', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'narrative-006', tagId: 'tag-005' },  // Political
+    { entityId: 'narrative-006', tagId: 'tag-003' },  // Technology
+
+    // =====================
+    // EVENT TAGS (4-6 each)
+    // =====================
+    // The Restoration of Eldoria events
+    { entityId: 'event-001', tagId: 'tag-001' },  // Magic
+    { entityId: 'event-001', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-001', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-001', tagId: 'tag-006' },  // Ancient
+    { entityId: 'event-002', tagId: 'tag-005' },  // Political
+    { entityId: 'event-002', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-002', tagId: 'tag-001' },  // Magic
+    { entityId: 'event-002', tagId: 'tag-015' }, // Wise
+    { entityId: 'event-003', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-003', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-003', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-003', tagId: 'tag-010' }, // Legendary
+    { entityId: 'event-004', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-004', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-004', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-004', tagId: 'tag-006' },  // Ancient
+    { entityId: 'event-005', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-005', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-005', tagId: 'tag-001' },  // Magic
+    { entityId: 'event-005', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'event-006', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-006', tagId: 'tag-010' }, // Legendary
+    { entityId: 'event-006', tagId: 'tag-001' },  // Magic
+    { entityId: 'event-006', tagId: 'tag-007' },  // Sacred
+    { entityId: 'event-007', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-007', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-007', tagId: 'tag-008' },  // Corrupted
+    { entityId: 'event-007', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'event-008', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-008', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-008', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-008', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'event-009', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-009', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-009', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-009', tagId: 'tag-010' }, // Legendary
+    { entityId: 'event-010', tagId: 'tag-001' },  // Magic
+    { entityId: 'event-010', tagId: 'tag-007' },  // Sacred
+    { entityId: 'event-010', tagId: 'tag-006' },  // Ancient
+    { entityId: 'event-010', tagId: 'tag-010' }, // Legendary
+    { entityId: 'event-010', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-011', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-011', tagId: 'tag-011' }, // Peaceful
+    { entityId: 'event-011', tagId: 'tag-010' }, // Legendary
+    { entityId: 'event-011', tagId: 'tag-007' },  // Sacred
+
+    // Rise of the Resistance events
+    { entityId: 'event-012', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-012', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-012', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-012', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-013', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-013', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-013', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-013', tagId: 'tag-023' }, // Ally
+    { entityId: 'event-014', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-014', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-014', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-014', tagId: 'tag-018' }, // Cunning
+    { entityId: 'event-014', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'event-015', tagId: 'tag-005' },  // Political
+    { entityId: 'event-015', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-015', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-015', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-016', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-016', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'event-016', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-016', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-017', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-017', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-017', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-017', tagId: 'tag-010' }, // Legendary
+    { entityId: 'event-018', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-018', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'event-018', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-018', tagId: 'tag-005' },  // Political
+
+    // The Prophet's Warning events
+    { entityId: 'event-019', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-019', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-019', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-019', tagId: 'tag-020' }, // Visionary
+    { entityId: 'event-020', tagId: 'tag-005' },  // Political
+    { entityId: 'event-020', tagId: 'tag-016' }, // Ruthless
+    { entityId: 'event-020', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-020', tagId: 'tag-018' }, // Cunning
+    { entityId: 'event-021', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-021', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-021', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-021', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-022', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-022', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-022', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-022', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-023', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-023', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-023', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-023', tagId: 'tag-010' }, // Legendary
+    { entityId: 'event-023', tagId: 'tag-020' }, // Visionary
+
+    // The Thornhaven Conspiracy events
+    { entityId: 'event-031', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-031', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-031', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-031', tagId: 'tag-011' }, // Peaceful (disrupted)
+    { entityId: 'event-032', tagId: 'tag-020' }, // Visionary
+    { entityId: 'event-032', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-032', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-032', tagId: 'tag-001' },  // Magic
+    { entityId: 'event-033', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-033', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-033', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-033', tagId: 'tag-023' }, // Ally
+    { entityId: 'event-034', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-034', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-034', tagId: 'tag-018' }, // Cunning
+    { entityId: 'event-034', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-035', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-035', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-035', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-035', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-036', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-036', tagId: 'tag-008' },  // Corrupted
+    { entityId: 'event-036', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'event-036', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-037', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-037', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'event-037', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-037', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-038', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-038', tagId: 'tag-008' },  // Corrupted
+    { entityId: 'event-038', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-038', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-039', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-039', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-039', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-039', tagId: 'tag-019' }, // Tormented
+    { entityId: 'event-040', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-040', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-040', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'event-040', tagId: 'tag-010' }, // Legendary
+    { entityId: 'event-041', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-041', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-041', tagId: 'tag-011' }, // Peaceful
+    { entityId: 'event-041', tagId: 'tag-023' }, // Ally
+    { entityId: 'event-042', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-042', tagId: 'tag-011' }, // Peaceful
+    { entityId: 'event-042', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-042', tagId: 'tag-023' }, // Ally
+
+    // Ghosts in the Machine events
+    { entityId: 'event-043', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-043', tagId: 'tag-016' }, // Ruthless
+    { entityId: 'event-043', tagId: 'tag-019' }, // Tormented
+    { entityId: 'event-043', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-044', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-044', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-044', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-044', tagId: 'tag-019' }, // Tormented
+    { entityId: 'event-045', tagId: 'tag-019' }, // Tormented
+    { entityId: 'event-045', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-045', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-045', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-046', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-046', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-046', tagId: 'tag-016' }, // Ruthless
+    { entityId: 'event-046', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-047', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-047', tagId: 'tag-019' }, // Tormented
+    { entityId: 'event-047', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-047', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-048', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-048', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-048', tagId: 'tag-019' }, // Tormented
+    { entityId: 'event-048', tagId: 'tag-023' }, // Ally
+    { entityId: 'event-049', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-049', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-049', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-049', tagId: 'tag-018' }, // Cunning
+    { entityId: 'event-050', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-050', tagId: 'tag-016' }, // Ruthless
+    { entityId: 'event-050', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'event-050', tagId: 'tag-018' }, // Cunning
+    { entityId: 'event-051', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-051', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'event-051', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-051', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-052', tagId: 'tag-018' }, // Cunning
+    { entityId: 'event-052', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-052', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-052', tagId: 'tag-005' },  // Political
+    { entityId: 'event-053', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-053', tagId: 'tag-010' }, // Legendary
+    { entityId: 'event-053', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-053', tagId: 'tag-003' },  // Technology
+    { entityId: 'event-054', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-054', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-054', tagId: 'tag-005' },  // Political
+    { entityId: 'event-054', tagId: 'tag-010' }, // Legendary
+
+    // The Lich King's Gambit events
+    { entityId: 'event-024', tagId: 'tag-008' },  // Corrupted
+    { entityId: 'event-024', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-024', tagId: 'tag-006' },  // Ancient
+    { entityId: 'event-024', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-025', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-025', tagId: 'tag-008' },  // Corrupted
+    { entityId: 'event-025', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-025', tagId: 'tag-019' }, // Tormented
+    { entityId: 'event-026', tagId: 'tag-005' },  // Political
+    { entityId: 'event-026', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-026', tagId: 'tag-015' }, // Wise
+    { entityId: 'event-026', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-027', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-027', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-027', tagId: 'tag-008' },  // Corrupted
+    { entityId: 'event-027', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-028', tagId: 'tag-009' },  // Hidden
+    { entityId: 'event-028', tagId: 'tag-004' },  // Mysterious
+    { entityId: 'event-028', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-028', tagId: 'tag-010' }, // Legendary
+    { entityId: 'event-029', tagId: 'tag-002' },  // Dangerous
+    { entityId: 'event-029', tagId: 'tag-013' }, // Chaotic
+    { entityId: 'event-029', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-029', tagId: 'tag-012' }, // Ominous
+    { entityId: 'event-029', tagId: 'tag-010' }, // Legendary
+    { entityId: 'event-030', tagId: 'tag-017' }, // Heroic
+    { entityId: 'event-030', tagId: 'tag-010' }, // Legendary
+    { entityId: 'event-030', tagId: 'tag-014' }, // Hopeful
+    { entityId: 'event-030', tagId: 'tag-007' }   // Sacred
   ],
   narratives: [
     // Eldoria narratives
@@ -1386,9 +1894,9 @@ async function seed() {
     await seedCharacters(session);
     await seedItems(session);
     await seedTags(session);
-    await seedTagRelations(session);
     await seedNarratives(session);
     await seedEvents(session);
+    await seedTagRelations(session);  // Must run AFTER all entities exist
     await seedEventRelations(session);
     await seedImages(session);
 
