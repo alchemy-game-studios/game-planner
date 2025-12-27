@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useBreadcrumbs } from '@/context/breadcrumb-context';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { AddProductDialog } from '@/components/add-product-dialog';
 
 const GET_PRODUCTS = gql`
   query Products {
@@ -51,12 +50,18 @@ function getProductTypeColor(type: string): string {
 }
 
 export default function ProductsPage() {
-  const { loading, error, data } = useQuery(GET_PRODUCTS);
+  const { loading, error, data, refetch } = useQuery(GET_PRODUCTS);
   const { clear } = useBreadcrumbs();
+  const navigate = useNavigate();
 
   useEffect(() => {
     clear();
   }, [clear]);
+
+  const handleProductCreated = (product: any) => {
+    refetch();
+    navigate(`/product/${product.id}`);
+  };
 
   if (loading) {
     return (
@@ -82,10 +87,7 @@ export default function ProductsPage() {
           <h1 className="text-4xl font-heading text-white">Products</h1>
           <p className="text-gray-400 mt-1">Games, books, and media based on your universes</p>
         </div>
-        <Button variant="outline" className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Product
-        </Button>
+        <AddProductDialog onProductCreated={handleProductCreated} />
       </div>
 
       <div className="grid gap-4">

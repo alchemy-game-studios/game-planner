@@ -68,17 +68,29 @@ function getProductTypeLabel(type: string, gameType?: string): string {
       card: 'Card Game',
       board: 'Board Game',
       ttrpg: 'TTRPG',
-      video: 'Video Game'
+      video: 'Video Game',
+      mobile: 'Mobile Game',
+      party: 'Party Game',
+      miniatures: 'Miniatures Game',
+      dice: 'Dice Game'
     };
-    return gameTypeLabels[gameType] || `${gameType} Game`;
+    return gameTypeLabels[gameType] || `${gameType.charAt(0).toUpperCase() + gameType.slice(1)} Game`;
   }
   const typeLabels: Record<string, string> = {
     game: 'Game',
     book: 'Book',
     movie: 'Movie',
-    comic: 'Comic'
+    comic: 'Comic',
+    'tv series': 'TV Series',
+    podcast: 'Podcast',
+    music: 'Music'
   };
-  return typeLabels[type] || type;
+  return typeLabels[type] || type.charAt(0).toUpperCase() + type.slice(1);
+}
+
+// Get the label for entity adaptations - universal term for all product types
+function getAdaptationLabel(plural = true): string {
+  return plural ? 'Components' : 'Component';
 }
 
 export default function ProductPage() {
@@ -171,7 +183,7 @@ export default function ProductPage() {
           {isGame && <TabsTrigger value="attributes">Attributes ({product.attributes.length})</TabsTrigger>}
           {isGame && <TabsTrigger value="mechanics">Mechanics ({product.mechanics.length})</TabsTrigger>}
           <TabsTrigger value="adaptations">
-            {isGame ? 'Cards' : 'Adaptations'} ({product.adaptations.length})
+            {getAdaptationLabel()} ({product.adaptations.length})
           </TabsTrigger>
           {isPassiveMedia && <TabsTrigger value="sections">Sections ({product.sections.length})</TabsTrigger>}
         </TabsList>
@@ -194,7 +206,7 @@ export default function ProductPage() {
             )}
             <div className="p-6 rounded-lg border border-gray-700 bg-gray-800/50">
               <h3 className="text-lg font-semibold text-white mb-2">
-                {isGame ? 'Cards' : 'Adaptations'}
+                {getAdaptationLabel()}
               </h3>
               <p className="text-3xl font-bold text-indigo-400">{product.adaptations.length}</p>
               <p className="text-sm text-gray-400 mt-1">IP entities mapped</p>
@@ -277,11 +289,11 @@ export default function ProductPage() {
         <TabsContent value="adaptations" className="space-y-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-white">
-              {isGame ? 'Card Adaptations' : 'Entity Adaptations'}
+              {getAdaptationLabel()}
             </h2>
             <Button variant="outline" size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
-              Add Adaptation
+              Add {getAdaptationLabel(false)}
             </Button>
           </div>
           <div className="grid gap-4">
