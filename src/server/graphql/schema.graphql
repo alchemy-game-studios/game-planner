@@ -94,7 +94,7 @@ type Entity {
   allImages: [EntityImage!]!
   # Event-specific fields (populated for Event entities)
   locations: [EntityProperties!]
-  participants: [EntityProperties!]
+  participants: [Participant!]
   # Reverse lookup: events this entity is involved in
   events: [EntityProperties!]
   # For Events: their parent narrative
@@ -109,6 +109,15 @@ type EntityProperties {
   # Event-specific properties
   startDate: String
   endDate: String
+}
+
+# Participant type for event participants (characters and items)
+type Participant {
+  id: String!
+  name: String!
+  description: String
+  type: String
+  _nodeType: String!
 }
 
 type ContentItem {

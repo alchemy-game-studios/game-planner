@@ -153,12 +153,17 @@ async function getLocationsForEvent(eventId) {
 async function getParticipantsForEvent(eventId) {
   const result = await runQuery(`
     MATCH (e:Event {id: $eventId})-[:INVOLVES]->(p)
-    RETURN properties(p) AS participant, labels(p)[0] AS nodeType
+    RETURN properties(p) AS participant,
+           CASE
+             WHEN p:Character THEN 'character'
+             WHEN p:Item THEN 'item'
+             ELSE 'unknown'
+           END AS nodeType
   `, { eventId });
 
   return result.records.map(r => ({
     ...r.get('participant'),
-    _nodeType: r.get('nodeType')?.toLowerCase()
+    _nodeType: r.get('nodeType')
   }));
 }
 
