@@ -7,9 +7,10 @@ interface PaymentFormProps {
   onSuccess: () => void;
   onError: (error: string) => void;
   submitLabel?: string;
+  returnTab: 'credits' | 'subscription';
 }
 
-export function PaymentForm({ onSuccess, onError, submitLabel = 'Pay' }: PaymentFormProps) {
+export function PaymentForm({ onSuccess, onError, submitLabel = 'Pay', returnTab }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
@@ -20,10 +21,11 @@ export function PaymentForm({ onSuccess, onError, submitLabel = 'Pay' }: Payment
 
     setProcessing(true);
 
+    const successType = returnTab === 'credits' ? 'credits' : 'subscription';
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/account?success=payment`,
+        return_url: `${window.location.origin}/account?success=${successType}&tab=${returnTab}`,
       },
       redirect: 'if_required' // Only redirect if 3DS required
     });
@@ -37,11 +39,12 @@ export function PaymentForm({ onSuccess, onError, submitLabel = 'Pay' }: Payment
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 pb-4">
       <PaymentElement />
       <Button
         type="submit"
-        className="w-full bg-ck-ember hover:bg-ck-ember/90"
+        size="lg"
+        className="w-full !bg-ck-ember hover:!bg-ck-ember/80 text-white font-semibold py-6"
         disabled={!stripe || processing}
       >
         {processing ? (

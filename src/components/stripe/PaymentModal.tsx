@@ -17,7 +17,8 @@ interface PaymentModalProps {
   title: string;
   description: string;
   submitLabel: string;
-  onSuccess: () => void;
+  returnTab: 'credits' | 'subscription';
+  onSuccess: (returnTab: 'credits' | 'subscription') => void;
 }
 
 export function PaymentModal({
@@ -27,6 +28,7 @@ export function PaymentModal({
   title,
   description,
   submitLabel,
+  returnTab,
   onSuccess,
 }: PaymentModalProps) {
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +36,9 @@ export function PaymentModal({
 
   const handleSuccess = () => {
     setSuccess(true);
+    const tab = returnTab; // Capture at time of success
     setTimeout(() => {
-      onSuccess();
+      onSuccess(tab);
       onOpenChange(false);
       setSuccess(false);
       setError(null);
@@ -52,7 +55,7 @@ export function PaymentModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-ck-indigo border-border">
+      <DialogContent className="sm:max-w-[425px] bg-zinc-900 border border-zinc-700 max-h-[90vh] overflow-y-auto shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-foreground">{title}</DialogTitle>
           <DialogDescription className="text-muted-foreground">
@@ -78,6 +81,7 @@ export function PaymentModal({
               onSuccess={handleSuccess}
               onError={setError}
               submitLabel={submitLabel}
+              returnTab={returnTab}
             />
           </StripeProvider>
         ) : (

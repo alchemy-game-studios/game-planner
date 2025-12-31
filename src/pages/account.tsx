@@ -66,14 +66,23 @@ const CREDIT_PACKAGES = [
 export default function AccountPage() {
   const { user, loading, refetch } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { clear, push } = useBreadcrumbs();
 
   const [displayName, setDisplayName] = useState('');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'profile');
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
   const [updateProfile] = useMutation(UPDATE_PROFILE);
   const [createSubscription] = useMutation(CREATE_SUBSCRIPTION);
   const [createCreditPaymentIntent] = useMutation(CREATE_CREDIT_PAYMENT_INTENT);
   const [cancelSubscription] = useMutation(CANCEL_SUBSCRIPTION);
+
+  // Animation state for success feedback
+  const [justUpdated, setJustUpdated] = useState<'credits' | 'subscription' | null>(null);
 
   // Payment modal state
   const [paymentModal, setPaymentModal] = useState<{
@@ -82,15 +91,16 @@ export default function AccountPage() {
     title: string;
     description: string;
     submitLabel: string;
+    paymentType: 'credits' | 'subscription';
   }>({
     open: false,
     clientSecret: null,
     title: '',
     description: '',
     submitLabel: 'Pay',
+    paymentType: 'credits',
   });
 
-  const success = searchParams.get('success');
   const canceled = searchParams.get('canceled');
 
   useEffect(() => {
@@ -111,13 +121,7 @@ export default function AccountPage() {
     }
   }, [user, loading, navigate]);
 
-  useEffect(() => {
-    // Refetch user data after successful payment
-    if (success) {
-      refetch();
-    }
-  }, [success, refetch]);
-
+  
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -146,6 +150,7 @@ export default function AccountPage() {
           title: `Subscribe to ${tierInfo.name}`,
           description: `${tierInfo.price} - ${tierInfo.entities} entities, ${tierInfo.credits} monthly credits`,
           submitLabel: 'Subscribe',
+          paymentType: 'subscription',
         });
       }
     } catch (err) {
@@ -164,6 +169,7 @@ export default function AccountPage() {
           title: `Purchase ${pkg?.amount} Credits`,
           description: `One-time payment of ${pkg?.price}`,
           submitLabel: 'Purchase',
+          paymentType: 'credits',
         });
       }
     } catch (err) {
@@ -171,8 +177,10 @@ export default function AccountPage() {
     }
   };
 
-  const handlePaymentSuccess = async () => {
+  const handlePaymentSuccess = async (returnTab: 'credits' | 'subscription') => {
     await refetch();
+    setJustUpdated(returnTab);
+    setTimeout(() => setJustUpdated(null), 2000);
   };
 
   const handleCancelSubscription = async () => {
@@ -196,19 +204,13 @@ export default function AccountPage() {
     <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold text-white mb-6">Account Settings</h1>
 
-      {success && (
-        <div className="mb-6 p-4 rounded bg-green-500/10 border border-green-500/30 text-green-400">
-          {success === 'subscription' ? 'Subscription activated successfully!' : 'Credits purchased successfully!'}
-        </div>
-      )}
-
       {canceled && (
         <div className="mb-6 p-4 rounded bg-yellow-500/10 border border-yellow-500/30 text-yellow-400">
           Payment was canceled. No changes were made.
         </div>
       )}
 
-      <Tabs defaultValue="profile" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className="bg-zinc-800">
           <TabsTrigger value="profile" className="gap-2">
             <UserIcon className="w-4 h-4" />
@@ -283,7 +285,9 @@ export default function AccountPage() {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 Current Plan
-                <Badge className={currentTier.color}>{currentTier.name}</Badge>
+                <Badge className={`${currentTier.color} transition-all duration-700 ${justUpdated === 'subscription' ? 'ring-2 ring-ck-ember scale-110' : ''}`}>
+                  {currentTier.name}
+                </Badge>
                 {user.subscriptionStatus === 'canceled' && (
                   <Badge variant="outline" className="text-yellow-500 border-yellow-500">
                     Canceling
@@ -356,8 +360,10 @@ export default function AccountPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
-                <div className="text-center p-6 bg-zinc-800 rounded">
-                  <p className="text-4xl font-bold text-white">{typeof user.credits === 'object' ? (user.credits as any).low : user.credits}</p>
+                <div className={`text-center p-6 bg-zinc-800 rounded transition-all duration-700 ${justUpdated === 'credits' ? 'scale-110' : ''}`}>
+                  <p className={`text-4xl font-bold transition-all duration-700 ${justUpdated === 'credits' ? 'text-ck-ember scale-110' : 'text-white'}`}>
+                    {typeof user.credits === 'object' ? (user.credits as any).low : user.credits}
+                  </p>
                   <p className="text-sm text-gray-400">credits available</p>
                 </div>
                 {user.creditsResetAt && (
@@ -405,6 +411,7 @@ export default function AccountPage() {
         title={paymentModal.title}
         description={paymentModal.description}
         submitLabel={paymentModal.submitLabel}
+        returnTab={paymentModal.paymentType}
         onSuccess={handlePaymentSuccess}
       />
     </div>
