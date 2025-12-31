@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { User as UserIcon, CreditCard, Coins, Check, ExternalLink } from 'lucide-react';
+import { User as UserIcon, CreditCard, Coins, Check } from 'lucide-react';
+import { PaymentModal } from '@/components/stripe/PaymentModal';
 
 const UPDATE_PROFILE = gql`
   mutation UpdateProfile($displayName: String!) {
@@ -20,18 +21,22 @@ const UPDATE_PROFILE = gql`
   }
 `;
 
-const CREATE_SUBSCRIPTION_CHECKOUT = gql`
-  mutation CreateSubscriptionCheckout($tier: String!) {
-    createSubscriptionCheckout(tier: $tier) {
-      url
+// Stripe Elements mutations (embedded checkout)
+const CREATE_SUBSCRIPTION = gql`
+  mutation CreateSubscription($tier: String!) {
+    createSubscription(tier: $tier) {
+      clientSecret
+      subscriptionId
+      status
     }
   }
 `;
 
-const PURCHASE_CREDITS = gql`
-  mutation PurchaseCredits($packageId: String!) {
-    purchaseCredits(packageId: $packageId) {
-      url
+const CREATE_CREDIT_PAYMENT_INTENT = gql`
+  mutation CreateCreditPaymentIntent($packageId: String!) {
+    createCreditPaymentIntent(packageId: $packageId) {
+      clientSecret
+      paymentIntentId
     }
   }
 `;
@@ -48,12 +53,12 @@ const CANCEL_SUBSCRIPTION = gql`
 // Tier configurations (matching backend)
 const TIERS = {
   free: { name: 'Free', price: '$0', entities: 50, credits: 100, color: 'bg-gray-600' },
-  creative: { name: 'Creative', price: '$9.99/mo', entities: 500, credits: 1000, color: 'bg-blue-600' },
+  creative: { name: 'Creative', price: '$4.99/mo', entities: 500, credits: 1000, color: 'bg-blue-600' },
   studio: { name: 'Studio', price: '$29.99/mo', entities: 'Unlimited', credits: 5000, color: 'bg-purple-600' }
 };
 
 const CREDIT_PACKAGES = [
-  { id: 'credits_100', amount: 100, price: '$4.99' },
+  { id: 'credits_100', amount: 100, price: '$10.00' },
   { id: 'credits_500', amount: 500, price: '$19.99' },
   { id: 'credits_1000', amount: 1000, price: '$34.99' }
 ];
@@ -66,9 +71,24 @@ export default function AccountPage() {
 
   const [displayName, setDisplayName] = useState('');
   const [updateProfile] = useMutation(UPDATE_PROFILE);
-  const [createSubscriptionCheckout] = useMutation(CREATE_SUBSCRIPTION_CHECKOUT);
-  const [purchaseCredits] = useMutation(PURCHASE_CREDITS);
+  const [createSubscription] = useMutation(CREATE_SUBSCRIPTION);
+  const [createCreditPaymentIntent] = useMutation(CREATE_CREDIT_PAYMENT_INTENT);
   const [cancelSubscription] = useMutation(CANCEL_SUBSCRIPTION);
+
+  // Payment modal state
+  const [paymentModal, setPaymentModal] = useState<{
+    open: boolean;
+    clientSecret: string | null;
+    title: string;
+    description: string;
+    submitLabel: string;
+  }>({
+    open: false,
+    clientSecret: null,
+    title: '',
+    description: '',
+    submitLabel: 'Pay',
+  });
 
   const success = searchParams.get('success');
   const canceled = searchParams.get('canceled');
@@ -116,25 +136,43 @@ export default function AccountPage() {
   };
 
   const handleUpgrade = async (tier: string) => {
+    const tierInfo = TIERS[tier as keyof typeof TIERS];
     try {
-      const { data } = await createSubscriptionCheckout({ variables: { tier } });
-      if (data?.createSubscriptionCheckout?.url) {
-        window.location.href = data.createSubscriptionCheckout.url;
+      const { data } = await createSubscription({ variables: { tier } });
+      if (data?.createSubscription?.clientSecret) {
+        setPaymentModal({
+          open: true,
+          clientSecret: data.createSubscription.clientSecret,
+          title: `Subscribe to ${tierInfo.name}`,
+          description: `${tierInfo.price} - ${tierInfo.entities} entities, ${tierInfo.credits} monthly credits`,
+          submitLabel: 'Subscribe',
+        });
       }
     } catch (err) {
-      console.error('Error creating checkout:', err);
+      console.error('Error creating subscription:', err);
     }
   };
 
   const handlePurchaseCredits = async (packageId: string) => {
+    const pkg = CREDIT_PACKAGES.find((p) => p.id === packageId);
     try {
-      const { data } = await purchaseCredits({ variables: { packageId } });
-      if (data?.purchaseCredits?.url) {
-        window.location.href = data.purchaseCredits.url;
+      const { data } = await createCreditPaymentIntent({ variables: { packageId } });
+      if (data?.createCreditPaymentIntent?.clientSecret) {
+        setPaymentModal({
+          open: true,
+          clientSecret: data.createCreditPaymentIntent.clientSecret,
+          title: `Purchase ${pkg?.amount} Credits`,
+          description: `One-time payment of ${pkg?.price}`,
+          submitLabel: 'Purchase',
+        });
       }
     } catch (err) {
-      console.error('Error purchasing credits:', err);
+      console.error('Error creating payment intent:', err);
     }
+  };
+
+  const handlePaymentSuccess = async () => {
+    await refetch();
   };
 
   const handleCancelSubscription = async () => {
@@ -356,6 +394,17 @@ export default function AccountPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        open={paymentModal.open}
+        onOpenChange={(open) => setPaymentModal((prev) => ({ ...prev, open }))}
+        clientSecret={paymentModal.clientSecret}
+        title={paymentModal.title}
+        description={paymentModal.description}
+        submitLabel={paymentModal.submitLabel}
+        onSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 }

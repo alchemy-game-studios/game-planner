@@ -11,7 +11,7 @@ import { AuthProvider } from '@/context/auth-context';
 
 // Create an Apollo Client instance
 const client = new ApolloClient({
-  uri: 'http://localhost:3000/graphql',
+  uri: '/graphql', // Uses Vite proxy in dev, direct path in prod
   cache: new InMemoryCache(),
   credentials: 'include' // Send cookies with requests
 });

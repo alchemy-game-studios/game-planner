@@ -1452,6 +1452,101 @@ export default {
       }
 
       return updateUserCredits(user.id, -amount, description, 'usage');
+    },
+
+    // Stripe Elements: Create subscription with embedded checkout
+    createSubscription: async (_, { tier }, context) => {
+      const user = requireAuth(context);
+
+      if (!stripe) {
+        throw new Error('Stripe is not configured');
+      }
+
+      const tierConfig = SUBSCRIPTION_TIERS[tier];
+      if (!tierConfig || !tierConfig.stripePriceId) {
+        throw new Error('Invalid subscription tier');
+      }
+
+      // Create or get Stripe customer
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { userId: user.id }
+        });
+        customerId = customer.id;
+
+        await runQuery(`
+          MATCH (u:User {id: $userId})
+          SET u.stripeCustomerId = $customerId
+        `, { userId: user.id, customerId });
+      }
+
+      // Create subscription with payment_behavior: 'default_incomplete'
+      // This returns a subscription with a pending payment intent
+      const subscription = await stripe.subscriptions.create({
+        customer: customerId,
+        items: [{ price: tierConfig.stripePriceId }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: { save_default_payment_method: 'on_subscription' },
+        expand: ['latest_invoice.payment_intent'],
+        metadata: {
+          userId: user.id,
+          tier
+        }
+      });
+
+      return {
+        clientSecret: subscription.latest_invoice.payment_intent.client_secret,
+        subscriptionId: subscription.id,
+        status: subscription.status
+      };
+    },
+
+    // Stripe Elements: Create payment intent for credit purchase
+    createCreditPaymentIntent: async (_, { packageId }, context) => {
+      const user = requireAuth(context);
+
+      if (!stripe) {
+        throw new Error('Stripe is not configured');
+      }
+
+      const creditPkg = getCreditPackage(packageId);
+      if (!creditPkg) {
+        throw new Error('Invalid credit package');
+      }
+
+      // Create or get Stripe customer
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { userId: user.id }
+        });
+        customerId = customer.id;
+
+        await runQuery(`
+          MATCH (u:User {id: $userId})
+          SET u.stripeCustomerId = $customerId
+        `, { userId: user.id, customerId });
+      }
+
+      // Create PaymentIntent for one-time credit purchase
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: creditPkg.price,
+        currency: 'usd',
+        customer: customerId,
+        metadata: {
+          userId: user.id,
+          packageId,
+          creditAmount: creditPkg.amount.toString()
+        }
+      });
+
+      return {
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id
+      };
     }
   }
 };

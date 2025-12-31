@@ -18,7 +18,8 @@
     "db:migrate-images": "node ./scripts/migrate-images.js",
     "db:reset": "npm run db:stop && docker volume rm game-planner_neo4j_data game-planner_neo4j_logs game-planner_minio_data 2>/dev/null; npm run db:start && npm run db:wait && npm run db:seed",
     "setup": "npm install && npm run db:start && npm run db:wait && npm run db:seed",
-    "start": "npm run dev"
+    "start": "npm run dev",
+    "stripe:listen": "stripe listen --forward-to localhost:3000/webhooks/stripe"
   },
   "repository": {
     "type": "git",
@@ -48,6 +49,8 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@stripe/react-stripe-js": "^5.4.1",
+    "@stripe/stripe-js": "^8.6.0",
     "@tailwindcss/vite": "^4.1.18",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -61,6 +64,7 @@
     "clsx": "^2.1.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "eslint-plugin-dependencies": "^2.5.0",
     "express": "^4.19.2",
     "express-session": "^1.18.0",

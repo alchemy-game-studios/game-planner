@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import indexRouter from "./routes/index.js";
 import testApiRouter from "./routes/testApi.js";
 import uploadRouter, { setUploadDriver } from "./routes/upload.js";

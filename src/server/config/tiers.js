@@ -14,8 +14,8 @@ export const SUBSCRIPTION_TIERS = {
   },
   creative: {
     name: 'Creative',
-    price: 999, // $9.99 in cents
-    stripePriceId: process.env.STRIPE_PRICE_CREATIVE || 'price_creative_monthly',
+    price: 499, // $4.99 in cents
+    stripePriceId: process.env.STRIPE_PRICE_CREATIVE,
     limits: {
       maxEntities: 500,
       maxUniverses: 5,
@@ -26,7 +26,7 @@ export const SUBSCRIPTION_TIERS = {
   studio: {
     name: 'Studio',
     price: 2999, // $29.99 in cents
-    stripePriceId: process.env.STRIPE_PRICE_STUDIO || 'price_studio_monthly',
+    stripePriceId: process.env.STRIPE_PRICE_STUDIO,
     limits: {
       maxEntities: Infinity,
       maxUniverses: Infinity,
@@ -40,20 +40,20 @@ export const CREDIT_PACKAGES = [
   {
     id: 'credits_100',
     amount: 100,
-    price: 499, // $4.99
-    stripePriceId: process.env.STRIPE_PRICE_CREDITS_100 || 'price_credits_100'
+    price: 1000, // $10.00
+    stripePriceId: process.env.STRIPE_PRICE_CREDITS_100
   },
   {
     id: 'credits_500',
     amount: 500,
     price: 1999, // $19.99
-    stripePriceId: process.env.STRIPE_PRICE_CREDITS_500 || 'price_credits_500'
+    stripePriceId: process.env.STRIPE_PRICE_CREDITS_500
   },
   {
     id: 'credits_1000',
     amount: 1000,
     price: 3499, // $34.99
-    stripePriceId: process.env.STRIPE_PRICE_CREDITS_1000 || 'price_credits_1000'
+    stripePriceId: process.env.STRIPE_PRICE_CREDITS_1000
   }
 ];
 

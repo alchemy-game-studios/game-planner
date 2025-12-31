@@ -2,6 +2,10 @@
 
 Full-stack web application for game development planning built with React, GraphQL, and Neo4j.
 
+## Note for AI Assistants
+
+When searching for files in this codebase, **always ignore `node_modules/`**. Use glob patterns that exclude it or filter results appropriately.
+
 ## Tech Stack
 
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
@@ -101,6 +105,11 @@ npm run setup         # Full setup: install, start db, seed
 npm start             # Alias for npm run dev
 ```
 
+### Stripe
+```bash
+npm run stripe:listen # Forward Stripe webhooks to local server
+```
+
 ## Architecture
 
 ```
@@ -197,14 +206,21 @@ relateTagged(relation: TagRelationInput!): Response
 | `NEO4J_URI` | `bolt://localhost:7687` | Neo4j connection URI |
 | `NEO4J_USER` | `neo4j` | Neo4j username |
 | `NEO4J_PASSWORD` | `password` | Neo4j password |
-| `SESSION_SECRET` | (hardcoded) | Express session secret |
+| `SESSION_SECRET` | - | Express session secret (generate a random string) |
+| `GOOGLE_CLIENT_ID` | - | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | - | Google OAuth client secret |
+| `GOOGLE_CALLBACK_URL` | `http://localhost:3000/auth/google/callback` | OAuth callback URL |
+| `STRIPE_SECRET_KEY` | - | Stripe API secret key |
+| `STRIPE_WEBHOOK_SECRET` | - | Stripe webhook signing secret (from CLI) |
+| `STRIPE_PRICE_*` | - | Stripe price IDs for subscriptions/credits |
+| `FRONTEND_URL` | `http://localhost:3001` | Frontend URL for OAuth redirects |
 | `S3_ENDPOINT` | `http://localhost:9000` | S3/MinIO endpoint |
 | `S3_BUCKET` | `game-planner-images` | S3 bucket name |
 | `S3_ACCESS_KEY` | `minioadmin` | S3 access key |
 | `S3_SECRET_KEY` | `minioadmin` | S3 secret key |
 | `S3_REGION` | `us-east-1` | S3 region |
 
-For production with AWS S3, just change the endpoint and credentials.
+See `.env.example` for a complete template. For production with AWS S3, change the endpoint and credentials.
 
 ## Seed Data
 
@@ -270,3 +286,43 @@ main
 ```
 
 This allows incremental review while keeping related changes together.
+
+## Stripe Webhook Setup
+
+For local development with Stripe webhooks (subscriptions, payments):
+
+### First-time setup
+
+1. Install Stripe CLI:
+   ```bash
+   brew install stripe/stripe-cli/stripe
+   ```
+
+2. Login to Stripe:
+   ```bash
+   stripe login
+   ```
+
+3. Start webhook forwarding:
+   ```bash
+   npm run stripe:listen
+   ```
+
+4. Copy the webhook signing secret displayed (starts with `whsec_...`) to your `.env`:
+   ```
+   STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret
+   ```
+
+### Ongoing development
+
+- Run `npm run stripe:listen` in a separate terminal whenever testing Stripe flows
+- The webhook secret **expires when the listener stops** - if you restart the listener, update `.env` with the new secret
+- Keep the listener running during development to receive webhook events
+
+### When to refresh the secret
+
+- After restarting your machine
+- After stopping and restarting the stripe listener
+- If webhook events aren't being received
+
+The secret in `.env` is specific to your local Stripe CLI session. Don't commit real secrets to version control.

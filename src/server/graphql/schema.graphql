@@ -115,6 +115,10 @@ type Mutation {
   cancelSubscription: User!
   purchaseCredits(packageId: String!): CheckoutSession!
   useCredits(amount: Int!, description: String!): User!
+
+  # Stripe Elements mutations (embedded checkout)
+  createSubscription(tier: String!): SubscriptionSetupResponse!
+  createCreditPaymentIntent(packageId: String!): PaymentIntentResponse!
 }
 
 # Common types
@@ -446,9 +450,22 @@ type CreditTransaction {
   createdAt: String!
 }
 
-# Stripe checkout session
+# Stripe checkout session (legacy - redirect flow)
 type CheckoutSession {
   url: String!
+}
+
+# Stripe Elements - PaymentIntent response for one-time payments
+type PaymentIntentResponse {
+  clientSecret: String!
+  paymentIntentId: String!
+}
+
+# Stripe Elements - Subscription setup response
+type SubscriptionSetupResponse {
+  clientSecret: String!
+  subscriptionId: String!
+  status: String!
 }
 
 # Credit package for purchase

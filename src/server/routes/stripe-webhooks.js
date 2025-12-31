@@ -216,6 +216,83 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
         break;
       }
 
+      // Stripe Elements: Handle PaymentIntent success for credit purchases
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object;
+        const userId = paymentIntent.metadata?.userId;
+        const packageId = paymentIntent.metadata?.packageId;
+        const creditAmount = parseInt(paymentIntent.metadata?.creditAmount, 10);
+
+        // Only process credit purchases (have packageId in metadata)
+        if (userId && packageId && creditAmount) {
+          await runQuery(`
+            MATCH (u:User {id: $userId})
+            SET u.credits = u.credits + $creditAmount
+          `, { userId, creditAmount });
+
+          await recordCreditTransaction(
+            userId,
+            'purchase',
+            creditAmount,
+            `Purchased ${creditAmount} credits`
+          );
+
+          console.log(`[Elements] User ${userId} purchased ${creditAmount} credits`);
+        }
+        break;
+      }
+
+      // Stripe Elements: Handle invoice paid for subscription payments
+      case 'invoice.paid': {
+        const invoice = event.data.object;
+
+        // Only handle subscription invoices (has subscription field)
+        if (!invoice.subscription) break;
+
+        const subscriptionId = invoice.subscription;
+
+        // Get subscription to check metadata
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const userId = subscription.metadata?.userId;
+        const tier = subscription.metadata?.tier;
+
+        if (userId && tier && SUBSCRIPTION_TIERS[tier]) {
+          const tierLimits = SUBSCRIPTION_TIERS[tier].limits;
+
+          // Update user subscription status
+          await runQuery(`
+            MATCH (u:User {id: $userId})
+            SET u.subscriptionTier = $tier,
+                u.subscriptionStatus = 'active',
+                u.stripeSubscriptionId = $subscriptionId
+          `, { userId, tier, subscriptionId });
+
+          // For initial subscription, add monthly credits
+          // (For renewals, credits are handled by the lazy reset in getUserWithLimits)
+          if (invoice.billing_reason === 'subscription_create') {
+            await runQuery(`
+              MATCH (u:User {id: $userId})
+              SET u.credits = u.credits + $monthlyCredits,
+                  u.creditsResetAt = $resetAt
+            `, {
+              userId,
+              monthlyCredits: tierLimits.monthlyCredits,
+              resetAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            });
+
+            await recordCreditTransaction(
+              userId,
+              'monthly_allocation',
+              tierLimits.monthlyCredits,
+              `${SUBSCRIPTION_TIERS[tier].name} tier monthly credits`
+            );
+          }
+
+          console.log(`[Elements] Invoice paid for user ${userId}, tier: ${tier}`);
+        }
+        break;
+      }
+
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }

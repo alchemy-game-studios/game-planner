@@ -16,6 +16,9 @@ export default defineConfig({
     proxy: {
       '/graphql': 'http://localhost:3000',
       '/api': 'http://localhost:3000',
+      '/auth': 'http://localhost:3000',
+      '/webhooks': 'http://localhost:3000',
+      '/upload': 'http://localhost:3000',
       '/s3': {
         target: 'http://localhost:9000',
         changeOrigin: true,
