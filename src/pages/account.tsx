@@ -188,7 +188,9 @@ export default function AccountPage() {
   };
 
   const currentTier = TIERS[user.subscriptionTier as keyof typeof TIERS] || TIERS.free;
-  const entityLimit = user.limits.maxEntities === -1 ? 'Unlimited' : user.limits.maxEntities;
+  const rawMaxEntities = user.limits?.maxEntities;
+  const maxEntities = typeof rawMaxEntities === 'object' ? (rawMaxEntities as any).low : rawMaxEntities;
+  const entityLimit = maxEntities === -1 ? 'Unlimited' : (maxEntities ?? currentTier.entities);
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -289,13 +291,13 @@ export default function AccountPage() {
                 )}
               </CardTitle>
               <CardDescription>
-                {currentTier.price} - {entityLimit} entities, {currentTier.credits} monthly credits
+                {entityLimit} entities, {currentTier.credits} monthly credits
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
                 <div className="text-center p-4 bg-zinc-800 rounded">
-                  <p className="text-2xl font-bold text-white">{user.entityCount}</p>
+                  <p className="text-2xl font-bold text-white">{typeof user.entityCount === 'object' ? (user.entityCount as any).low : user.entityCount}</p>
                   <p className="text-sm text-gray-400">/ {entityLimit} entities</p>
                 </div>
                 {user.subscriptionTier !== 'free' && user.subscriptionStatus === 'active' && (
@@ -355,7 +357,7 @@ export default function AccountPage() {
             <CardContent>
               <div className="flex items-center gap-4">
                 <div className="text-center p-6 bg-zinc-800 rounded">
-                  <p className="text-4xl font-bold text-white">{user.credits}</p>
+                  <p className="text-4xl font-bold text-white">{typeof user.credits === 'object' ? (user.credits as any).low : user.credits}</p>
                   <p className="text-sm text-gray-400">credits available</p>
                 </div>
                 {user.creditsResetAt && (

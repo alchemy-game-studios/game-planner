@@ -33,8 +33,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_URL}/auth/me`, {
+      const response = await fetch('/auth/me', {
         credentials: 'include'
       });
 
@@ -70,12 +68,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(() => {
     // Redirect to Google OAuth
-    window.location.href = `${API_URL}/auth/google`;
+    window.location.href = '/auth/google';
   }, []);
 
   const logout = useCallback(async () => {
     try {
-      await fetch(`${API_URL}/auth/logout`, {
+      await fetch('/auth/logout', {
         method: 'POST',
         credentials: 'include'
       });

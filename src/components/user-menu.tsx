@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, Settings, CreditCard, LogOut, Coins } from 'lucide-react';
+import { Home, CreditCard, LogOut, Coins } from 'lucide-react';
 
 export function UserMenu() {
   const { user, loading, login, logout } = useAuth();
@@ -22,7 +22,10 @@ export function UserMenu() {
 
   if (!user) {
     return (
-      <Button variant="outline" size="sm" onClick={login}>
+      <Button
+        onClick={login}
+        className="bg-ck-ember hover:bg-ck-ember/90 text-white font-medium"
+      >
         Sign In
       </Button>
     );
@@ -31,19 +34,19 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <button className="relative h-10 w-10 rounded-full bg-ck-ember hover:bg-ck-ember/80 flex items-center justify-center cursor-pointer transition-colors">
           {user.avatarUrl ? (
             <img
               src={user.avatarUrl}
               alt={user.displayName}
-              className="h-8 w-8 rounded-full object-cover"
+              className="h-10 w-10 rounded-full object-cover"
             />
           ) : (
-            <div className="h-8 w-8 rounded-full bg-zinc-700 flex items-center justify-center text-white text-sm">
+            <span className="text-white font-medium">
               {user.displayName.charAt(0).toUpperCase()}
-            </div>
+            </span>
           )}
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56 bg-zinc-900 border-zinc-800" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
@@ -54,15 +57,15 @@ export function UserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-zinc-800" />
         <DropdownMenuItem asChild>
-          <Link to="/account" className="flex items-center cursor-pointer text-gray-300 hover:text-white">
-            <User className="mr-2 h-4 w-4" />
-            Account
+          <Link to="/" className="flex items-center cursor-pointer text-gray-300 hover:text-white">
+            <Home className="mr-2 h-4 w-4" />
+            Home
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/account?tab=subscription" className="flex items-center cursor-pointer text-gray-300 hover:text-white">
             <CreditCard className="mr-2 h-4 w-4" />
-            Subscription
+            Billing
             <span className="ml-auto text-xs text-gray-500 capitalize">{user.subscriptionTier}</span>
           </Link>
         </DropdownMenuItem>

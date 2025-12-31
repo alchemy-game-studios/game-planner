@@ -1,18 +1,20 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useBreadcrumbs } from '@/context/breadcrumb-context';
+import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { UserMenu } from '@/components/user-menu';
 
 export function Breadcrumbs() {
   const { breadcrumbs, navigateTo, canGoBack } = useBreadcrumbs();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const isHome = location.pathname === '/';
 
-  // Hide breadcrumbs on home page
+  // Hide breadcrumbs on home page (both landing and dashboard)
   if (isHome) {
     return null;
   }
