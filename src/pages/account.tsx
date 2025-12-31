@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useMutation, gql } from '@apollo/client';
+import { useMutation, useQuery, gql } from '@apollo/client';
 import { useAuth, User } from '@/context/auth-context';
 import { useBreadcrumbs } from '@/context/breadcrumb-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { User as UserIcon, CreditCard, Coins, Check, Loader2 } from 'lucide-react';
+import { User as UserIcon, CreditCard, Coins, Check, Loader2, History, ExternalLink } from 'lucide-react';
 import { PaymentModal } from '@/components/stripe/PaymentModal';
 
 const UPDATE_PROFILE = gql`
@@ -60,6 +60,23 @@ const CONFIRM_SUBSCRIPTION = gql`
   }
 `;
 
+const GET_BILLING_HISTORY = gql`
+  query GetBillingHistory($limit: Int, $cursor: String) {
+    billingHistory(limit: $limit, cursor: $cursor) {
+      items {
+        id
+        date
+        description
+        amount
+        status
+        invoiceUrl
+      }
+      hasMore
+      nextCursor
+    }
+  }
+`;
+
 // Tier configurations (matching backend)
 const TIERS = {
   free: { name: 'Free', price: '$0', entities: 50, credits: 100, color: 'bg-gray-600' },
@@ -91,6 +108,14 @@ export default function AccountPage() {
   const [createCreditPaymentIntent] = useMutation(CREATE_CREDIT_PAYMENT_INTENT);
   const [cancelSubscription] = useMutation(CANCEL_SUBSCRIPTION);
   const [confirmSubscription] = useMutation(CONFIRM_SUBSCRIPTION);
+
+  // Billing history query - only load when History tab is active
+  const { data: billingData, loading: billingLoading, fetchMore: fetchMoreBilling, refetch: refetchBilling } = useQuery(GET_BILLING_HISTORY, {
+    variables: { limit: 10 },
+    skip: !user || activeTab !== 'history',
+    fetchPolicy: 'network-only',
+  });
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Animation state for success feedback
   const [justUpdated, setJustUpdated] = useState<'credits' | 'subscription' | null>(null);
@@ -236,6 +261,36 @@ export default function AccountPage() {
     }
   };
 
+  const handleLoadMoreBilling = async () => {
+    if (!billingData?.billingHistory?.nextCursor) return;
+    setLoadingMore(true);
+    try {
+      await fetchMoreBilling({
+        variables: {
+          cursor: billingData.billingHistory.nextCursor,
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+          return {
+            billingHistory: {
+              ...fetchMoreResult.billingHistory,
+              items: [...prev.billingHistory.items, ...fetchMoreResult.billingHistory.items],
+            },
+          };
+        },
+      });
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const formatAmount = (cents: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(cents / 100);
+  };
+
   const currentTier = TIERS[user.subscriptionTier as keyof typeof TIERS] || TIERS.free;
   const rawMaxEntities = user.limits?.maxEntities;
   const maxEntities = typeof rawMaxEntities === 'object' ? (rawMaxEntities as any).low : rawMaxEntities;
@@ -264,6 +319,10 @@ export default function AccountPage() {
           <TabsTrigger value="credits" className="gap-2">
             <Coins className="w-4 h-4" />
             Credits
+          </TabsTrigger>
+          <TabsTrigger value="history" className="gap-2">
+            <History className="w-4 h-4" />
+            History
           </TabsTrigger>
         </TabsList>
 
@@ -456,6 +515,95 @@ export default function AccountPage() {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        {/* History Tab */}
+        <TabsContent value="history">
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white">Billing History</CardTitle>
+              <CardDescription>
+                Your past payments and invoices
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {billingLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                </div>
+              ) : !billingData?.billingHistory?.items?.length ? (
+                <p className="text-gray-400 text-center py-8">No billing history yet</p>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    {billingData.billingHistory.items.map((item: {
+                      id: string;
+                      date: string;
+                      description: string;
+                      amount: number;
+                      status: string;
+                      invoiceUrl: string | null;
+                    }) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-4 bg-zinc-800 rounded-lg"
+                      >
+                        <div className="flex-1">
+                          <p className="text-white font-medium">{item.description}</p>
+                          <p className="text-sm text-gray-400">
+                            {new Date(item.date).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="text-white font-medium">{formatAmount(item.amount)}</p>
+                            <Badge
+                              variant={item.status === 'paid' ? 'default' : 'outline'}
+                              className={item.status === 'paid' ? 'bg-green-600' : ''}
+                            >
+                              {item.status}
+                            </Badge>
+                          </div>
+                          {item.invoiceUrl && (
+                            <a
+                              href={item.invoiceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-400 hover:text-white transition-colors"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {billingData.billingHistory.hasMore && (
+                    <div className="flex justify-center pt-4">
+                      <Button
+                        variant="outline"
+                        onClick={handleLoadMoreBilling}
+                        disabled={loadingMore}
+                      >
+                        {loadingMore ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          'Load More'
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

@@ -30,6 +30,7 @@ type Query {
   creditHistory(limit: Int): [CreditTransaction!]!
   creditPackages: [CreditPackage!]!
   subscriptionTiers: [TierInfo!]!
+  billingHistory(limit: Int, cursor: String): BillingHistory!
 }
 
 # Mutation type for modifying data
@@ -484,4 +485,21 @@ type TierInfo {
   price: Int!
   displayPrice: String!
   limits: TierLimits!
+}
+
+# Billing history item (from Stripe)
+type BillingHistoryItem {
+  id: String!
+  date: String!
+  description: String!
+  amount: Int!
+  status: String!
+  invoiceUrl: String
+}
+
+# Paginated billing history response
+type BillingHistory {
+  items: [BillingHistoryItem!]!
+  hasMore: Boolean!
+  nextCursor: String
 }

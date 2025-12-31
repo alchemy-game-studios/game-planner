@@ -1060,6 +1060,65 @@ export default {
           monthlyCredits: tier.limits.monthlyCredits
         }
       }));
+    },
+
+    billingHistory: async (_, { limit = 10, cursor }, context) => {
+      const user = requireAuth(context);
+
+      if (!stripe) {
+        return { items: [], hasMore: false, nextCursor: null };
+      }
+
+      // Get user's Stripe customer ID
+      const result = await runQuery(`
+        MATCH (u:User {id: $userId})
+        RETURN u.stripeCustomerId as customerId
+      `, { userId: user.id });
+
+      const customerId = result.records[0]?.get('customerId');
+      if (!customerId) {
+        return { items: [], hasMore: false, nextCursor: null };
+      }
+
+      // Fetch charges from Stripe (includes both subscriptions and one-time payments)
+      const chargeParams = {
+        customer: customerId,
+        limit: limit + 1, // Fetch one extra to check if there are more
+      };
+
+      if (cursor) {
+        chargeParams.starting_after = cursor;
+      }
+
+      const charges = await stripe.charges.list(chargeParams);
+
+      // Check if there are more results
+      const hasMore = charges.data.length > limit;
+      const items = charges.data.slice(0, limit);
+
+      return {
+        items: items.map(charge => {
+          // Build description from metadata or fallback to charge description
+          let description = charge.description || 'Payment';
+          if (charge.metadata?.creditAmount) {
+            description = `${charge.metadata.creditAmount} Credits`;
+          } else if (charge.metadata?.tier) {
+            const tierName = charge.metadata.tier.charAt(0).toUpperCase() + charge.metadata.tier.slice(1);
+            description = `${tierName} Subscription`;
+          }
+
+          return {
+            id: charge.id,
+            date: new Date(charge.created * 1000).toISOString(),
+            description,
+            amount: charge.amount || 0,
+            status: charge.status === 'succeeded' ? 'paid' : charge.status,
+            invoiceUrl: charge.receipt_url || null
+          };
+        }),
+        hasMore,
+        nextCursor: hasMore ? items[items.length - 1]?.id : null
+      };
     }
   },
 
