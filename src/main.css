@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap');
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+
+@custom-variant dark (&:is(.dark *));
+
+
+/* CanonKiln Theme - Dark First Design */
+:root {
+  --radius: 0.625rem;
+
+  /* CanonKiln Brand Colors */
+  --ck-ember: #F28C28;
+  --ck-gold: #FFB703;
+  --ck-forge: #D97706;
+  --ck-indigo: #1B1F2A;
+  --ck-charcoal: #14161D;
+  --ck-obsidian: #0B0D12;
+  --ck-teal: #3AB7A8;
+  --ck-ash: #E6E6E6;
+  --ck-stone: #9CA3AF;
+  --ck-danger: #C2410C;
+  --ck-rare: #7C3AED;
+
+  /* Semantic mappings - Dark theme as default */
+  --background: #1B1F2A;
+  --foreground: #E6E6E6;
+  --card: #14161D;
+  --card-foreground: #E6E6E6;
+  --popover: #14161D;
+  --popover-foreground: #E6E6E6;
+  --primary: #F28C28;
+  --primary-foreground: #0B0D12;
+  --secondary: #3AB7A8;
+  --secondary-foreground: #0B0D12;
+  --muted: #1B1F2A;
+  --muted-foreground: #9CA3AF;
+  --accent: #3AB7A8;
+  --accent-foreground: #0B0D12;
+  --destructive: #C2410C;
+  --border: #0B0D12;
+  --input: #14161D;
+  --ring: #F28C28;
+  --chart-1: #F28C28;
+  --chart-2: #3AB7A8;
+  --chart-3: #FFB703;
+  --chart-4: #7C3AED;
+  --chart-5: #D97706;
+  --sidebar: #14161D;
+  --sidebar-foreground: #E6E6E6;
+  --sidebar-primary: #F28C28;
+  --sidebar-primary-foreground: #0B0D12;
+  --sidebar-accent: #1B1F2A;
+  --sidebar-accent-foreground: #E6E6E6;
+  --sidebar-border: #0B0D12;
+  --sidebar-ring: #F28C28;
+}
+
+.dark {
+  /* Dark mode uses same colors since we're dark-first */
+  --background: #1B1F2A;
+  --foreground: #E6E6E6;
+  --card: #14161D;
+  --card-foreground: #E6E6E6;
+  --popover: #14161D;
+  --popover-foreground: #E6E6E6;
+  --primary: #F28C28;
+  --primary-foreground: #0B0D12;
+  --secondary: #3AB7A8;
+  --secondary-foreground: #0B0D12;
+  --muted: #1B1F2A;
+  --muted-foreground: #9CA3AF;
+  --accent: #3AB7A8;
+  --accent-foreground: #0B0D12;
+  --destructive: #C2410C;
+  --border: #0B0D12;
+  --input: #14161D;
+  --ring: #F28C28;
+  --chart-1: #F28C28;
+  --chart-2: #3AB7A8;
+  --chart-3: #FFB703;
+  --chart-4: #7C3AED;
+  --chart-5: #D97706;
+  --sidebar: #14161D;
+  --sidebar-foreground: #E6E6E6;
+  --sidebar-primary: #F28C28;
+  --sidebar-primary-foreground: #0B0D12;
+  --sidebar-accent: #1B1F2A;
+  --sidebar-accent-foreground: #E6E6E6;
+  --sidebar-border: #0B0D12;
+  --sidebar-ring: #F28C28;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-primary: 'Inter', 'sans-serif';
+  --font-heading: 'Cinzel', 'serif';
+  --font-book: 'Cormorant Garamond', 'serif';
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
