@@ -240,6 +240,38 @@ The seed script (`scripts/seed.js`) creates sample data:
 - `docker-compose.yml` - Neo4j container configuration
 - `jest.config.js` - Test runner configuration
 
+## Code Guidelines
+
+### Fixed Ports
+Always use the configured ports. Never let Vite or other tools auto-switch to a different port:
+- Frontend: `localhost:3001`
+- Backend: `localhost:3000`
+- Neo4j: `localhost:7687`
+- MinIO: `localhost:9000` (API), `localhost:9001` (console)
+
+If a port is in use, kill the existing process rather than switching ports.
+
+### No Delay Crutches
+Never use arbitrary `setTimeout` delays as a workaround for async timing issues. Instead:
+- **Poll for state changes**: Check repeatedly until the expected state is reached
+- **Use proper async patterns**: Await the actual operation, not an arbitrary delay
+- **Handle webhooks properly**: When waiting for webhook processing, poll the database until the update is confirmed
+
+Bad:
+```javascript
+await new Promise(resolve => setTimeout(resolve, 2000));
+await refetch();
+```
+
+Good:
+```javascript
+for (let i = 0; i < 10; i++) {
+  const { data } = await refetch();
+  if (data.value !== previousValue) break;
+  await new Promise(resolve => setTimeout(resolve, 500));
+}
+```
+
 ## Troubleshooting
 
 ### Neo4j won't start

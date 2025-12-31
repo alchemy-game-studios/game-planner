@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { User as UserIcon, CreditCard, Coins, Check } from 'lucide-react';
+import { User as UserIcon, CreditCard, Coins, Check, Loader2 } from 'lucide-react';
 import { PaymentModal } from '@/components/stripe/PaymentModal';
 
 const UPDATE_PROFILE = gql`
@@ -50,6 +50,16 @@ const CANCEL_SUBSCRIPTION = gql`
   }
 `;
 
+const CONFIRM_SUBSCRIPTION = gql`
+  mutation ConfirmSubscription($paymentIntentId: String!, $tier: String!) {
+    confirmSubscription(paymentIntentId: $paymentIntentId, tier: $tier) {
+      id
+      subscriptionTier
+      subscriptionStatus
+    }
+  }
+`;
+
 // Tier configurations (matching backend)
 const TIERS = {
   free: { name: 'Free', price: '$0', entities: 50, credits: 100, color: 'bg-gray-600' },
@@ -80,9 +90,13 @@ export default function AccountPage() {
   const [createSubscription] = useMutation(CREATE_SUBSCRIPTION);
   const [createCreditPaymentIntent] = useMutation(CREATE_CREDIT_PAYMENT_INTENT);
   const [cancelSubscription] = useMutation(CANCEL_SUBSCRIPTION);
+  const [confirmSubscription] = useMutation(CONFIRM_SUBSCRIPTION);
 
   // Animation state for success feedback
   const [justUpdated, setJustUpdated] = useState<'credits' | 'subscription' | null>(null);
+
+  // Track pending subscription tier for confirmation after payment
+  const [pendingTier, setPendingTier] = useState<string | null>(null);
 
   // Payment modal state
   const [paymentModal, setPaymentModal] = useState<{
@@ -92,6 +106,7 @@ export default function AccountPage() {
     description: string;
     submitLabel: string;
     paymentType: 'credits' | 'subscription';
+    showSuccess: boolean;
   }>({
     open: false,
     clientSecret: null,
@@ -99,6 +114,7 @@ export default function AccountPage() {
     description: '',
     submitLabel: 'Pay',
     paymentType: 'credits',
+    showSuccess: false,
   });
 
   const canceled = searchParams.get('canceled');
@@ -122,7 +138,8 @@ export default function AccountPage() {
   }, [user, loading, navigate]);
 
   
-  if (loading || !user) {
+  // Only show loading on initial load, not during refetch
+  if (!user) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <p className="text-gray-400">Loading...</p>
@@ -139,22 +156,32 @@ export default function AccountPage() {
     }
   };
 
+  const [upgrading, setUpgrading] = useState(false);
+
   const handleUpgrade = async (tier: string) => {
     const tierInfo = TIERS[tier as keyof typeof TIERS];
+    setUpgrading(true);
     try {
       const { data } = await createSubscription({ variables: { tier } });
-      if (data?.createSubscription?.clientSecret) {
+      const clientSecret = data?.createSubscription?.clientSecret;
+
+      if (clientSecret) {
+        setPendingTier(tier);
+        setUpgrading(false);
         setPaymentModal({
           open: true,
-          clientSecret: data.createSubscription.clientSecret,
+          clientSecret: clientSecret,
           title: `Subscribe to ${tierInfo.name}`,
           description: `${tierInfo.price} - ${tierInfo.entities} entities, ${tierInfo.credits} monthly credits`,
           submitLabel: 'Subscribe',
           paymentType: 'subscription',
         });
+      } else {
+        setUpgrading(false);
       }
     } catch (err) {
       console.error('Error creating subscription:', err);
+      setUpgrading(false);
     }
   };
 
@@ -177,10 +204,24 @@ export default function AccountPage() {
     }
   };
 
-  const handlePaymentSuccess = async (returnTab: 'credits' | 'subscription') => {
-    await refetch();
-    setJustUpdated(returnTab);
-    setTimeout(() => setJustUpdated(null), 2000);
+  const handlePaymentSuccess = async (returnTab: 'credits' | 'subscription', paymentIntentId: string) => {
+    if (returnTab === 'subscription' && pendingTier) {
+      // Confirm subscription synchronously - creates the subscription and updates user
+      await confirmSubscription({ variables: { paymentIntentId, tier: pendingTier } });
+      setPendingTier(null);
+    }
+
+    // Show success message in modal
+    setPaymentModal((prev) => ({ ...prev, showSuccess: true }));
+
+    // Auto-close modal after 2 seconds, then refresh data
+    setTimeout(async () => {
+      setPaymentModal((prev) => ({ ...prev, open: false, showSuccess: false }));
+      // Refetch AFTER modal closes
+      await refetch();
+      setJustUpdated(returnTab);
+      setTimeout(() => setJustUpdated(null), 2000);
+    }, 2000);
   };
 
   const handleCancelSubscription = async () => {
@@ -333,12 +374,27 @@ export default function AccountPage() {
                 <CardContent className="space-y-2">
                   <p className="text-gray-400 text-sm">{tier.entities} entities</p>
                   <p className="text-gray-400 text-sm">{tier.credits} monthly credits</p>
+                  {user.subscriptionTier !== key && key === 'free' && user.subscriptionTier !== 'free' && (
+                    <Button
+                      variant="outline"
+                      className="w-full mt-4"
+                      onClick={handleCancelSubscription}
+                    >
+                      Downgrade
+                    </Button>
+                  )}
                   {user.subscriptionTier !== key && key !== 'free' && (
                     <Button
                       className="w-full mt-4"
                       onClick={() => handleUpgrade(key)}
+                      disabled={upgrading}
                     >
-                      {key === 'studio' || (key === 'creative' && user.subscriptionTier === 'free')
+                      {upgrading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : key === 'studio' || (key === 'creative' && user.subscriptionTier === 'free')
                         ? 'Upgrade'
                         : 'Switch'}
                     </Button>
@@ -412,6 +468,7 @@ export default function AccountPage() {
         description={paymentModal.description}
         submitLabel={paymentModal.submitLabel}
         returnTab={paymentModal.paymentType}
+        showSuccess={paymentModal.showSuccess}
         onSuccess={handlePaymentSuccess}
       />
     </div>

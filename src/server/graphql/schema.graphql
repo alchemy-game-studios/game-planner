@@ -119,6 +119,7 @@ type Mutation {
   # Stripe Elements mutations (embedded checkout)
   createSubscription(tier: String!): SubscriptionSetupResponse!
   createCreditPaymentIntent(packageId: String!): PaymentIntentResponse!
+  confirmSubscription(paymentIntentId: String!, tier: String!): User!
 }
 
 # Common types
@@ -463,8 +464,8 @@ type PaymentIntentResponse {
 
 # Stripe Elements - Subscription setup response
 type SubscriptionSetupResponse {
-  clientSecret: String!
-  subscriptionId: String!
+  clientSecret: String
+  subscriptionId: String
   status: String!
 }
 

@@ -1482,25 +1482,104 @@ export default {
         `, { userId: user.id, customerId });
       }
 
-      // Create subscription with payment_behavior: 'default_incomplete'
-      // This returns a subscription with a pending payment intent
-      const subscription = await stripe.subscriptions.create({
+      // Cancel any existing active subscription first
+      const existingSubscriptions = await stripe.subscriptions.list({
         customer: customerId,
-        items: [{ price: tierConfig.stripePriceId }],
-        payment_behavior: 'default_incomplete',
-        payment_settings: { save_default_payment_method: 'on_subscription' },
-        expand: ['latest_invoice.payment_intent'],
+        status: 'active',
+        limit: 1
+      });
+
+      if (existingSubscriptions.data.length > 0) {
+        await stripe.subscriptions.cancel(existingSubscriptions.data[0].id);
+      }
+
+      // Also cancel any incomplete subscriptions
+      const incompleteSubscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        status: 'incomplete',
+        limit: 10
+      });
+
+      for (const sub of incompleteSubscriptions.data) {
+        await stripe.subscriptions.cancel(sub.id);
+      }
+
+      // Get the price to determine amount
+      const price = await stripe.prices.retrieve(tierConfig.stripePriceId);
+      const amount = price.unit_amount;
+
+      // Create a PaymentIntent directly (like credits flow) for the subscription
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        customer: customerId,
+        setup_future_usage: 'off_session', // Save payment method for future billing
         metadata: {
           userId: user.id,
-          tier
+          tier,
+          type: 'subscription'
         }
       });
 
       return {
-        clientSecret: subscription.latest_invoice.payment_intent.client_secret,
-        subscriptionId: subscription.id,
-        status: subscription.status
+        clientSecret: paymentIntent.client_secret,
+        subscriptionId: null, // Will create subscription after payment succeeds
+        status: 'requires_payment'
       };
+    },
+
+    // Confirm subscription after payment succeeds
+    confirmSubscription: async (_, { paymentIntentId, tier }, context) => {
+      const user = requireAuth(context);
+      console.time('confirmSubscription:total');
+
+      if (!stripe) {
+        throw new Error('Stripe is not configured');
+      }
+
+      // Verify the payment intent succeeded
+      console.time('confirmSubscription:retrievePI');
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      console.timeEnd('confirmSubscription:retrievePI');
+      if (paymentIntent.status !== 'succeeded') {
+        throw new Error('Payment not completed');
+      }
+
+      // Verify this payment belongs to this user
+      if (paymentIntent.metadata?.userId !== user.id) {
+        throw new Error('Payment does not belong to this user');
+      }
+
+      const tierConfig = SUBSCRIPTION_TIERS[tier];
+      if (!tierConfig || !tierConfig.stripePriceId) {
+        throw new Error('Invalid subscription tier');
+      }
+
+      // Create the subscription with the saved payment method
+      console.time('confirmSubscription:createSub');
+      const subscription = await stripe.subscriptions.create({
+        customer: paymentIntent.customer,
+        items: [{ price: tierConfig.stripePriceId }],
+        default_payment_method: paymentIntent.payment_method,
+        metadata: { userId: user.id, tier }
+      });
+      console.timeEnd('confirmSubscription:createSub');
+
+      // Update user's subscription info
+      console.time('confirmSubscription:neo4j');
+      await runQuery(`
+        MATCH (u:User {id: $userId})
+        SET u.subscriptionTier = $tier,
+            u.subscriptionStatus = 'active',
+            u.stripeSubscriptionId = $subscriptionId
+      `, { userId: user.id, tier, subscriptionId: subscription.id });
+      console.timeEnd('confirmSubscription:neo4j');
+
+      console.time('confirmSubscription:getUserWithLimits');
+      const result = await getUserWithLimits(user.id);
+      console.timeEnd('confirmSubscription:getUserWithLimits');
+      console.timeEnd('confirmSubscription:total');
+      return result;
     },
 
     // Stripe Elements: Create payment intent for credit purchase

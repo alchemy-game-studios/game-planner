@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
 interface PaymentFormProps {
-  onSuccess: () => void;
+  onSuccess: (paymentIntentId: string) => void;
   onError: (error: string) => void;
   submitLabel?: string;
   returnTab: 'credits' | 'subscription';
@@ -22,7 +22,7 @@ export function PaymentForm({ onSuccess, onError, submitLabel = 'Pay', returnTab
     setProcessing(true);
 
     const successType = returnTab === 'credits' ? 'credits' : 'subscription';
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/account?success=${successType}&tab=${returnTab}`,
@@ -33,8 +33,8 @@ export function PaymentForm({ onSuccess, onError, submitLabel = 'Pay', returnTab
     if (error) {
       onError(error.message || 'Payment failed');
       setProcessing(false);
-    } else {
-      onSuccess();
+    } else if (paymentIntent) {
+      onSuccess(paymentIntent.id);
     }
   };
 

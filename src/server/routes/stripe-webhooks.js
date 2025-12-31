@@ -217,13 +217,15 @@ router.post('/', express.raw({ type: 'application/json' }), async (req, res) => 
       }
 
       // Stripe Elements: Handle PaymentIntent success for credit purchases
+      // Note: Subscriptions are handled synchronously via confirmSubscription mutation
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object;
         const userId = paymentIntent.metadata?.userId;
+
+        // Handle credit purchases (have packageId in metadata)
         const packageId = paymentIntent.metadata?.packageId;
         const creditAmount = parseInt(paymentIntent.metadata?.creditAmount, 10);
 
-        // Only process credit purchases (have packageId in metadata)
         if (userId && packageId && creditAmount) {
           await runQuery(`
             MATCH (u:User {id: $userId})

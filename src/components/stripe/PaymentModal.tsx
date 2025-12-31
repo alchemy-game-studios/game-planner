@@ -18,7 +18,8 @@ interface PaymentModalProps {
   description: string;
   submitLabel: string;
   returnTab: 'credits' | 'subscription';
-  onSuccess: (returnTab: 'credits' | 'subscription') => void;
+  showSuccess: boolean;
+  onSuccess: (returnTab: 'credits' | 'subscription', paymentIntentId: string) => Promise<void>;
 }
 
 export function PaymentModal({
@@ -29,26 +30,23 @@ export function PaymentModal({
   description,
   submitLabel,
   returnTab,
+  showSuccess,
   onSuccess,
 }: PaymentModalProps) {
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
-  const handleSuccess = () => {
-    setSuccess(true);
-    const tab = returnTab; // Capture at time of success
-    setTimeout(() => {
-      onSuccess(tab);
-      onOpenChange(false);
-      setSuccess(false);
-      setError(null);
-    }, 1500);
+  const handleSuccess = async (paymentIntentId: string) => {
+    // Fire and forget - parent handles success state and closing
+    onSuccess(returnTab, paymentIntentId);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
+    // Don't allow closing while showing success message
+    if (!newOpen && showSuccess) {
+      return;
+    }
     if (!newOpen) {
       setError(null);
-      setSuccess(false);
     }
     onOpenChange(newOpen);
   };
@@ -70,10 +68,12 @@ export function PaymentModal({
           </div>
         )}
 
-        {success ? (
+        {showSuccess ? (
           <div className="flex flex-col items-center justify-center py-8 gap-3">
             <CheckCircle2 className="h-12 w-12 text-green-500" />
-            <p className="text-foreground font-medium">Payment successful!</p>
+            <p className="text-foreground font-medium">
+              {returnTab === 'subscription' ? 'Upgrade successful!' : 'Purchase successful!'}
+            </p>
           </div>
         ) : clientSecret ? (
           <StripeProvider clientSecret={clientSecret}>
