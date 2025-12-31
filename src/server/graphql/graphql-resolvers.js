@@ -1092,9 +1092,14 @@ export default {
 
       const charges = await stripe.charges.list(chargeParams);
 
+      // Only show charges with our metadata (tier for subscriptions, creditAmount for credits)
+      const filteredCharges = charges.data.filter(charge =>
+        charge.metadata?.tier || charge.metadata?.creditAmount
+      );
+
       // Check if there are more results
-      const hasMore = charges.data.length > limit;
-      const items = charges.data.slice(0, limit);
+      const hasMore = filteredCharges.length > limit;
+      const items = filteredCharges.slice(0, limit);
 
       return {
         items: items.map(charge => {
