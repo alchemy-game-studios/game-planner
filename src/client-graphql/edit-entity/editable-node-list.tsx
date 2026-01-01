@@ -8,8 +8,25 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useNavigate } from "react-router-dom"
 import { getEntityImage } from "@/media/util"
-import { X, Plus } from "lucide-react"
+import { X, Plus, Sparkles, Coins } from "lucide-react"
 import { getRelateContainsMutation, getRelateTaggedMutation } from '@/utils/graphql-utils';
+
+// Credit costs for generating each entity type (based on complexity)
+// Tags are auto-generated as part of each entity generation
+const GENERATION_CREDITS: Record<string, number> = {
+  // World-building entities
+  item: 10,            // Basic object with properties
+  place: 15,           // Location with description and atmosphere
+  event: 20,           // Scene with actions and participants
+  character: 25,       // Complex personality, backstory, traits
+  narrative: 50,       // Full story arc with multiple events
+
+  // Product entities
+  attribute: 5,        // Single stat definition
+  mechanic: 10,        // Ability or game mechanic
+  section: 15,         // Chapter, scene, or issue
+  adaptation: 30,      // Full entity adaptation with stats and flavor
+};
 
 interface EditableNodeListProps {
   initContents: any[];
@@ -157,15 +174,30 @@ export function EditableNodeList({
         <h3 className="text-sm font-medium text-muted-foreground">
           {entityType.charAt(0).toUpperCase() + entityType.slice(1)}s
         </h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleEditMode}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Add
-        </Button>
+        <div className="flex gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {/* TODO: implement generation */}}
+            className="relative bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-0 before:absolute before:inset-0 before:rounded-md before:p-[1px] before:bg-gradient-to-r before:from-purple-500 before:to-pink-500 before:-z-10 before:content-[''] after:absolute after:inset-[1px] after:rounded-[5px] after:bg-zinc-900 after:-z-10 after:content-[''] text-purple-300 hover:text-purple-200 hover:from-purple-500/20 hover:to-pink-500/20"
+          >
+            <Sparkles className="h-4 w-4 mr-1" />
+            {entityType.charAt(0).toUpperCase() + entityType.slice(1)}
+            <span className="ml-2 flex items-center gap-0.5 text-[10px] opacity-60">
+              <Coins className="h-3 w-3" />
+              {GENERATION_CREDITS[entityType] || 10}
+            </span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleEditMode}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add
+          </Button>
+        </div>
       </div>
       
       <ol

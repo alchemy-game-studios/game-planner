@@ -5,7 +5,15 @@ import { useBreadcrumbs } from '@/context/breadcrumb-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, Sparkles, Coins } from 'lucide-react';
+
+// Credit costs for generating product entities
+const GENERATION_CREDITS: Record<string, number> = {
+  attribute: 5,
+  mechanic: 10,
+  section: 15,
+  adaptation: 30,
+};
 
 const GET_PRODUCT = gql`
   query Product($obj: IdInput!) {
@@ -224,10 +232,25 @@ export default function ProductPage() {
         <TabsContent value="attributes" className="space-y-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-foreground">Attribute Definitions</h2>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Attribute
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {/* TODO: implement generation */}}
+                className="relative bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-0 before:absolute before:inset-0 before:rounded-md before:p-[1px] before:bg-gradient-to-r before:from-purple-500 before:to-pink-500 before:-z-10 before:content-[''] after:absolute after:inset-[1px] after:rounded-[5px] after:bg-zinc-900 after:-z-10 after:content-[''] text-purple-300 hover:text-purple-200 hover:from-purple-500/20 hover:to-pink-500/20"
+              >
+                <Sparkles className="h-4 w-4 mr-1" />
+                Attribute
+                <span className="ml-2 flex items-center gap-0.5 text-[10px] opacity-60">
+                  <Coins className="h-3 w-3" />
+                  {GENERATION_CREDITS.attribute}
+                </span>
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add
+              </Button>
+            </div>
           </div>
           <div className="grid gap-3">
             {product.attributes.map((attr: any) => (
@@ -260,10 +283,25 @@ export default function ProductPage() {
         <TabsContent value="mechanics" className="space-y-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-foreground">Mechanic Definitions</h2>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Mechanic
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {/* TODO: implement generation */}}
+                className="relative bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-0 before:absolute before:inset-0 before:rounded-md before:p-[1px] before:bg-gradient-to-r before:from-purple-500 before:to-pink-500 before:-z-10 before:content-[''] after:absolute after:inset-[1px] after:rounded-[5px] after:bg-zinc-900 after:-z-10 after:content-[''] text-purple-300 hover:text-purple-200 hover:from-purple-500/20 hover:to-pink-500/20"
+              >
+                <Sparkles className="h-4 w-4 mr-1" />
+                Mechanic
+                <span className="ml-2 flex items-center gap-0.5 text-[10px] opacity-60">
+                  <Coins className="h-3 w-3" />
+                  {GENERATION_CREDITS.mechanic}
+                </span>
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add
+              </Button>
+            </div>
           </div>
           <div className="grid gap-3">
             {product.mechanics.map((mech: any) => (
@@ -291,10 +329,25 @@ export default function ProductPage() {
             <h2 className="text-xl font-semibold text-foreground">
               {getAdaptationLabel()}
             </h2>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add {getAdaptationLabel(false)}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {/* TODO: implement generation */}}
+                className="relative bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-0 before:absolute before:inset-0 before:rounded-md before:p-[1px] before:bg-gradient-to-r before:from-purple-500 before:to-pink-500 before:-z-10 before:content-[''] after:absolute after:inset-[1px] after:rounded-[5px] after:bg-zinc-900 after:-z-10 after:content-[''] text-purple-300 hover:text-purple-200 hover:from-purple-500/20 hover:to-pink-500/20"
+              >
+                <Sparkles className="h-4 w-4 mr-1" />
+                {getAdaptationLabel(false)}
+                <span className="ml-2 flex items-center gap-0.5 text-[10px] opacity-60">
+                  <Coins className="h-3 w-3" />
+                  {GENERATION_CREDITS.adaptation}
+                </span>
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add
+              </Button>
+            </div>
           </div>
           <div className="grid gap-4">
             {product.adaptations.map((adapt: any) => {
@@ -351,10 +404,25 @@ export default function ProductPage() {
         <TabsContent value="sections" className="space-y-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-foreground">Sections</h2>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Section
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {/* TODO: implement generation */}}
+                className="relative bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-0 before:absolute before:inset-0 before:rounded-md before:p-[1px] before:bg-gradient-to-r before:from-purple-500 before:to-pink-500 before:-z-10 before:content-[''] after:absolute after:inset-[1px] after:rounded-[5px] after:bg-zinc-900 after:-z-10 after:content-[''] text-purple-300 hover:text-purple-200 hover:from-purple-500/20 hover:to-pink-500/20"
+              >
+                <Sparkles className="h-4 w-4 mr-1" />
+                Section
+                <span className="ml-2 flex items-center gap-0.5 text-[10px] opacity-60">
+                  <Coins className="h-3 w-3" />
+                  {GENERATION_CREDITS.section}
+                </span>
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add
+              </Button>
+            </div>
           </div>
           <div className="grid gap-3">
             {[...product.sections]
