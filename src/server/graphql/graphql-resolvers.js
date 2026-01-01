@@ -136,18 +136,18 @@ async function getAllContentsForEntity(entityId) {
     OPTIONAL MATCH path = (root)-[:CONTAINS*1..]->(descendant)
     WHERE descendant IS NOT NULL
 
-    // Get the immediate parent of each descendant
-    WITH root, descendant, path,
-         length(path) AS depth,
-         nodes(path)[-2] AS parent
+    // Get the immediate parent of each descendant (use shortest path to avoid duplicates)
+    WITH descendant,
+         min(length(path)) AS depth,
+         head(collect(nodes(path)[-2])) AS parent
 
-    RETURN
+    RETURN DISTINCT
       toLower(labels(descendant)[0]) AS _nodeType,
       properties(descendant) AS properties,
       parent.id AS parentId,
       parent.name AS parentName,
       depth
-    ORDER BY depth, descendant.name
+    ORDER BY depth, properties(descendant).name
   `, { entityId });
 
   return result.records
@@ -1042,6 +1042,7 @@ export default {
         cypher = `
           MATCH (u:Universe {id: $universeId})-[:CONTAINS*0..]->(e${typeFilter})
           WHERE e.name =~ $pattern
+          WITH DISTINCT e
           RETURN {
             id: e.id,
             properties: properties(e),
@@ -1074,6 +1075,7 @@ export default {
       const result = await runQuery(`
         MATCH (u:Universe {id: $universeId})-[:CONTAINS*0..]->(e)
         WHERE e.id <> $excludeId
+        WITH DISTINCT e
         RETURN {
           id: e.id,
           _nodeType: toLower(labels(e)[0]),
