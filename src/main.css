@@ -188,3 +188,19 @@
 .description-content p:last-child {
   margin-bottom: 0;
 }
+
+/* Tippy.js mention dropdown styling */
+.tippy-box[data-theme~='mention'] {
+  background-color: #14161D; /* ck-charcoal */
+  border: 1px solid #1B1F2A; /* ck-indigo */
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+.tippy-box[data-theme~='mention'] .tippy-content {
+  padding: 0;
+  background-color: #14161D;
+  border-radius: 0.5rem;
+}
+.tippy-box[data-theme~='mention'] .tippy-arrow {
+  display: none;
+}
