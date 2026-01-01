@@ -4,6 +4,17 @@ import Link from '@tiptap/extension-link';
 import { useEffect, useCallback, useRef } from 'react';
 import { MentionExtension, MentionSuggestion } from './mention-extension';
 
+// Extend Link to not parse mention-chip anchors
+const CustomLink = Link.extend({
+  parseHTML() {
+    return [
+      {
+        tag: 'a[href]:not(.mention-chip)',
+      },
+    ];
+  },
+});
+
 export interface EntityMention {
   id: string;
   name: string;
@@ -60,12 +71,7 @@ export function RichTextEditor({
           levels: [1, 2, 3]
         }
       }),
-      Link.configure({
-        openOnClick: false, // Don't navigate when editing
-        HTMLAttributes: {
-          class: 'text-secondary hover:text-ck-gold underline'
-        }
-      }),
+      // Mention must come before Link to parse mention-chip anchors first
       MentionExtension.configure({
         HTMLAttributes: {
           class: 'mention-chip'
@@ -75,6 +81,12 @@ export function RichTextEditor({
           entityId,
           onSelect: handleMentionSelect
         })
+      }),
+      CustomLink.configure({
+        openOnClick: false, // Don't navigate when editing
+        HTMLAttributes: {
+          class: 'text-secondary hover:text-ck-gold underline'
+        }
       })
     ],
     content: '',
