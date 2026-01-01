@@ -1,5 +1,5 @@
 import { gql, useLazyQuery, useMutation } from '@apollo/client';
-import { useState, useEffect, useRef} from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 //import './edit-entity.css'
 import { EditContainsComponent } from './edit-contains'
 import { capitalizeFirst, grouped } from '../util.js'
@@ -16,6 +16,9 @@ import { TagPills } from "@/components/tag-pills"
 import { ImageGallery } from "@/components/image-gallery"
 import { useBreadcrumbs } from "@/context/breadcrumb-context"
 import { Link } from 'react-router-dom';
+import { RichTextEditor } from "@/components/rich-text-editor";
+import { ConnectionSignalBar, MentionToastContainer } from "@/components/connections";
+import { useMentionRelationship } from "@/hooks/use-mention-relationship";
 
 
 
@@ -99,6 +102,28 @@ export function EditEntityComponent({id, type, isEdit}) {
 
     const [name, setName] = useState('');
     const deboucedName = useDebounce(name);
+
+    // Toast state for mention confirmations
+    const [mentionToasts, setMentionToasts] = useState([]);
+
+    const handleMentionToast = useCallback((toast) => {
+        setMentionToasts(prev => [...prev, toast]);
+    }, []);
+
+    const handleDismissToast = useCallback((toastId) => {
+        setMentionToasts(prev => prev.filter(t => t.id !== toastId));
+    }, []);
+
+    // Mention relationship hook
+    const { createRelationship } = useMentionRelationship({
+        currentEntityType: type,
+        currentEntityId: id,
+        onRelationshipCreated: () => {
+            // Refetch entity data when a relationship is created
+            Get({ variables: { obj: { id } } });
+        },
+        onToast: handleMentionToast
+    });
 
 
     useEffect(() => {
@@ -335,10 +360,13 @@ export function EditEntityComponent({id, type, isEdit}) {
 
                 {editMode && (
                     <>
-                       <HoverEditableText
+                       <RichTextEditor
                             value={description}
                             onChange={setDescription}
-                            multiline
+                            entityType={type}
+                            entityId={id}
+                            onMentionInsert={createRelationship}
+                            placeholder="Start writing... Use @ to mention entities"
                         />
                     </>
                     )}
@@ -435,111 +463,22 @@ export function EditEntityComponent({id, type, isEdit}) {
           </div>
           
         <div id="related-contains" className="w-72 flex-shrink-0 flex flex-col gap-4 mt-5 relative z-10">
-            {/* Show narratives (for universes) */}
-            {allRelationGroups['narrative'] && allRelationGroups['narrative'].length > 0 && (
-                <EditableNodeList
-                    initContents={allRelationGroups['narrative']}
-                    parentId={id}
-                    parentType={type}
-                    entityType="narrative"
-                    maxItems={5}
-                    onUpdate={() => {
-                      Get({ variables: { obj: { id } } });
-                    }}
-                />
-            )}
-
-            {/* Show events (for narratives, and for places/characters/items) */}
-            {allRelationGroups['event'] && allRelationGroups['event'].length > 0 && (
-                <EditableNodeList
-                    initContents={allRelationGroups['event']}
-                    parentId={id}
-                    parentType={type}
-                    entityType="event"
-                    maxItems={5}
-                    onUpdate={() => {
-                      Get({ variables: { obj: { id } } });
-                    }}
-                />
-            )}
-
-            {/* Show events for places, characters, items (from 'events' field) */}
-            {entity.events && entity.events.length > 0 && !allRelationGroups['event'] && (
-                <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Events</h3>
-                    <ol className="space-y-1">
-                        {entity.events.map((event) => (
-                            <li key={event.id}>
-                                <Link
-                                    to={`/edit/event/${event.id}`}
-                                    className="block p-2 rounded hover:bg-card transition-colors"
-                                >
-                                    <span className="text-sm text-card-foreground">{event.name}</span>
-                                    {event.type && (
-                                        <span className="text-xs text-muted-foreground ml-2">({event.type})</span>
-                                    )}
-                                </Link>
-                            </li>
-                        ))}
-                    </ol>
-                </div>
-            )}
-
-            {/* Show all descendant entity types with max 5 items each */}
-            {allRelationGroups['place'] && allRelationGroups['place'].length > 0 && (
-                <EditableNodeList
-                    initContents={allRelationGroups['place']}
-                    parentId={id}
-                    parentType={type}
-                    entityType="place"
-                    maxItems={5}
-                    onUpdate={() => {
-                      Get({ variables: { obj: { id } } });
-                    }}
-                />
-            )}
-
-            {allRelationGroups['character'] && allRelationGroups['character'].length > 0 && (
-                <EditableNodeList
-                    initContents={allRelationGroups['character']}
-                    parentId={id}
-                    parentType={type}
-                    entityType="character"
-                    maxItems={5}
-                    onUpdate={() => {
-                      Get({ variables: { obj: { id } } });
-                    }}
-                />
-            )}
-
-            {allRelationGroups['item'] && allRelationGroups['item'].length > 0 && (
-                <EditableNodeList
-                    initContents={allRelationGroups['item']}
-                    parentId={id}
-                    parentType={type}
-                    entityType="item"
-                    maxItems={5}
-                    onUpdate={() => {
-                      Get({ variables: { obj: { id } } });
-                    }}
-                />
-            )}
-
-            {/* Show empty state if no descendants at all */}
-            {(!allRelationGroups['narrative'] || allRelationGroups['narrative'].length === 0) &&
-             (!allRelationGroups['event'] || allRelationGroups['event'].length === 0) &&
-             (!entity.events || entity.events.length === 0) &&
-             (!allRelationGroups['place'] || allRelationGroups['place'].length === 0) &&
-             (!allRelationGroups['character'] || allRelationGroups['character'].length === 0) &&
-             (!allRelationGroups['item'] || allRelationGroups['item'].length === 0) && (
-                <div className="text-muted-foreground text-sm text-center py-4">
-                    No related entities
-                </div>
-            )}
+            <ConnectionSignalBar
+                entity={entity}
+                entityType={type}
+                entityId={id}
+                onRefetch={() => Get({ variables: { obj: { id } } })}
+            />
         </div>
         </div>
         </div>
-        
+
+        {/* Mention toast notifications */}
+        <MentionToastContainer
+            toasts={mentionToasts}
+            onDismiss={handleDismissToast}
+        />
+
         </>
       )};
       
