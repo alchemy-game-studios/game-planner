@@ -7,6 +7,7 @@ interface ConnectionSignalBarProps {
   entity: any;
   entityType: string;
   entityId: string;
+  universeId?: string;
   onRefetch: () => void;
 }
 
@@ -14,6 +15,7 @@ export function ConnectionSignalBar({
   entity,
   entityType,
   entityId,
+  universeId,
   onRefetch
 }: ConnectionSignalBarProps) {
   const lenses = getLensesForType(entityType);
@@ -37,6 +39,7 @@ export function ConnectionSignalBar({
             entity={entity}
             parentId={entityId}
             parentType={entityType}
+            universeId={universeId}
             onRefetch={onRefetch}
           />
           {index < lenses.length - 1 && (

@@ -299,6 +299,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                     onChange={setDescription}
                     entityType={type}
                     entityId={id}
+                    universeId={entity.universeId}
                     onMentionInsert={createRelationship}
                     placeholder="Start writing... Use @ to mention entities"
                     readOnly={!editMode}
@@ -324,6 +325,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                 entity={entity}
                 entityType={type}
                 entityId={id}
+                universeId={entity.universeId}
                 onRefetch={() => Get({ variables: { obj: { id } } })}
             />
         </div>
@@ -373,6 +375,7 @@ function oneQuery(type) {
     query ${nodeType}($obj: IdInput!) {
             ${type}(obj: $obj) {
                 id
+                universeId
                 contents {
                     _nodeType
                     properties {

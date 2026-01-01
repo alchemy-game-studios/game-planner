@@ -18,8 +18,11 @@ type Query {
   narrative(obj: IdInput!): Entity
   narratives: [Entity!]!
 
-  # Search entities by name
-  searchEntities(query: String!, type: String): [Entity!]!
+  # Search entities by name (optionally filter by universe)
+  searchEntities(query: String!, type: String, universeId: String): [Entity!]!
+
+  # Get all entities in a universe (for @ mentions)
+  entitiesInUniverse(universeId: String!, excludeId: String): [Entity!]!
 
   # Product queries
   product(obj: IdInput!): Product
@@ -153,6 +156,8 @@ type Entity {
   events: [EntityProperties!]
   # For Events: their parent narrative
   parentNarrative: EntityProperties
+  # The universe this entity belongs to (via CONTAINS chain)
+  universeId: String
 }
 
 type EntityProperties {

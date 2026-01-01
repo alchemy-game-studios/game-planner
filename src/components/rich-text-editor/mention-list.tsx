@@ -2,6 +2,17 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallbac
 import { useQuery, gql } from '@apollo/client';
 import { EntityMention } from './rich-text-editor';
 
+// Query for entities in the same universe
+const ENTITIES_IN_UNIVERSE = gql`
+  query EntitiesInUniverse($universeId: String!, $excludeId: String) {
+    entitiesInUniverse(universeId: $universeId, excludeId: $excludeId) {
+      id
+      properties { id, name, type }
+    }
+  }
+`;
+
+// Fallback: search all entities (when no universe context)
 const SEARCH_ALL_ENTITIES = gql`
   query SearchAllEntities {
     places {
@@ -34,7 +45,8 @@ interface Entity {
     name: string;
     type?: string;
   };
-  _entityType: string;
+  _entityType?: string;
+  _nodeType?: string;
 }
 
 interface MentionListProps {
@@ -42,6 +54,7 @@ interface MentionListProps {
   command: (item: { id: string; label: string; type: string }) => void;
   currentEntityType: string;
   currentEntityId: string;
+  universeId?: string;
   onMentionSelect?: (mention: EntityMention) => void;
 }
 
@@ -59,11 +72,32 @@ const TYPE_COLORS: Record<string, { bg: string; text: string; border: string }> 
 
 export const MentionList = forwardRef<MentionListRef, MentionListProps>((props, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const { data, loading } = useQuery(SEARCH_ALL_ENTITIES);
+
+  // Use universe-filtered query if universeId is available, otherwise fall back to all entities
+  const { data: universeData, loading: universeLoading } = useQuery(ENTITIES_IN_UNIVERSE, {
+    variables: { universeId: props.universeId || '', excludeId: props.currentEntityId },
+    skip: !props.universeId
+  });
+
+  const { data: allData, loading: allLoading } = useQuery(SEARCH_ALL_ENTITIES, {
+    skip: !!props.universeId
+  });
+
+  const loading = props.universeId ? universeLoading : allLoading;
+  const data = props.universeId ? universeData : allData;
 
   const getAllEntities = useCallback((): Entity[] => {
     if (!data) return [];
 
+    // If using universe query, entities come directly with _nodeType
+    if (props.universeId && data.entitiesInUniverse) {
+      return data.entitiesInUniverse.map((item: any) => ({
+        ...item,
+        _entityType: item._nodeType || item.properties?.type || 'unknown'
+      }));
+    }
+
+    // Fallback: combine entities from all types
     const entities: Entity[] = [];
 
     const addEntities = (items: any[], type: string) => {
@@ -83,7 +117,7 @@ export const MentionList = forwardRef<MentionListRef, MentionListProps>((props, 
     addEntities(data.narratives, 'narrative');
 
     return entities;
-  }, [data]);
+  }, [data, props.universeId]);
 
   const filteredEntities = useCallback(() => {
     const all = getAllEntities();

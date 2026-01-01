@@ -27,6 +27,7 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   entityType: string;
   entityId: string;
+  universeId?: string;
   onMentionInsert?: (mention: EntityMention) => void;
   placeholder?: string;
   className?: string;
@@ -50,6 +51,7 @@ export function RichTextEditor({
   onChange,
   entityType,
   entityId,
+  universeId,
   onMentionInsert,
   placeholder = 'Start writing...',
   className = '',
@@ -95,6 +97,7 @@ export function RichTextEditor({
         suggestion: MentionSuggestion({
           entityType,
           entityId,
+          universeId,
           onSelect: handleMentionSelect
         })
       }),

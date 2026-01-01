@@ -7,6 +7,7 @@ import { EntityMention } from './rich-text-editor';
 interface MentionSuggestionOptions {
   entityType: string;
   entityId: string;
+  universeId?: string;
   onSelect?: (mention: EntityMention) => void;
 }
 
@@ -96,6 +97,7 @@ export function MentionSuggestion(options: MentionSuggestionOptions) {
               ...props,
               currentEntityType: options.entityType,
               currentEntityId: options.entityId,
+              universeId: options.universeId,
               onMentionSelect: options.onSelect
             },
             editor: props.editor
@@ -120,6 +122,7 @@ export function MentionSuggestion(options: MentionSuggestionOptions) {
             ...props,
             currentEntityType: options.entityType,
             currentEntityId: options.entityId,
+            universeId: options.universeId,
             onMentionSelect: options.onSelect
           });
 

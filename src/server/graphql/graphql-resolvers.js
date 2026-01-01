@@ -26,6 +26,24 @@ async function runQuery(cypher, params = {}) {
   }
 }
 
+// Helper to get the universe ID for any entity by traversing up the CONTAINS chain
+async function getUniverseForEntity(entityId) {
+  const result = await runQuery(`
+    MATCH (e {id: $entityId})
+    OPTIONAL MATCH path = (u:Universe)-[:CONTAINS*0..]->(e)
+    WHERE u IS NOT NULL
+    RETURN u.id AS universeId, properties(u) AS universe
+    LIMIT 1
+  `, { entityId });
+
+  if (result.records.length === 0) return null;
+  const record = result.records[0];
+  return {
+    id: record.get('universeId'),
+    properties: record.get('universe')
+  };
+}
+
 // Helper to get images for an entity
 async function getImagesForEntity(entityId) {
   const result = await runQuery(`
@@ -1011,20 +1029,60 @@ export default {
     product: async (_, { obj }) => getProduct(obj.id),
     products: async () => getAllProducts(),
 
-    // Search
-    searchEntities: async (_, { query, type }) => {
+    // Search (optionally filter by universe)
+    searchEntities: async (_, { query, type, universeId }) => {
       const typeFilter = type ? `:${type.charAt(0).toUpperCase() + type.slice(1)}` : '';
+
+      let cypher;
+      let params = { pattern: `(?i).*${query}.*` };
+
+      if (universeId) {
+        // Filter to entities within the specified universe
+        cypher = `
+          MATCH (u:Universe {id: $universeId})-[:CONTAINS*0..]->(e${typeFilter})
+          WHERE e.name =~ $pattern
+          RETURN {
+            id: e.id,
+            properties: properties(e),
+            contents: [],
+            tags: []
+          } AS entity
+          LIMIT 20
+        `;
+        params.universeId = universeId;
+      } else {
+        cypher = `
+          MATCH (e${typeFilter})
+          WHERE e.name =~ $pattern
+          RETURN {
+            id: e.id,
+            properties: properties(e),
+            contents: [],
+            tags: []
+          } AS entity
+          LIMIT 20
+        `;
+      }
+
+      const result = await runQuery(cypher, params);
+      return result.records.map(r => r.get('entity'));
+    },
+
+    // Get all entities in a universe (for @ mentions)
+    entitiesInUniverse: async (_, { universeId, excludeId }) => {
       const result = await runQuery(`
-        MATCH (e${typeFilter})
-        WHERE e.name =~ $pattern
+        MATCH (u:Universe {id: $universeId})-[:CONTAINS*0..]->(e)
+        WHERE e.id <> $excludeId
         RETURN {
           id: e.id,
+          _nodeType: toLower(labels(e)[0]),
           properties: properties(e),
           contents: [],
           tags: []
         } AS entity
-        LIMIT 20
-      `, { pattern: `(?i).*${query}.*` });
+        ORDER BY e.name
+        LIMIT 100
+      `, { universeId, excludeId: excludeId || '' });
 
       return result.records.map(r => r.get('entity'));
     },
@@ -1741,6 +1799,20 @@ export default {
         clientSecret: paymentIntent.client_secret,
         paymentIntentId: paymentIntent.id
       };
+    }
+  },
+
+  // Entity field resolvers
+  Entity: {
+    universeId: async (entity) => {
+      // If the entity is a Universe, return its own ID
+      if (entity.id && entity.properties?.type === 'universe') {
+        return entity.id;
+      }
+
+      // Otherwise, traverse up the CONTAINS chain to find the universe
+      const universe = await getUniverseForEntity(entity.id);
+      return universe?.id || null;
     }
   }
 };

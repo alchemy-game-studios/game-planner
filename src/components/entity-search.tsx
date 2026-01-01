@@ -9,10 +9,26 @@ interface EntitySearchProps {
   entityType: 'place' | 'character' | 'item' | 'tag' | 'event' | 'narrative';
   onSelect: (entity: any) => void;
   excludeIds?: string[];
+  universeId?: string;
   placeholder?: string;
 }
 
-const SEARCH_QUERIES = {
+// Query for searching within a universe
+const SEARCH_IN_UNIVERSE = gql`
+  query SearchEntitiesInUniverse($query: String!, $type: String, $universeId: String) {
+    searchEntities(query: $query, type: $type, universeId: $universeId) {
+      id
+      properties {
+        id
+        name
+        description
+        type
+      }
+    }
+  }
+`;
+
+const SEARCH_QUERIES: Record<string, any> = {
   place: gql`
     query SearchPlaces {
       places {
@@ -95,17 +111,34 @@ const SEARCH_QUERIES = {
   `
 };
 
-export const EntitySearch: React.FC<EntitySearchProps> = ({ 
-  entityType, 
-  onSelect, 
+export const EntitySearch: React.FC<EntitySearchProps> = ({
+  entityType,
+  onSelect,
   excludeIds = [],
-  placeholder 
+  universeId,
+  placeholder
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
-  const { data, loading } = useQuery(SEARCH_QUERIES[entityType]);
+
+  // Use universe-filtered search if universeId is provided
+  const { data: universeData, loading: universeLoading } = useQuery(SEARCH_IN_UNIVERSE, {
+    variables: {
+      query: searchTerm || '',
+      type: entityType,
+      universeId
+    },
+    skip: !universeId || !searchTerm
+  });
+
+  // Fallback to fetching all entities of type (when no universe or no search term)
+  const { data: allData, loading: allLoading } = useQuery(SEARCH_QUERIES[entityType], {
+    skip: !!universeId && !!searchTerm
+  });
+
+  const loading = universeId && searchTerm ? universeLoading : allLoading;
+  const data = universeId && searchTerm ? universeData : allData;
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -119,7 +152,10 @@ export const EntitySearch: React.FC<EntitySearchProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
   
-  const entities = data?.[`${entityType}s`] || [];
+  // Extract entities from the appropriate query result
+  const entities = universeId && searchTerm
+    ? (data?.searchEntities || [])
+    : (data?.[`${entityType}s`] || []);
   
   const filteredEntities = entities.filter((entity: any) => {
     const name = entity.properties?.name || '';

@@ -36,6 +36,7 @@ interface LensSectionProps {
   entity: any;
   parentId: string;
   parentType: string;
+  universeId?: string;
   maxPreview?: number;
   onRefetch: () => void;
 }
@@ -53,6 +54,7 @@ export function LensSection({
   entity,
   parentId,
   parentType,
+  universeId,
   maxPreview = 5,
   onRefetch
 }: LensSectionProps) {
@@ -126,6 +128,7 @@ export function LensSection({
                 entityType={lens.singularLabel as any}
                 onSelect={handleAddEntity}
                 excludeIds={[parentId]}
+                universeId={universeId}
                 placeholder={`Add ${lens.singularLabel}...`}
               />
             </div>
@@ -193,6 +196,7 @@ export function LensSection({
               entityType={lens.singularLabel as any}
               onSelect={handleAddEntity}
               excludeIds={entities.map((e: Entity) => normalizeEntity(e).id).concat(parentId)}
+              universeId={universeId}
               placeholder={`Add ${lens.singularLabel}...`}
             />
           </div>
