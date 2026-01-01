@@ -7,6 +7,7 @@ const ENTITIES_IN_UNIVERSE = gql`
   query EntitiesInUniverse($universeId: String!, $excludeId: String) {
     entitiesInUniverse(universeId: $universeId, excludeId: $excludeId) {
       id
+      _nodeType
       properties { id, name, type }
     }
   }

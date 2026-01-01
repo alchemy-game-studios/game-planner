@@ -143,6 +143,8 @@ type Response {
 # Entity type returned from queries
 type Entity {
   id: String!
+  # The Neo4j node label (e.g., "character", "place", "item")
+  _nodeType: String
   properties: EntityProperties!
   contents: [ContentItem!]!
   allContents: [DescendantContent!]!

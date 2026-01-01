@@ -28,6 +28,22 @@ const SEARCH_IN_UNIVERSE = gql`
   }
 `;
 
+// Query for getting all entities of a type within a universe (no search term required)
+const ENTITIES_IN_UNIVERSE_BY_TYPE = gql`
+  query EntitiesInUniverseByType($universeId: String!, $type: String!) {
+    entitiesInUniverse(universeId: $universeId) {
+      id
+      _nodeType
+      properties {
+        id
+        name
+        description
+        type
+      }
+    }
+  }
+`;
+
 const SEARCH_QUERIES: Record<string, any> = {
   place: gql`
     query SearchPlaces {
@@ -122,8 +138,8 @@ export const EntitySearch: React.FC<EntitySearchProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Use universe-filtered search if universeId is provided
-  const { data: universeData, loading: universeLoading } = useQuery(SEARCH_IN_UNIVERSE, {
+  // Use universe-filtered search if universeId is provided with search term
+  const { data: universeSearchData, loading: universeSearchLoading } = useQuery(SEARCH_IN_UNIVERSE, {
     variables: {
       query: searchTerm || '',
       type: entityType,
@@ -132,13 +148,36 @@ export const EntitySearch: React.FC<EntitySearchProps> = ({
     skip: !universeId || !searchTerm
   });
 
-  // Fallback to fetching all entities of type (when no universe or no search term)
-  const { data: allData, loading: allLoading } = useQuery(SEARCH_QUERIES[entityType], {
-    skip: !!universeId && !!searchTerm
+  // Get all entities of type in universe (when universeId but no search term)
+  const { data: universeAllData, loading: universeAllLoading } = useQuery(ENTITIES_IN_UNIVERSE_BY_TYPE, {
+    variables: {
+      universeId: universeId || '',
+      type: entityType
+    },
+    skip: !universeId || !!searchTerm
   });
 
-  const loading = universeId && searchTerm ? universeLoading : allLoading;
-  const data = universeId && searchTerm ? universeData : allData;
+  // Fallback to fetching all entities of type (when no universe context)
+  const { data: allData, loading: allLoading } = useQuery(SEARCH_QUERIES[entityType], {
+    skip: !!universeId
+  });
+
+  // Determine which data/loading to use
+  let loading: boolean;
+  let entities: any[];
+
+  if (universeId && searchTerm) {
+    loading = universeSearchLoading;
+    entities = universeSearchData?.searchEntities || [];
+  } else if (universeId) {
+    loading = universeAllLoading;
+    // Filter by entity type since entitiesInUniverse returns all types
+    const allInUniverse = universeAllData?.entitiesInUniverse || [];
+    entities = allInUniverse.filter((e: any) => e._nodeType === entityType);
+  } else {
+    loading = allLoading;
+    entities = allData?.[`${entityType}s`] || [];
+  }
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -151,12 +190,7 @@ export const EntitySearch: React.FC<EntitySearchProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-  
-  // Extract entities from the appropriate query result
-  const entities = universeId && searchTerm
-    ? (data?.searchEntities || [])
-    : (data?.[`${entityType}s`] || []);
-  
+
   const filteredEntities = entities.filter((entity: any) => {
     const name = entity.properties?.name || '';
     const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase());

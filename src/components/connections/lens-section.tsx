@@ -146,6 +146,7 @@ export function LensSection({
           entities={entities}
           parentId={parentId}
           parentType={parentType}
+          universeId={universeId}
           onAddEntity={handleAddEntity}
         />
       </div>
@@ -256,6 +257,7 @@ export function LensSection({
         entities={entities}
         parentId={parentId}
         parentType={parentType}
+        universeId={universeId}
         onAddEntity={handleAddEntity}
       />
     </div>

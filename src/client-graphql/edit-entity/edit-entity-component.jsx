@@ -76,11 +76,23 @@ export function EditEntityComponent({id, type, isEdit}) {
     const [Get] = useLazyQuery(queries.one, { fetchPolicy: 'network-only' });
 
     const HandleEdit = async () => {
+        // Filter properties to only include fields valid for this entity type
+        const baseFields = ['id', 'name', 'description', 'type'];
+        const eventFields = [...baseFields, 'day', 'startDate', 'endDate'];
+        const validFields = type === 'event' ? eventFields : baseFields;
+
+        const filteredProps = {};
+        for (const field of validFields) {
+            if (entity.properties[field] !== undefined) {
+                filteredProps[field] = entity.properties[field];
+            }
+        }
+
         const networkObj = {
           variables: {}
         };
-        networkObj.variables[type] = removeTypeName(entity.properties);
-      
+        networkObj.variables[type] = removeTypeName(filteredProps);
+
         try {
             await EditMutation(networkObj);
         } catch (e) {
@@ -295,6 +307,7 @@ export function EditEntityComponent({id, type, isEdit}) {
 
                 {/* Description - Rich Text Editor (editable or read-only) */}
                 <RichTextEditor
+                    key={entity.universeId || 'loading'}
                     value={description}
                     onChange={setDescription}
                     entityType={type}

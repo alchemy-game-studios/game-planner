@@ -35,6 +35,7 @@ interface ConnectionPreviewModalProps {
   entities: Entity[];
   parentId: string;
   parentType: string;
+  universeId?: string;
   onAddEntity: (entity: any) => void;
   onRemoveEntity?: (entityId: string) => void;
 }
@@ -62,6 +63,7 @@ export function ConnectionPreviewModal({
   entities,
   parentId,
   parentType,
+  universeId,
   onAddEntity,
   onRemoveEntity
 }: ConnectionPreviewModalProps) {
@@ -142,6 +144,7 @@ export function ConnectionPreviewModal({
               entityType={lens.singularLabel as any}
               onSelect={handleAddExisting}
               excludeIds={existingIds}
+              universeId={universeId}
               placeholder={`Search ${lens.label.toLowerCase()}...`}
             />
           </div>

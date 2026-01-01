@@ -139,17 +139,14 @@ export function RichTextEditor({
     // Don't update while user is actively editing
     if (isUserEditing.current) return;
 
-    // Check if this is new content from parent
-    if (value !== lastSavedValue.current) {
-      const htmlContent = textToHtml(value);
-      const currentHtml = editor.getHTML();
+    const htmlContent = textToHtml(value);
+    const currentHtml = editor.getHTML();
 
-      // Only update if content actually differs
-      if (htmlContent !== currentHtml) {
-        editor.commands.setContent(htmlContent, false);
-        lastSavedValue.current = value;
-        hasInitialized.current = true;
-      }
+    // Update if content differs OR if this is initial mount with content
+    if (htmlContent !== currentHtml) {
+      editor.commands.setContent(htmlContent, false);
+      lastSavedValue.current = value;
+      hasInitialized.current = true;
     }
   }, [editor, value]);
 

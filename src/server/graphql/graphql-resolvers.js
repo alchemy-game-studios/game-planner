@@ -719,6 +719,7 @@ async function getEntity(type, id) {
 
     RETURN {
       id: e.id,
+      _nodeType: toLower(labels(e)[0]),
       properties: properties(e),
       contents: contents,
       tags: tags
@@ -1806,7 +1807,7 @@ export default {
   Entity: {
     universeId: async (entity) => {
       // If the entity is a Universe, return its own ID
-      if (entity.id && entity.properties?.type === 'universe') {
+      if (entity.id && entity._nodeType === 'universe') {
         return entity.id;
       }
 
