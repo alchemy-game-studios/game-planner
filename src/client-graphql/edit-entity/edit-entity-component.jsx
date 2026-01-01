@@ -358,30 +358,19 @@ export function EditEntityComponent({id, type, isEdit}) {
                     </div>
                 )}
 
-                {editMode && (
-                    <>
-                       <RichTextEditor
-                            value={description}
-                            onChange={setDescription}
-                            entityType={type}
-                            entityId={id}
-                            onMentionInsert={createRelationship}
-                            placeholder="Start writing... Use @ to mention entities"
-                        />
-                    </>
-                    )}
-
+                {/* Description - Rich Text Editor (editable or read-only) */}
+                <RichTextEditor
+                    value={description}
+                    onChange={setDescription}
+                    entityType={type}
+                    entityId={id}
+                    onMentionInsert={createRelationship}
+                    placeholder="Start writing... Use @ to mention entities"
+                    readOnly={!editMode}
+                />
 
         {!editMode && type === 'narrative' && (
             <>
-              {/* Story-styled description for Narratives */}
-              <div className="flex w-full mt-9 pr-15">
-                    <div className="bg-card/50 rounded-lg p-6 border-l-4 border-primary">
-                        <p className="text-2xl font-serif text-foreground leading-relaxed whitespace-pre-line italic">
-                            {entity.properties.description}
-                        </p>
-                    </div>
-                </div>
 
                 {/* Narrative Locations (aggregated from events) */}
                 {entity.locations && entity.locations.length > 0 && (
@@ -439,15 +428,6 @@ export function EditEntityComponent({id, type, isEdit}) {
             </>
           )}
 
-        {!editMode && type !== 'narrative' && (
-            <>
-              <div className="flex w-full mt-9 pr-15">
-                    <p className="text-xl font-book text-card-foreground leading-tight tracking-tight">
-                        {entity.properties.description}
-                    </p>
-                </div>
-            </>
-          )}
       
           {/* <div id="related-contains" class="flex justify-end m-auto w-full">
             {Object.entries(relationGroups).map(([_type, items]) => (

@@ -144,7 +144,8 @@ export const MentionList = forwardRef<MentionListRef, MentionListProps>((props, 
         return true;
       }
 
-      if (event.key === 'ArrowDown') {
+      if (event.key === 'ArrowDown' || event.key === 'Tab') {
+        event.preventDefault();
         downHandler();
         return true;
       }

@@ -18,30 +18,19 @@ interface RichTextEditorProps {
   onMentionInsert?: (mention: EntityMention) => void;
   placeholder?: string;
   className?: string;
+  readOnly?: boolean;
 }
 
-// Convert plain text to HTML paragraphs
+// Convert plain text to HTML paragraphs (for legacy content)
 function textToHtml(text: string): string {
   if (!text) return '';
   // If it already looks like HTML, return as-is
-  if (text.startsWith('<')) return text;
+  if (text.trim().startsWith('<')) return text;
   // Convert newlines to paragraphs
   return text
     .split(/\n\n+/)
     .map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`)
     .join('');
-}
-
-// Convert HTML back to plain text for storage
-function htmlToText(html: string): string {
-  if (!html) return '';
-  // If it doesn't look like HTML, return as-is
-  if (!html.startsWith('<')) return html;
-  return html
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>\s*<p>/gi, '\n\n')
-    .replace(/<[^>]+>/g, '')
-    .trim();
 }
 
 export function RichTextEditor({
@@ -51,7 +40,8 @@ export function RichTextEditor({
   entityId,
   onMentionInsert,
   placeholder = 'Start writing...',
-  className = ''
+  className = '',
+  readOnly = false
 }: RichTextEditorProps) {
   const isUserEditing = useRef(false);
   const lastSavedValue = useRef(value);
@@ -88,7 +78,7 @@ export function RichTextEditor({
       })
     ],
     content: '',
-    editable: true,
+    editable: !readOnly,
     editorProps: {
       attributes: {
         class: `prose prose-invert max-w-none focus:outline-none min-h-[100px] text-xl font-book text-card-foreground leading-relaxed ${className}`,
@@ -103,11 +93,10 @@ export function RichTextEditor({
     },
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
-      // Convert HTML back to plain text for storage compatibility
-      const plainText = htmlToText(html);
-      if (plainText !== lastSavedValue.current) {
-        lastSavedValue.current = plainText;
-        onChange(plainText);
+      // Store HTML directly to preserve mention chips
+      if (html !== lastSavedValue.current) {
+        lastSavedValue.current = html;
+        onChange(html);
       }
     }
   });
@@ -138,20 +127,20 @@ export function RichTextEditor({
   }
 
   return (
-    <div className="rich-text-editor relative">
+    <div className={`rich-text-editor relative ${readOnly ? 'read-only' : 'editable'}`}>
       <EditorContent editor={editor} />
       <style>{`
         .rich-text-editor .ProseMirror {
-          min-height: 100px;
-          padding: 0.75rem;
+          min-height: ${readOnly ? 'auto' : '100px'};
+          padding: ${readOnly ? '0' : '0.75rem'};
           border-radius: 0.5rem;
           border: 1px solid transparent;
           transition: border-color 0.2s, background-color 0.2s;
         }
-        .rich-text-editor .ProseMirror:hover {
+        .rich-text-editor.editable .ProseMirror:hover {
           background-color: rgba(255, 255, 255, 0.02);
         }
-        .rich-text-editor .ProseMirror:focus {
+        .rich-text-editor.editable .ProseMirror:focus {
           outline: none;
           border-color: var(--ck-ember);
           background-color: rgba(255, 255, 255, 0.03);
@@ -162,7 +151,7 @@ export function RichTextEditor({
         .rich-text-editor .ProseMirror p:last-child {
           margin-bottom: 0;
         }
-        .rich-text-editor .ProseMirror p.is-editor-empty:first-child::before {
+        .rich-text-editor.editable .ProseMirror p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
           color: var(--ck-stone);
           pointer-events: none;

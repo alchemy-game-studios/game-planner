@@ -143,3 +143,48 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mention chips for @ mentions in rich text */
+.mention-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.mention-chip:hover {
+  opacity: 0.8;
+}
+.mention-chip[data-type="place"] {
+  background-color: rgba(58, 183, 168, 0.2);
+  border: 1px solid rgba(58, 183, 168, 0.3);
+  color: var(--ck-teal);
+}
+.mention-chip[data-type="character"] {
+  background-color: rgba(124, 58, 237, 0.2);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  color: var(--ck-rare);
+}
+.mention-chip[data-type="item"] {
+  background-color: rgba(255, 183, 3, 0.2);
+  border: 1px solid rgba(255, 183, 3, 0.3);
+  color: var(--ck-gold);
+}
+.mention-chip[data-type="event"],
+.mention-chip[data-type="narrative"] {
+  background-color: rgba(242, 140, 40, 0.2);
+  border: 1px solid rgba(242, 140, 40, 0.3);
+  color: var(--ck-ember);
+}
+
+/* Description content paragraph spacing */
+.description-content p {
+  margin-bottom: 1em;
+}
+.description-content p:last-child {
+  margin-bottom: 0;
+}

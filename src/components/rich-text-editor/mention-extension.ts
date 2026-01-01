@@ -13,6 +13,22 @@ interface MentionSuggestionOptions {
 export const MentionExtension = Mention.extend({
   name: 'mention',
 
+  // Parse HTML back into mention nodes
+  parseHTML() {
+    return [
+      {
+        tag: 'a.mention-chip',
+        getAttrs: (element: HTMLElement) => {
+          const id = element.getAttribute('data-id');
+          const label = element.getAttribute('data-label') || element.textContent?.replace('@', '') || '';
+          const type = element.getAttribute('data-type');
+
+          return { id, label, type };
+        }
+      }
+    ];
+  },
+
   addAttributes() {
     return {
       id: {
