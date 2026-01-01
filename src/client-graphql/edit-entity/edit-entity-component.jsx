@@ -253,8 +253,8 @@ export function EditEntityComponent({id, type, isEdit}) {
                 </div>
                 <Separator />
             </div>
-            <div className="flex mt-30 gap-6">
-            <div className="flex-1 pr-4">
+            <div className="flex mt-30 gap-6 h-[calc(100vh-10rem)]">
+            <div className="flex-1 pr-4 overflow-y-auto">
                 <div className="rounded mt-5 relative w-full">
                         <ImageGallery
                             images={entity.images || []}
@@ -294,7 +294,7 @@ export function EditEntityComponent({id, type, isEdit}) {
                 />
 
 
-      
+
           {/* <div id="related-contains" class="flex justify-end m-auto w-full">
             {Object.entries(relationGroups).map(([_type, items]) => (
               <div key={_type}>
@@ -307,8 +307,8 @@ export function EditEntityComponent({id, type, isEdit}) {
             ))}
           </div> */}
           </div>
-          
-        <div id="related-contains" className="w-72 flex-shrink-0 mt-5 sticky top-32 self-start max-h-[calc(100vh-10rem)] overflow-y-auto">
+
+        <div id="related-contains" className="w-72 flex-shrink-0 mt-5 overflow-y-auto">
             <ConnectionSignalBar
                 entity={entity}
                 entityType={type}
