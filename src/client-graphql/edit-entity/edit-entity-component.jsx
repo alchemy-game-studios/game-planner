@@ -308,7 +308,7 @@ export function EditEntityComponent({id, type, isEdit}) {
           </div> */}
           </div>
           
-        <div id="related-contains" className="w-72 flex-shrink-0 flex flex-col gap-4 mt-5 relative z-10">
+        <div id="related-contains" className="w-72 flex-shrink-0 mt-5 sticky top-32 self-start max-h-[calc(100vh-10rem)] overflow-y-auto">
             <ConnectionSignalBar
                 entity={entity}
                 entityType={type}
