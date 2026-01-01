@@ -7,7 +7,7 @@ import { ConnectionPreviewModal } from './connection-preview-modal';
 import { EntitySearch } from '@/components/entity-search';
 import { AddEntityDialog } from '@/components/add-entity-dialog';
 import { getEntityImage, getPlaceholderImage } from '@/media/util';
-import { ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const RELATE_CONTAINS = gql`
@@ -104,6 +104,15 @@ export function LensSection({
               variant="ghost"
               size="sm"
               className="h-7 px-2"
+              onClick={() => setShowModal(true)}
+              title={`View all ${lens.label.toLowerCase()}`}
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2"
               onClick={() => setShowAddSearch(!showAddSearch)}
             >
               <Plus className="h-3.5 w-3.5" />
@@ -126,6 +135,16 @@ export function LensSection({
             />
           </div>
         )}
+        {/* Full modal */}
+        <ConnectionPreviewModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          lens={lens}
+          entities={entities}
+          parentId={parentId}
+          parentType={parentType}
+          onAddEntity={handleAddEntity}
+        />
       </div>
     );
   }
@@ -146,6 +165,15 @@ export function LensSection({
           )}
         </button>
         <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2"
+            onClick={() => setShowModal(true)}
+            title={`View all ${lens.label.toLowerCase()}`}
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -180,7 +208,7 @@ export function LensSection({
         <div className="mt-2 space-y-1">
           {previewEntities.map((e: Entity) => {
             const { id, name } = normalizeEntity(e);
-            const imageUrl = getEntityImage(id, 'avatar') || getPlaceholderImage('avatar');
+            const placeholderUrl = getPlaceholderImage('hero');
 
             return (
               <div
@@ -192,9 +220,12 @@ export function LensSection({
                 onClick={() => handleEntityClick(e)}
               >
                 <img
-                  src={imageUrl}
+                  src={getEntityImage(id, 'hero')}
                   alt={name}
                   className="w-6 h-6 rounded-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = placeholderUrl;
+                  }}
                 />
                 <span className={`text-sm truncate ${lens.color.text}`}>
                   {name}

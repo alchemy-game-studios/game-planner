@@ -39,11 +39,18 @@ interface ConnectionPreviewModalProps {
   onRemoveEntity?: (entityId: string) => void;
 }
 
+// Strip HTML tags for plain text display
+function stripHtml(html: string): string {
+  if (!html) return '';
+  return html.replace(/<[^>]*>/g, '').trim();
+}
+
 function normalizeEntity(entity: Entity): { id: string; name: string; description: string; type: string } {
+  const rawDescription = entity.properties?.description || entity.description || '';
   return {
     id: entity.id || entity.properties?.id || '',
     name: entity.properties?.name || entity.name || 'Unnamed',
-    description: entity.properties?.description || entity.description || '',
+    description: stripHtml(rawDescription),
     type: entity._nodeType || entity.properties?.type || ''
   };
 }
@@ -158,10 +165,10 @@ export function ConnectionPreviewModal({
                 : 'No matches found'}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-2">
               {filteredEntities.map((entity) => {
                 const { id, name, description } = normalizeEntity(entity);
-                const imageUrl = getEntityImage(id, 'avatar') || getPlaceholderImage('avatar');
+                const placeholderUrl = getPlaceholderImage('hero');
 
                 return (
                   <div
@@ -174,9 +181,12 @@ export function ConnectionPreviewModal({
                     onClick={() => handleEntityClick(entity)}
                   >
                     <img
-                      src={imageUrl}
+                      src={getEntityImage(id, 'hero')}
                       alt={name}
-                      className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                      className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = placeholderUrl;
+                      }}
                     />
                     <div className="flex-1 min-w-0">
                       <h4 className={`font-medium truncate ${lens.color.text}`}>

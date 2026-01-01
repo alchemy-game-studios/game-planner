@@ -2,6 +2,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import { useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MentionExtension, MentionSuggestion } from './mention-extension';
 
 // Extend Link to not parse mention-chip anchors
@@ -54,9 +55,24 @@ export function RichTextEditor({
   className = '',
   readOnly = false
 }: RichTextEditorProps) {
+  const navigate = useNavigate();
   const isUserEditing = useRef(false);
   const lastSavedValue = useRef(value);
   const hasInitialized = useRef(false);
+
+  // Handle clicks on mention chips to use React Router navigation
+  const handleEditorClick = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const mentionChip = target.closest('.mention-chip') as HTMLAnchorElement;
+
+    if (mentionChip && readOnly) {
+      e.preventDefault();
+      const href = mentionChip.getAttribute('href');
+      if (href) {
+        navigate(href);
+      }
+    }
+  }, [navigate, readOnly]);
 
   const handleMentionSelect = useCallback((mention: EntityMention) => {
     if (onMentionInsert) {
@@ -139,7 +155,10 @@ export function RichTextEditor({
   }
 
   return (
-    <div className={`rich-text-editor relative ${readOnly ? 'read-only' : 'editable'}`}>
+    <div
+      className={`rich-text-editor relative ${readOnly ? 'read-only' : 'editable'}`}
+      onClick={handleEditorClick}
+    >
       <EditorContent editor={editor} />
       <style>{`
         .rich-text-editor .ProseMirror {
