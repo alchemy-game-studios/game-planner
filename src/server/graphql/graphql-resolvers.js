@@ -1261,6 +1261,57 @@ export default {
       return { message: 'Event participant relationships updated' };
     },
 
+    // Additive relationship: CONTAINS (adds without removing existing)
+    addContains: async (_, { relation }) => {
+      if (relation.childIds && relation.childIds.length > 0) {
+        await runQuery(`
+          MATCH (parent {id: $id})
+          UNWIND $childIds AS childId
+          MATCH (child {id: childId})
+          MERGE (parent)-[:CONTAINS]->(child)
+        `, { id: relation.id, childIds: relation.childIds });
+      }
+
+      return { message: 'Contains relationship added' };
+    },
+
+    // Additive relationship: INVOLVES (adds without removing existing)
+    addInvolves: async (_, { relation }) => {
+      if (relation.characterIds && relation.characterIds.length > 0) {
+        await runQuery(`
+          MATCH (e:Event {id: $eventId})
+          UNWIND $characterIds AS charId
+          MATCH (c:Character {id: charId})
+          MERGE (e)-[:INVOLVES]->(c)
+        `, { eventId: relation.eventId, characterIds: relation.characterIds });
+      }
+
+      if (relation.itemIds && relation.itemIds.length > 0) {
+        await runQuery(`
+          MATCH (e:Event {id: $eventId})
+          UNWIND $itemIds AS itemId
+          MATCH (i:Item {id: itemId})
+          MERGE (e)-[:INVOLVES]->(i)
+        `, { eventId: relation.eventId, itemIds: relation.itemIds });
+      }
+
+      return { message: 'Involves relationship added' };
+    },
+
+    // Additive relationship: OCCURS_AT (adds without removing existing)
+    addOccursAt: async (_, { relation }) => {
+      if (relation.placeIds && relation.placeIds.length > 0) {
+        await runQuery(`
+          MATCH (e:Event {id: $eventId})
+          UNWIND $placeIds AS placeId
+          MATCH (p:Place {id: placeId})
+          MERGE (e)-[:OCCURS_AT]->(p)
+        `, { eventId: relation.eventId, placeIds: relation.placeIds });
+      }
+
+      return { message: 'Occurs at relationship added' };
+    },
+
     // Image mutations
     reorderImages: async (_, { entityId, imageIds }) => {
       // Update ranks based on array order

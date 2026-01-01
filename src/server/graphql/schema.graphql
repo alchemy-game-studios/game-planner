@@ -72,9 +72,14 @@ type Mutation {
   editNarrative(narrative: NarrativeInput!): Response
   removeNarrative(narrative: NarrativeInput!): Response
 
-  # Relationship mutations
+  # Relationship mutations (replace existing relationships)
   relateContains(relation: RelatableInput!): Response
   relateTagged(relation: TagRelationInput!): Response
+
+  # Additive relationship mutations (add to existing relationships)
+  addContains(relation: RelatableInput!): Response
+  addInvolves(relation: EventParticipantsInput!): Response
+  addOccursAt(relation: EventLocationInput!): Response
 
   # Event relationship mutations
   relateOccursAt(relation: EventLocationInput!): Response

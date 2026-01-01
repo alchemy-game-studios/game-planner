@@ -73,7 +73,7 @@ export function EditEntityComponent({id, type, isEdit}) {
 
     const [Add] = useMutation(queries.add);
     const [EditMutation] = useMutation(queries.edit);
-    const [Get] = useLazyQuery(queries.one);
+    const [Get] = useLazyQuery(queries.one, { fetchPolicy: 'network-only' });
 
     const HandleEdit = async () => {
         const networkObj = {
@@ -118,9 +118,20 @@ export function EditEntityComponent({id, type, isEdit}) {
     const { createRelationship } = useMentionRelationship({
         currentEntityType: type,
         currentEntityId: id,
-        onRelationshipCreated: () => {
+        onRelationshipCreated: async () => {
             // Refetch entity data when a relationship is created
-            Get({ variables: { obj: { id } } });
+            console.log('Relationship created, refetching entity data...');
+            const result = await Get({ variables: { obj: { id } } });
+            console.log('Refetched entity:', result.data?.[type]);
+            if (result.data && result.data[type]) {
+                const newEntity = result.data[type];
+                setEntity(newEntity);
+                const groupedResult = grouped(newEntity.contents || []);
+                const allGroupedResult = grouped(newEntity.allContents || []);
+                setRelationGroups(groupedResult);
+                setAllRelationGroups(allGroupedResult);
+                console.log('Updated entity state with new data');
+            }
         },
         onToast: handleMentionToast
     });

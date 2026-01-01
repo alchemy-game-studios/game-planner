@@ -3,25 +3,26 @@ import { useCallback, useState } from 'react';
 import { getInferenceRule, InferenceRule } from '@/lib/mention-inference';
 import type { EntityMention } from '@/components/rich-text-editor';
 
-const RELATE_CONTAINS = gql`
-  mutation RelateContains($relation: RelatableInput!) {
-    relateContains(relation: $relation) {
+// Additive mutations - add relationships without removing existing ones
+const ADD_CONTAINS = gql`
+  mutation AddContains($relation: RelatableInput!) {
+    addContains(relation: $relation) {
       message
     }
   }
 `;
 
-const RELATE_INVOLVES = gql`
-  mutation RelateInvolves($relation: EventParticipantsInput!) {
-    relateInvolves(relation: $relation) {
+const ADD_INVOLVES = gql`
+  mutation AddInvolves($relation: EventParticipantsInput!) {
+    addInvolves(relation: $relation) {
       message
     }
   }
 `;
 
-const RELATE_OCCURS_AT = gql`
-  mutation RelateOccursAt($relation: EventLocationInput!) {
-    relateOccursAt(relation: $relation) {
+const ADD_OCCURS_AT = gql`
+  mutation AddOccursAt($relation: EventLocationInput!) {
+    addOccursAt(relation: $relation) {
       message
     }
   }
@@ -47,9 +48,9 @@ export function useMentionRelationship({
   onRelationshipCreated,
   onToast
 }: UseMentionRelationshipOptions) {
-  const [relateContains] = useMutation(RELATE_CONTAINS);
-  const [relateInvolves] = useMutation(RELATE_INVOLVES);
-  const [relateOccursAt] = useMutation(RELATE_OCCURS_AT);
+  const [addContains] = useMutation(ADD_CONTAINS);
+  const [addInvolves] = useMutation(ADD_INVOLVES);
+  const [addOccursAt] = useMutation(ADD_OCCURS_AT);
   const [lastCreatedRelation, setLastCreatedRelation] = useState<{
     mention: EntityMention;
     rule: InferenceRule;
@@ -64,8 +65,8 @@ export function useMentionRelationship({
     }
 
     try {
-      if (rule.mutation === 'relateContains') {
-        await relateContains({
+      if (rule.mutation === 'addContains') {
+        await addContains({
           variables: {
             relation: {
               id: currentEntityId,
@@ -73,7 +74,7 @@ export function useMentionRelationship({
             }
           }
         });
-      } else if (rule.mutation === 'relateInvolves') {
+      } else if (rule.mutation === 'addInvolves') {
         const variables: any = {
           relation: {
             eventId: currentEntityId,
@@ -88,9 +89,9 @@ export function useMentionRelationship({
           variables.relation.itemIds = [mention.id];
         }
 
-        await relateInvolves({ variables });
-      } else if (rule.mutation === 'relateOccursAt') {
-        await relateOccursAt({
+        await addInvolves({ variables });
+      } else if (rule.mutation === 'addOccursAt') {
+        await addOccursAt({
           variables: {
             relation: {
               eventId: currentEntityId,
@@ -120,9 +121,9 @@ export function useMentionRelationship({
   }, [
     currentEntityType,
     currentEntityId,
-    relateContains,
-    relateInvolves,
-    relateOccursAt,
+    addContains,
+    addInvolves,
+    addOccursAt,
     onRelationshipCreated,
     onToast
   ]);

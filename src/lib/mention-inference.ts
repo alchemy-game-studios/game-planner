@@ -2,11 +2,11 @@
 // Maps (currentEntityType, mentionedEntityType) to relationship mutation
 
 export interface InferenceRule {
-  mutation: 'relateContains' | 'relateTagged' | 'relateOccursAt' | 'relateInvolves';
+  mutation: 'addContains' | 'addTagged' | 'addOccursAt' | 'addInvolves';
   description: string;
   // How to construct the mutation variables
   variableKey: 'relation' | 'eventId' | 'placeId';
-  // For relateInvolves/relateOccursAt, need to know which field
+  // For addInvolves/addOccursAt, need to know which field
   targetField?: 'characterIds' | 'itemIds' | 'placeIds';
 }
 
@@ -14,19 +14,19 @@ export const INFERENCE_RULES: Record<string, Record<string, InferenceRule>> = {
   // Events - use INVOLVES for characters/items, OCCURS_AT for places
   event: {
     character: {
-      mutation: 'relateInvolves',
+      mutation: 'addInvolves',
       description: 'Characters involved',
       variableKey: 'relation',
       targetField: 'characterIds'
     },
     item: {
-      mutation: 'relateInvolves',
+      mutation: 'addInvolves',
       description: 'Items involved',
       variableKey: 'relation',
       targetField: 'itemIds'
     },
     place: {
-      mutation: 'relateOccursAt',
+      mutation: 'addOccursAt',
       description: 'Locations',
       variableKey: 'relation',
       targetField: 'placeIds'
@@ -36,22 +36,22 @@ export const INFERENCE_RULES: Record<string, Record<string, InferenceRule>> = {
   // Narratives - use CONTAINS for all child types
   narrative: {
     event: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Scenes / events',
       variableKey: 'relation'
     },
     character: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Key characters',
       variableKey: 'relation'
     },
     place: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Key places',
       variableKey: 'relation'
     },
     item: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Key items',
       variableKey: 'relation'
     }
@@ -60,17 +60,17 @@ export const INFERENCE_RULES: Record<string, Record<string, InferenceRule>> = {
   // Places - use CONTAINS for characters, items, and nearby places
   place: {
     character: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Characters here',
       variableKey: 'relation'
     },
     item: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Items here',
       variableKey: 'relation'
     },
     place: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Nearby places',
       variableKey: 'relation'
     }
@@ -79,17 +79,17 @@ export const INFERENCE_RULES: Record<string, Record<string, InferenceRule>> = {
   // Characters - use CONTAINS for items, places
   character: {
     item: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Items owned',
       variableKey: 'relation'
     },
     place: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Associated places',
       variableKey: 'relation'
     },
     character: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Connected characters',
       variableKey: 'relation'
     }
@@ -99,12 +99,12 @@ export const INFERENCE_RULES: Record<string, Record<string, InferenceRule>> = {
   // But mentioning a character from an item could create "owned by" relationship
   item: {
     character: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Owned by',
       variableKey: 'relation'
     },
     place: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Found at',
       variableKey: 'relation'
     }
@@ -113,27 +113,27 @@ export const INFERENCE_RULES: Record<string, Record<string, InferenceRule>> = {
   // Universes - contain everything
   universe: {
     narrative: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Narratives',
       variableKey: 'relation'
     },
     place: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Places',
       variableKey: 'relation'
     },
     character: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Characters',
       variableKey: 'relation'
     },
     item: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Items',
       variableKey: 'relation'
     },
     event: {
-      mutation: 'relateContains',
+      mutation: 'addContains',
       description: 'Events',
       variableKey: 'relation'
     }
