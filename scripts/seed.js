@@ -296,6 +296,13 @@ const seedData = {
       characterId: 'char-001'
     },
     {
+      id: 'item-023',
+      name: 'Starshard Crystal',
+      description: 'A fragment of the heavens that fell to Eldoria eons ago, pulsing with celestial energy.',
+      type: 'artifact',
+      characterId: 'char-013'
+    },
+    {
       id: 'item-002',
       name: 'Cloak of Shadows',
       description: 'A magical cloak that renders the wearer nearly invisible in darkness.',
@@ -2115,17 +2122,29 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       mechanicValues: JSON.stringify({ 'mech-004': true }),
       artDirection: 'Massive stone giant with moss-covered shoulders, standing before a mountain pass.'
     },
-    // Starshard as a card (item)
+    // Starshard Crystal as a card (item)
     {
       id: 'adapt-005',
       productId: 'product-001',
-      entityId: 'item-001',
+      entityId: 'item-023',
       entityType: 'item',
       cardName: 'Starshard Crystal',
       flavorText: 'A fragment of the heavens, fallen to mortal hands.',
       attributeValues: JSON.stringify({ 'attr-001': 2, 'attr-004': 'Artifact', 'attr-005': 'Uncommon' }),
       mechanicValues: JSON.stringify({ 'mech-006': 1 }),
       artDirection: 'A glowing crystalline shard floating above an outstretched hand, starlight refracting through it.'
+    },
+    // Staff of Eternity as a card (item)
+    {
+      id: 'adapt-006',
+      productId: 'product-001',
+      entityId: 'item-001',
+      entityType: 'item',
+      cardName: 'Staff of Eternity',
+      flavorText: 'Time bends to the will of those who wield it.',
+      attributeValues: JSON.stringify({ 'attr-001': 4, 'attr-004': 'Artifact', 'attr-005': 'Mythic' }),
+      mechanicValues: JSON.stringify({ 'mech-006': 2 }),
+      artDirection: 'An ornate staff crackling with arcane energy, ley lines visible flowing into its crystalline head.'
     }
   ],
 

@@ -217,8 +217,7 @@ export function ProductFocusModal({
                     {productData.adaptations.slice(0, 5).map((adaptation: any) => (
                       <div
                         key={adaptation.id}
-                        className="flex items-center gap-3 p-2 rounded-lg bg-card/30 hover:bg-card/50 transition-colors cursor-pointer border-l-2 border-ck-rare/30 hover:border-ck-rare"
-                        onClick={() => handleEntityClick(adaptation.sourceType, adaptation.sourceEntity.id)}
+                        className="flex items-center gap-3 p-2 rounded-lg bg-card/30 border-l-2 border-ck-rare/30"
                       >
                         <img
                           src={getEntityImage(adaptation.sourceEntity.id, 'avatar')}
@@ -244,12 +243,9 @@ export function ProductFocusModal({
                       </div>
                     ))}
                     {productData.adaptations.length > 5 && (
-                      <button
-                        onClick={handleViewFull}
-                        className="text-sm text-ck-forge hover:text-ck-gold transition-colors w-full text-center py-2"
-                      >
-                        +{productData.adaptations.length - 5} more...
-                      </button>
+                      <p className="text-sm text-muted-foreground w-full text-center py-2">
+                        +{productData.adaptations.length - 5} more
+                      </p>
                     )}
                   </div>
                 ) : (
