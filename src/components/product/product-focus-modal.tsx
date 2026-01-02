@@ -27,8 +27,10 @@ const GET_PRODUCT = gql`
       }
       adaptations {
         id
-        cardName
+        displayName
         flavorText
+        role
+        appearance
         sourceEntity {
           id
           name
@@ -221,7 +223,7 @@ export function ProductFocusModal({
                       >
                         <img
                           src={getEntityImage(adaptation.sourceEntity.id, 'avatar')}
-                          alt={adaptation.cardName || adaptation.sourceEntity.name}
+                          alt={adaptation.displayName || adaptation.sourceEntity.name}
                           className="w-8 h-8 rounded-full object-cover"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = placeholderUrl;
@@ -229,7 +231,7 @@ export function ProductFocusModal({
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-ck-bone truncate">
-                            {adaptation.cardName || adaptation.sourceEntity.name}
+                            {adaptation.displayName || adaptation.sourceEntity.name}
                           </p>
                           {adaptation.flavorText && (
                             <p className="text-xs text-muted-foreground italic truncate">

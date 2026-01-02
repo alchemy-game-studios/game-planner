@@ -67,11 +67,13 @@ const GET_PRODUCT = gql`
           description
         }
         sourceType
-        cardName
+        displayName
         flavorText
         attributeValues
         mechanicValues
         artDirection
+        role
+        appearance
       }
       images {
         id

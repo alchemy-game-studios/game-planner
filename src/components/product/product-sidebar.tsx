@@ -257,7 +257,7 @@ export function ProductSidebar({ product, onRefetch }: ProductSidebarProps) {
               >
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-ck-bone">
-                    {adapt.cardName || adapt.sourceEntity?.name}
+                    {adapt.displayName || adapt.sourceEntity?.name}
                   </span>
                   <Badge variant="secondary" className="text-xs">{adapt.sourceType}</Badge>
                 </div>
