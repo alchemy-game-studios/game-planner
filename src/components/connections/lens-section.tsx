@@ -22,6 +22,7 @@ import {
   User,
   Backpack,
   Scroll,
+  Box,
   LucideIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ const ICON_MAP: Record<LensIcon, LucideIcon> = {
   'user': User,
   'backpack': Backpack,
   'scroll': Scroll,
+  'box': Box,
 };
 
 const RELATE_CONTAINS = gql`

@@ -11,6 +11,7 @@ import {
   User,
   Backpack,
   Scroll,
+  Box,
   LucideIcon
 } from 'lucide-react';
 
@@ -26,6 +27,7 @@ const ICON_MAP: Record<LensIcon, LucideIcon> = {
   'user': User,
   'backpack': Backpack,
   'scroll': Scroll,
+  'box': Box,
 };
 
 interface ConnectionSignalProps {

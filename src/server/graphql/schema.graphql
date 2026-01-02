@@ -163,6 +163,8 @@ type Entity {
   parentNarrative: EntityProperties
   # The universe this entity belongs to (via CONTAINS chain)
   universeId: String
+  # Products based on this universe (for Universe entities)
+  products: [Product!]
 }
 
 type EntityProperties {

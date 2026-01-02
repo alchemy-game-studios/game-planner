@@ -256,6 +256,30 @@ async function getEventsForEntity(entityId, entityType) {
 // Product System Helpers
 // ============================================
 
+// Helper to get products for a universe
+async function getProductsForUniverse(universeId) {
+  const result = await runQuery(`
+    MATCH (p:Product)-[:USES_IP]->(u:Universe {id: $universeId})
+    RETURN {
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      type: p.type,
+      gameType: p.gameType,
+      _nodeType: 'product',
+      properties: {
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        type: p.type
+      }
+    } AS product
+    ORDER BY p.name
+  `, { universeId });
+
+  return result.records.map(r => r.get('product'));
+}
+
 // Helper to get a single product with all related data
 async function getProduct(id) {
   const result = await runQuery(`
@@ -753,6 +777,11 @@ async function getEntity(type, id) {
   // Reverse lookup: fetch events for Place, Character, Item
   if (['Place', 'Character', 'Item'].includes(type)) {
     entity.events = await getEventsForEntity(id, type);
+  }
+
+  // Universe-specific: fetch products based on this universe
+  if (type === 'Universe') {
+    entity.products = await getProductsForUniverse(id);
   }
 
   return entity;
