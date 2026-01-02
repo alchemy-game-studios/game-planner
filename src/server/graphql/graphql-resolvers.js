@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import neo4j from 'neo4j-driver';
 import { getImageUrl, deleteImage as deleteS3Image } from '../storage/s3-client.js';
 import { SUBSCRIPTION_TIERS, CREDIT_PACKAGES, getTierLimits, formatPrice, getCreditPackage } from '../config/tiers.js';
 import Stripe from 'stripe';
@@ -1088,6 +1089,41 @@ export default {
       `, { universeId, excludeId: excludeId || '' });
 
       return result.records.map(r => r.get('entity'));
+    },
+
+    // Get entities with a specific tag (paginated)
+    taggedEntities: async (_, { tagId, limit = 10, offset = 0 }) => {
+      // Get total count
+      const countResult = await runQuery(`
+        MATCH (entity)-[:TAGGED]->(tag:Tag {id: $tagId})
+        RETURN count(DISTINCT entity) as total
+      `, { tagId });
+      const totalRaw = countResult.records[0]?.get('total');
+      const total = typeof totalRaw === 'object' ? totalRaw.toNumber() : (totalRaw || 0);
+
+      // Get paginated entities
+      const result = await runQuery(`
+        MATCH (entity)-[:TAGGED]->(tag:Tag {id: $tagId})
+        WITH DISTINCT entity
+        RETURN {
+          id: entity.id,
+          _nodeType: toLower(labels(entity)[0]),
+          properties: properties(entity),
+          contents: [],
+          tags: []
+        } AS entityData
+        ORDER BY entityData.properties.name
+        SKIP $offset
+        LIMIT $limit
+      `, { tagId, offset: neo4j.int(offset), limit: neo4j.int(limit) });
+
+      const entities = result.records.map(r => r.get('entityData'));
+
+      return {
+        entities,
+        total,
+        hasMore: offset + entities.length < total
+      };
     },
 
     // User/Account queries

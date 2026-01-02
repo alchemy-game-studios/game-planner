@@ -1,21 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Tag as TagIcon, Heart, Sparkles, Cog } from 'lucide-react';
 import { EntitySearch } from '@/components/entity-search';
 import { AddEntityDialog } from '@/components/add-entity-dialog';
 import { getRelateTaggedMutation } from '@/utils/graphql-utils';
+import { TagModal, TagData } from '@/components/tags/tag-modal';
 
-interface Tag {
+interface TagItem {
   id: string;
   name: string;
   type?: string;
 }
 
 interface TagPillsProps {
-  tags: Tag[];
+  tags: TagItem[];
   parentId: string;
   parentType: string;
   onUpdate?: () => void;
+}
+
+// Tag type icons
+const TAG_ICONS: Record<string, React.ElementType> = {
+  descriptor: TagIcon,
+  feeling: Heart,
+  theme: Sparkles,
+  mechanic: Cog,
+  other: TagIcon,
+  default: TagIcon,
+};
+
+function getTagIcon(type?: string): React.ElementType {
+  return TAG_ICONS[type || ''] || TAG_ICONS.default;
 }
 
 const TAG_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -41,7 +56,7 @@ function getTagColors(type?: string) {
 }
 
 // Normalize tags from various formats to flat structure
-function normalizeTags(tags: any[]): Tag[] {
+function normalizeTags(tags: any[]): TagItem[] {
   return tags.map(tag => ({
     id: tag.id || tag.properties?.id,
     name: tag.name || tag.properties?.name,
@@ -50,13 +65,67 @@ function normalizeTags(tags: any[]): Tag[] {
 }
 
 export function TagPills({ tags, parentId, parentType, onUpdate }: TagPillsProps) {
-  const [localTags, setLocalTags] = useState<Tag[]>(normalizeTags(tags));
+  const [localTags, setLocalTags] = useState<TagItem[]>(normalizeTags(tags));
   const [isAdding, setIsAdding] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<TagItem | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'view' | 'edit' | 'create'>('view');
 
   // Sync with prop changes (e.g., navigating between entities)
   useEffect(() => {
     setLocalTags(normalizeTags(tags));
   }, [tags]);
+
+  const handleTagClick = (tag: TagItem) => {
+    setSelectedTag(tag);
+    setModalMode('view');
+    setModalOpen(true);
+  };
+
+  const handleCreateTag = () => {
+    setSelectedTag(null);
+    setModalMode('create');
+    setModalOpen(true);
+  };
+
+  const handleTagSaved = async (savedTag: TagData) => {
+    if (modalMode === 'create') {
+      // If creating, add it to the entity's tags
+      try {
+        const currentIds = localTags.map(t => t.id);
+        const newIds = [...currentIds, savedTag.id];
+
+        await updateRelation({
+          variables: {
+            relation: {
+              id: parentId,
+              tagIds: newIds,
+            },
+          },
+        });
+
+        setLocalTags([...localTags, {
+          id: savedTag.id,
+          name: savedTag.name,
+          type: savedTag.type
+        }]);
+        onUpdate?.();
+      } catch (error) {
+        console.error('Error adding new tag:', error);
+      }
+    } else {
+      // If editing, update the tag in local state
+      setLocalTags(prev => prev.map(t =>
+        t.id === savedTag.id ? { ...t, name: savedTag.name, type: savedTag.type } : t
+      ));
+    }
+  };
+
+  const handleTagDeleted = (tagId: string) => {
+    // Remove from local tags
+    setLocalTags(prev => prev.filter(t => t.id !== tagId));
+    onUpdate?.();
+  };
 
   const mutation = getRelateTaggedMutation();
   const [updateRelation] = useMutation(mutation);
@@ -115,14 +184,20 @@ export function TagPills({ tags, parentId, parentType, onUpdate }: TagPillsProps
       <div className="flex flex-wrap gap-2 items-center">
         {localTags.map((tag) => {
           const colors = getTagColors(tag.type);
+          const IconComponent = getTagIcon(tag.type);
           return (
             <span
               key={tag.id}
-              className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${colors.bg} ${colors.text} ${colors.border} group`}
+              className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${colors.bg} ${colors.text} ${colors.border} group cursor-pointer hover:opacity-80 transition-opacity`}
+              onClick={() => handleTagClick(tag)}
             >
+              <IconComponent className="h-3 w-3" />
               {tag.name}
               <button
-                onClick={() => handleRemoveTag(tag.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveTag(tag.id);
+                }}
                 className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:text-white"
                 aria-label={`Remove ${tag.name}`}
               >
@@ -164,14 +239,29 @@ export function TagPills({ tags, parentId, parentType, onUpdate }: TagPillsProps
 
           <div className="mt-3 pt-3 border-t border-gray-700">
             <p className="text-xs text-gray-500 mb-2">Or create a new tag</p>
-            <AddEntityDialog
-              entityType="tag"
-              onEntityCreated={handleAddTag}
-              triggerButton={false}
-            />
+            <button
+              onClick={() => {
+                setIsAdding(false);
+                handleCreateTag();
+              }}
+              className="w-full py-2 px-3 bg-ck-indigo/30 hover:bg-ck-indigo/50 rounded text-sm text-ck-bone transition-colors"
+            >
+              <Plus className="h-4 w-4 inline-block mr-1" />
+              Create New Tag
+            </button>
           </div>
         </div>
       )}
+
+      {/* Tag Modal */}
+      <TagModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        tag={selectedTag}
+        mode={modalMode}
+        onSave={handleTagSaved}
+        onDelete={handleTagDeleted}
+      />
     </div>
   );
 }

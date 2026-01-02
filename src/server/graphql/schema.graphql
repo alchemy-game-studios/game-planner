@@ -24,6 +24,9 @@ type Query {
   # Get all entities in a universe (for @ mentions)
   entitiesInUniverse(universeId: String!, excludeId: String): [Entity!]!
 
+  # Get entities with a specific tag (paginated)
+  taggedEntities(tagId: String!, limit: Int, offset: Int): TaggedEntitiesResponse!
+
   # Product queries
   product(obj: IdInput!): Product
   products: [Product!]!
@@ -514,4 +517,11 @@ type BillingHistory {
   items: [BillingHistoryItem!]!
   hasMore: Boolean!
   nextCursor: String
+}
+
+# Paginated tagged entities response
+type TaggedEntitiesResponse {
+  entities: [Entity!]!
+  total: Int!
+  hasMore: Boolean!
 }
