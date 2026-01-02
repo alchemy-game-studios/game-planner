@@ -10,6 +10,7 @@ interface TagItem {
   id: string;
   name: string;
   type?: string;
+  description?: string;
 }
 
 interface TagPillsProps {
@@ -61,6 +62,7 @@ function normalizeTags(tags: any[]): TagItem[] {
     id: tag.id || tag.properties?.id,
     name: tag.name || tag.properties?.name,
     type: tag.type || tag.properties?.type,
+    description: tag.description || tag.properties?.description,
   }));
 }
 
