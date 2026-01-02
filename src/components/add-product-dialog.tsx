@@ -36,13 +36,14 @@ const ADD_PRODUCT = gql`
 `;
 
 interface AddProductDialogProps {
+  universeId?: string;
   onProductCreated: (product: any) => void;
 }
 
 const MEDIA_TYPES = ['game', 'book', 'movie', 'comic', 'tv series', 'podcast', 'music'];
 const GAME_TYPES = ['card', 'board', 'ttrpg', 'video', 'mobile', 'party', 'miniatures', 'dice'];
 
-export const AddProductDialog: React.FC<AddProductDialogProps> = ({ onProductCreated }) => {
+export const AddProductDialog: React.FC<AddProductDialogProps> = ({ universeId: propUniverseId, onProductCreated }) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -50,10 +51,16 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({ onProductCre
   const [customType, setCustomType] = useState('');
   const [gameType, setGameType] = useState('card');
   const [customGameType, setCustomGameType] = useState('');
-  const [universeId, setUniverseId] = useState('');
+  const [selectedUniverseId, setSelectedUniverseId] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { data: universesData } = useQuery(GET_UNIVERSES);
+  // Only fetch universes if not provided via props
+  const { data: universesData } = useQuery(GET_UNIVERSES, {
+    skip: !!propUniverseId
+  });
+
+  // Use prop if provided, otherwise use selected
+  const universeId = propUniverseId || selectedUniverseId;
   const [addProduct] = useMutation(ADD_PRODUCT);
 
   const effectiveType = type === 'other' ? customType : type;
@@ -110,7 +117,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({ onProductCre
     setCustomType('');
     setGameType('card');
     setCustomGameType('');
-    setUniverseId('');
+    setSelectedUniverseId('');
   };
 
   return (
@@ -214,24 +221,27 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({ onProductCre
             </div>
           )}
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="universe" className="text-right">
-              Universe
-            </Label>
-            <select
-              id="universe"
-              value={universeId}
-              onChange={(e) => setUniverseId(e.target.value)}
-              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Select a universe...</option>
-              {universesData?.universes.map((universe: any) => (
-                <option key={universe.id} value={universe.id}>
-                  {universe.properties.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Only show universe selector if not provided via props */}
+          {!propUniverseId && (
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="universe" className="text-right">
+                Universe
+              </Label>
+              <select
+                id="universe"
+                value={selectedUniverseId}
+                onChange={(e) => setSelectedUniverseId(e.target.value)}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Select a universe...</option>
+                {universesData?.universes.map((universe: any) => (
+                  <option key={universe.id} value={universe.id}>
+                    {universe.properties.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>

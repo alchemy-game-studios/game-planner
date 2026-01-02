@@ -6,6 +6,7 @@ import { ConnectionSignal } from './connection-signal';
 import { ConnectionPreviewModal } from './connection-preview-modal';
 import { EntitySearch } from '@/components/entity-search';
 import { AddEntityDialog } from '@/components/add-entity-dialog';
+import { AddProductDialog } from '@/components/add-product-dialog';
 import { getEntityImage, getPlaceholderImage } from '@/media/util';
 import {
   ChevronDown,
@@ -169,10 +170,17 @@ export function LensSection({
                 placeholder={`Add ${lens.singularLabel}...`}
               />
             </div>
-            <AddEntityDialog
-              entityType={lens.singularLabel}
-              onEntityCreated={handleAddEntity}
-            />
+            {lens.singularLabel === 'product' ? (
+              <AddProductDialog
+                universeId={parentId}
+                onProductCreated={handleAddEntity}
+              />
+            ) : (
+              <AddEntityDialog
+                entityType={lens.singularLabel}
+                onEntityCreated={handleAddEntity}
+              />
+            )}
           </div>
         )}
         {/* Full modal */}
@@ -238,10 +246,17 @@ export function LensSection({
               placeholder={`Add ${lens.singularLabel}...`}
             />
           </div>
-          <AddEntityDialog
-            entityType={lens.singularLabel}
-            onEntityCreated={handleAddEntity}
-          />
+          {lens.singularLabel === 'product' ? (
+            <AddProductDialog
+              universeId={parentId}
+              onProductCreated={handleAddEntity}
+            />
+          ) : (
+            <AddEntityDialog
+              entityType={lens.singularLabel}
+              onEntityCreated={handleAddEntity}
+            />
+          )}
         </div>
       )}
 
