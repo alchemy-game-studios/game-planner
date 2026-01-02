@@ -8,6 +8,7 @@ export interface LensDefinition {
   entityTypes: string[];
   dataKey: string; // Key in entity data to filter from
   filter?: (entity: any) => boolean;
+  isSingleEntity?: boolean; // True if dataKey returns a single entity instead of array
   color: {
     bg: string;
     text: string;
@@ -200,6 +201,15 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
 
   event: [
     {
+      id: 'narrative',
+      label: 'Part of Narrative',
+      singularLabel: 'narrative',
+      entityTypes: ['narrative'],
+      dataKey: 'parentNarrative',
+      isSingleEntity: true,
+      color: { bg: 'bg-ck-ember/20', text: 'text-ck-ember', border: 'border-ck-ember/30' }
+    },
+    {
       id: 'characters',
       label: 'Characters involved',
       singularLabel: 'character',
@@ -233,7 +243,14 @@ export function getLensesForType(entityType: string): LensDefinition[] {
 }
 
 export function getLensData(entity: any, lens: LensDefinition): any[] {
-  const data = entity[lens.dataKey] || [];
+  const rawData = entity[lens.dataKey];
+
+  // Handle single entity relationships (wrap in array)
+  if (lens.isSingleEntity) {
+    return rawData ? [rawData] : [];
+  }
+
+  const data = rawData || [];
 
   if (lens.filter) {
     return data.filter(lens.filter);
