@@ -173,8 +173,10 @@ type Entity {
 type ProductAdaptation {
   id: String!
   product: ProductInfo!
-  cardName: String
+  displayName: String
   flavorText: String
+  role: String
+  appearance: String
 }
 
 type ProductInfo {
