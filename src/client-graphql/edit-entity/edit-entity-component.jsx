@@ -19,6 +19,7 @@ import { Link } from 'react-router-dom';
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { ConnectionSignalBar, MentionToastContainer } from "@/components/connections";
 import { useMentionRelationship } from "@/hooks/use-mention-relationship";
+import { ProductsSection } from "@/components/products-section";
 
 
 
@@ -56,7 +57,8 @@ export function EditEntityComponent({id, type, isEdit}) {
         locations: [],
         participants: [],
         parentNarrative: null,
-        events: []
+        events: [],
+        products: []
     }
     const [entity, setEntity] = useState(initEntity);
 
@@ -153,6 +155,10 @@ export function EditEntityComponent({id, type, isEdit}) {
         const fetchData = async() => {
             if (id) {
                 const result = await Get({ variables: { obj: { id } } });
+                if (!result.data || !result.data[type]) {
+                    console.error('Failed to fetch entity:', result);
+                    return;
+                }
                 console.log('Fetched entity:', result.data[type]);
                 console.log('Contents:', result.data[type].contents);
                 console.log('AllContents:', result.data[type].allContents);
@@ -334,6 +340,19 @@ export function EditEntityComponent({id, type, isEdit}) {
           </div>
 
         <div id="related-contains" className="w-72 flex-shrink-0 mt-5 overflow-y-auto">
+            {/* Products section - only for universes */}
+            {type === 'universe' && (
+                <ProductsSection
+                    products={entity.products || []}
+                    universeId={id}
+                    onRefetch={() => Get({ variables: { obj: { id } } }).then(result => {
+                        if (result.data?.[type]) {
+                            setEntity(result.data[type]);
+                        }
+                    })}
+                />
+            )}
+
             <ConnectionSignalBar
                 entity={entity}
                 entityType={type}
@@ -381,96 +400,126 @@ function allQuery(type) {
         `;
 }
 
+// Base entity fields shared by all entity types
+const ENTITY_FIELDS = `
+    id
+    universeId
+    contents {
+        _nodeType
+        properties {
+            id
+            name
+            description
+            type
+        }
+    }
+    allContents {
+        _nodeType
+        properties {
+            id
+            name
+            description
+            type
+        }
+        parentId
+        parentName
+        depth
+    }
+    properties {
+        id
+        name
+        description
+        type
+        day
+        startDate
+        endDate
+    }
+    tags {
+        id
+        name
+        description
+        type
+    }
+    images {
+        id
+        filename
+        url
+        mimeType
+        size
+        rank
+    }
+    allImages {
+        id
+        filename
+        url
+        mimeType
+        size
+        rank
+        entityId
+        entityName
+        entityType
+    }
+    locations {
+        id
+        name
+        description
+        type
+    }
+    participants {
+        id
+        name
+        description
+        type
+        _nodeType
+    }
+    parentNarrative {
+        id
+        name
+        description
+        type
+    }
+    events {
+        id
+        name
+        description
+        type
+        startDate
+        endDate
+    }
+`;
+
+// Universe-specific query includes products
+const UNIVERSE_QUERY = gql`
+    query Universe($obj: IdInput!) {
+        universe(obj: $obj) {
+            ${ENTITY_FIELDS}
+            products {
+                id
+                name
+                description
+                type
+                gameType
+                universe {
+                    id
+                    name
+                }
+            }
+        }
+    }
+`;
+
 function oneQuery(type) {
+    // Use pre-built universe query for universe type
+    if (type === 'universe') {
+        return UNIVERSE_QUERY;
+    }
+
     let nodeType = capitalizeFirst(type)
 
     let queryStr = `
     query ${nodeType}($obj: IdInput!) {
             ${type}(obj: $obj) {
-                id
-                universeId
-                contents {
-                    _nodeType
-                    properties {
-                        id
-                        name
-                        description
-                        type
-                    }
-                }
-                allContents {
-                    _nodeType
-                    properties {
-                        id
-                        name
-                        description
-                        type
-                    }
-                    parentId
-                    parentName
-                    depth
-                }
-                properties {
-                    id
-                    name
-                    description
-                    type
-                    day
-                    startDate
-                    endDate
-                }
-                tags {
-                    id
-                    name
-                    description
-                    type
-                }
-                images {
-                    id
-                    filename
-                    url
-                    mimeType
-                    size
-                    rank
-                }
-                allImages {
-                    id
-                    filename
-                    url
-                    mimeType
-                    size
-                    rank
-                    entityId
-                    entityName
-                    entityType
-                }
-                locations {
-                    id
-                    name
-                    description
-                    type
-                }
-                participants {
-                    id
-                    name
-                    description
-                    type
-                    _nodeType
-                }
-                parentNarrative {
-                    id
-                    name
-                    description
-                    type
-                }
-                events {
-                    id
-                    name
-                    description
-                    type
-                    startDate
-                    endDate
-                }
+                ${ENTITY_FIELDS}
             }
     }
 `

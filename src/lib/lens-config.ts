@@ -73,15 +73,6 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       filter: (e) => e._nodeType === 'item',
       icon: 'package',
       color: { bg: 'bg-ck-gold/20', text: 'text-ck-gold', border: 'border-ck-gold/30', ring: 'ring-ck-gold' }
-    },
-    {
-      id: 'products',
-      label: 'Products',
-      singularLabel: 'product',
-      entityTypes: ['product'],
-      dataKey: 'products',
-      icon: 'box',
-      color: { bg: 'bg-ck-forge/20', text: 'text-ck-forge', border: 'border-ck-forge/30', ring: 'ring-ck-forge' }
     }
   ],
 

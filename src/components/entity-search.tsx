@@ -6,7 +6,7 @@ import EntityCard from '../client-graphql/edit-entity/entity-card';
 import { capitalizeFirst } from '../client-graphql/util';
 
 interface EntitySearchProps {
-  entityType: 'place' | 'character' | 'item' | 'tag' | 'event' | 'narrative';
+  entityType: 'place' | 'character' | 'item' | 'tag' | 'event' | 'narrative' | 'product';
   onSelect: (entity: any) => void;
   excludeIds?: string[];
   universeId?: string;
@@ -124,6 +124,17 @@ const SEARCH_QUERIES: Record<string, any> = {
         }
       }
     }
+  `,
+  product: gql`
+    query SearchProducts {
+      products {
+        id
+        name
+        description
+        type
+        gameType
+      }
+    }
   `
 };
 
@@ -192,7 +203,8 @@ export const EntitySearch: React.FC<EntitySearchProps> = ({
   }, []);
 
   const filteredEntities = entities.filter((entity: any) => {
-    const name = entity.properties?.name || '';
+    // Products don't have properties wrapper
+    const name = entity.properties?.name || entity.name || '';
     const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase());
     const notExcluded = !excludeIds.includes(entity.id);
     return matchesSearch && notExcluded;
@@ -228,20 +240,25 @@ export const EntitySearch: React.FC<EntitySearchProps> = ({
             </div>
           ) : (
             <div className="py-1">
-              {filteredEntities.map((entity: any) => (
-                <div
-                  key={entity.id}
-                  className="px-2 py-1 hover:bg-gray-800 cursor-pointer"
-                  onClick={() => handleSelect(entity)}
-                >
-                  <div className="flex items-center gap-2 py-1">
-                    <span className="text-sm text-gray-200">{entity.properties?.name}</span>
-                    {entity.properties?.type && (
-                      <span className="text-xs text-gray-500">({entity.properties.type})</span>
-                    )}
+              {filteredEntities.map((entity: any) => {
+                // Products don't have properties wrapper
+                const name = entity.properties?.name || entity.name;
+                const type = entity.properties?.type || entity.type;
+                return (
+                  <div
+                    key={entity.id}
+                    className="px-2 py-1 hover:bg-gray-800 cursor-pointer"
+                    onClick={() => handleSelect(entity)}
+                  >
+                    <div className="flex items-center gap-2 py-1">
+                      <span className="text-sm text-gray-200">{name}</span>
+                      {type && (
+                        <span className="text-xs text-gray-500">({type})</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

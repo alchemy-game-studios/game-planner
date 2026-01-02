@@ -267,6 +267,10 @@ async function getProductsForUniverse(universeId) {
       type: p.type,
       gameType: p.gameType,
       _nodeType: 'product',
+      universe: {
+        id: u.id,
+        name: u.name
+      },
       properties: {
         id: p.id,
         name: p.name,
