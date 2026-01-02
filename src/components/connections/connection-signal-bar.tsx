@@ -2,6 +2,7 @@ import React from 'react';
 import { getLensesForType } from '@/lib/lens-config';
 import { LensSection } from './lens-section';
 import { Separator } from '@/components/ui/separator';
+import { Network } from 'lucide-react';
 
 interface ConnectionSignalBarProps {
   entity: any;
@@ -30,7 +31,10 @@ export function ConnectionSignalBar({
 
   return (
     <div className="space-y-1">
-      <h3 className="text-sm font-medium text-muted-foreground mb-2">Connections</h3>
+      <div className="flex items-center gap-2 mb-2">
+        <Network className="h-4 w-4 text-ck-teal" />
+        <h3 className="text-sm font-semibold text-ck-bone">Connections</h3>
+      </div>
       <Separator className="mb-2" />
       {lenses.map((lens, index) => (
         <React.Fragment key={lens.id}>

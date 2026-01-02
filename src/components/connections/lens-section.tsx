@@ -1,14 +1,44 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, gql } from '@apollo/client';
-import { LensDefinition, getLensData } from '@/lib/lens-config';
+import { LensDefinition, getLensData, LensIcon } from '@/lib/lens-config';
 import { ConnectionSignal } from './connection-signal';
 import { ConnectionPreviewModal } from './connection-preview-modal';
 import { EntitySearch } from '@/components/entity-search';
 import { AddEntityDialog } from '@/components/add-entity-dialog';
 import { getEntityImage, getPlaceholderImage } from '@/media/util';
-import { ChevronDown, ChevronUp, Plus, Maximize2 } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Maximize2,
+  BookOpen,
+  MapPin,
+  Users,
+  Package,
+  Calendar,
+  Swords,
+  Home,
+  User,
+  Backpack,
+  Scroll,
+  LucideIcon
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+// Map icon names to Lucide components
+const ICON_MAP: Record<LensIcon, LucideIcon> = {
+  'book-open': BookOpen,
+  'map-pin': MapPin,
+  'users': Users,
+  'package': Package,
+  'calendar': Calendar,
+  'swords': Swords,
+  'home': Home,
+  'user': User,
+  'backpack': Backpack,
+  'scroll': Scroll,
+};
 
 const RELATE_CONTAINS = gql`
   mutation RelateContains($relation: RelatableInput!) {
@@ -96,11 +126,16 @@ export function LensSection({
   };
 
   // If no entities, show add button only
+  const IconComponent = ICON_MAP[lens.icon];
+
   if (count === 0) {
     return (
       <div className="py-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{lens.label}</span>
+          <div className="flex items-center gap-1.5">
+            {IconComponent && <IconComponent className={`h-3.5 w-3.5 ${lens.color.text} opacity-60`} />}
+            <span className="text-sm text-muted-foreground">{lens.label}</span>
+          </div>
           <div className="flex gap-1">
             <Button
               variant="ghost"

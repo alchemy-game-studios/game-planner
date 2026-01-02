@@ -1,6 +1,19 @@
 // Lens configuration for progressive navigation
 // Each entity type has specific lenses for viewing connected content
 
+// Icon names from Lucide - resolved at render time
+export type LensIcon =
+  | 'book-open'
+  | 'map-pin'
+  | 'users'
+  | 'package'
+  | 'calendar'
+  | 'swords'
+  | 'home'
+  | 'user'
+  | 'backpack'
+  | 'scroll';
+
 export interface LensDefinition {
   id: string;
   label: string;
@@ -9,6 +22,7 @@ export interface LensDefinition {
   dataKey: string; // Key in entity data to filter from
   filter?: (entity: any) => boolean;
   isSingleEntity?: boolean; // True if dataKey returns a single entity instead of array
+  icon: LensIcon;
   color: {
     bg: string;
     text: string;
@@ -25,6 +39,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['narrative'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'narrative',
+      icon: 'book-open',
       color: { bg: 'bg-ck-ember/20', text: 'text-ck-ember', border: 'border-ck-ember/30' }
     },
     {
@@ -34,6 +49,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['place'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'place',
+      icon: 'map-pin',
       color: { bg: 'bg-ck-teal/20', text: 'text-ck-teal', border: 'border-ck-teal/30' }
     },
     {
@@ -43,6 +59,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['character'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'character',
+      icon: 'users',
       color: { bg: 'bg-ck-rare/20', text: 'text-ck-rare', border: 'border-ck-rare/30' }
     },
     {
@@ -52,6 +69,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['item'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'item',
+      icon: 'package',
       color: { bg: 'bg-ck-gold/20', text: 'text-ck-gold', border: 'border-ck-gold/30' }
     }
   ],
@@ -64,6 +82,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['character'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'character',
+      icon: 'users',
       color: { bg: 'bg-ck-rare/20', text: 'text-ck-rare', border: 'border-ck-rare/30' }
     },
     {
@@ -73,6 +92,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['item'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'item',
+      icon: 'package',
       color: { bg: 'bg-ck-gold/20', text: 'text-ck-gold', border: 'border-ck-gold/30' }
     },
     {
@@ -82,6 +102,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['place'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'place',
+      icon: 'map-pin',
       color: { bg: 'bg-ck-teal/20', text: 'text-ck-teal', border: 'border-ck-teal/30' }
     },
     {
@@ -90,6 +111,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       singularLabel: 'event',
       entityTypes: ['event'],
       dataKey: 'events',
+      icon: 'calendar',
       color: { bg: 'bg-ck-ember/20', text: 'text-ck-ember', border: 'border-ck-ember/30' }
     }
   ],
@@ -102,6 +124,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['item'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'item',
+      icon: 'backpack',
       color: { bg: 'bg-ck-gold/20', text: 'text-ck-gold', border: 'border-ck-gold/30' }
     },
     {
@@ -111,6 +134,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['place'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'place',
+      icon: 'map-pin',
       color: { bg: 'bg-ck-teal/20', text: 'text-ck-teal', border: 'border-ck-teal/30' }
     },
     {
@@ -120,6 +144,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['character'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'character',
+      icon: 'users',
       color: { bg: 'bg-ck-rare/20', text: 'text-ck-rare', border: 'border-ck-rare/30' }
     },
     {
@@ -128,6 +153,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       singularLabel: 'event',
       entityTypes: ['event'],
       dataKey: 'events',
+      icon: 'calendar',
       color: { bg: 'bg-ck-ember/20', text: 'text-ck-ember', border: 'border-ck-ember/30' }
     }
   ],
@@ -140,6 +166,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['character'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'character',
+      icon: 'user',
       color: { bg: 'bg-ck-rare/20', text: 'text-ck-rare', border: 'border-ck-rare/30' }
     },
     {
@@ -149,6 +176,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['place'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'place',
+      icon: 'map-pin',
       color: { bg: 'bg-ck-teal/20', text: 'text-ck-teal', border: 'border-ck-teal/30' }
     },
     {
@@ -157,6 +185,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       singularLabel: 'event',
       entityTypes: ['event'],
       dataKey: 'events',
+      icon: 'calendar',
       color: { bg: 'bg-ck-ember/20', text: 'text-ck-ember', border: 'border-ck-ember/30' }
     }
   ],
@@ -169,6 +198,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['event'],
       dataKey: 'allContents',
       filter: (e) => e._nodeType === 'event',
+      icon: 'calendar',
       color: { bg: 'bg-ck-ember/20', text: 'text-ck-ember', border: 'border-ck-ember/30' }
     },
     {
@@ -178,6 +208,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['character'],
       dataKey: 'participants',
       filter: (e) => e._nodeType === 'character',
+      icon: 'users',
       color: { bg: 'bg-ck-rare/20', text: 'text-ck-rare', border: 'border-ck-rare/30' }
     },
     {
@@ -186,6 +217,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       singularLabel: 'place',
       entityTypes: ['place'],
       dataKey: 'locations',
+      icon: 'map-pin',
       color: { bg: 'bg-ck-teal/20', text: 'text-ck-teal', border: 'border-ck-teal/30' }
     },
     {
@@ -195,6 +227,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['item'],
       dataKey: 'participants',
       filter: (e) => e._nodeType === 'item',
+      icon: 'package',
       color: { bg: 'bg-ck-gold/20', text: 'text-ck-gold', border: 'border-ck-gold/30' }
     }
   ],
@@ -207,6 +240,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['narrative'],
       dataKey: 'parentNarrative',
       isSingleEntity: true,
+      icon: 'book-open',
       color: { bg: 'bg-ck-ember/20', text: 'text-ck-ember', border: 'border-ck-ember/30' }
     },
     {
@@ -216,6 +250,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['character'],
       dataKey: 'participants',
       filter: (e) => e._nodeType === 'character',
+      icon: 'swords',
       color: { bg: 'bg-ck-rare/20', text: 'text-ck-rare', border: 'border-ck-rare/30' }
     },
     {
@@ -225,6 +260,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       entityTypes: ['item'],
       dataKey: 'participants',
       filter: (e) => e._nodeType === 'item',
+      icon: 'package',
       color: { bg: 'bg-ck-gold/20', text: 'text-ck-gold', border: 'border-ck-gold/30' }
     },
     {
@@ -233,6 +269,7 @@ export const LENS_CONFIG: Record<string, LensDefinition[]> = {
       singularLabel: 'place',
       entityTypes: ['place'],
       dataKey: 'locations',
+      icon: 'map-pin',
       color: { bg: 'bg-ck-teal/20', text: 'text-ck-teal', border: 'border-ck-teal/30' }
     }
   ]
