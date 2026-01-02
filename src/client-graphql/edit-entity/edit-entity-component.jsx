@@ -359,7 +359,15 @@ export function EditEntityComponent({id, type, isEdit}) {
             {type !== 'universe' && (
                 <EntityAdaptationsSection
                     adaptations={entity.adaptations || []}
+                    entityId={id}
+                    entityType={type}
                     entityName={entity.properties?.name || 'Entity'}
+                    universeId={entity.universeId}
+                    onRefetch={() => Get({ variables: { obj: { id } } }).then(result => {
+                        if (result.data?.[type]) {
+                            setEntity(result.data[type]);
+                        }
+                    })}
                 />
             )}
 
