@@ -284,6 +284,30 @@ async function getProductsForUniverse(universeId) {
   return result.records.map(r => r.get('product'));
 }
 
+// Helper to get adaptations for an entity (reverse lookup)
+async function getAdaptationsForEntity(entityId) {
+  const result = await runQuery(`
+    MATCH (e {id: $entityId})<-[:ADAPTS]-(adapt:EntityAdaptation)-[:FOR_PRODUCT]->(p:Product)
+    RETURN {
+      id: adapt.id,
+      cardName: adapt.cardName,
+      flavorText: adapt.flavorText,
+      product: {
+        id: p.id,
+        name: p.name,
+        type: p.type,
+        gameType: p.gameType
+      }
+    } AS adaptation
+    ORDER BY p.name
+  `, { entityId });
+
+  // Return empty array instead of null when no adaptations
+  return result.records.length > 0
+    ? result.records.map(r => r.get('adaptation'))
+    : [];
+}
+
 // Helper to get a single product with all related data
 async function getProduct(id) {
   const result = await runQuery(`
@@ -787,6 +811,9 @@ async function getEntity(type, id) {
   if (type === 'Universe') {
     entity.products = await getProductsForUniverse(id);
   }
+
+  // Get adaptations for this entity (cards in products, etc.)
+  entity.adaptations = await getAdaptationsForEntity(id);
 
   return entity;
 }

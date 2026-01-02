@@ -20,6 +20,7 @@ import { RichTextEditor } from "@/components/rich-text-editor";
 import { ConnectionSignalBar, MentionToastContainer } from "@/components/connections";
 import { useMentionRelationship } from "@/hooks/use-mention-relationship";
 import { ProductsSection } from "@/components/products-section";
+import { EntityAdaptationsSection } from "@/components/entity-adaptations-section";
 
 
 
@@ -58,7 +59,8 @@ export function EditEntityComponent({id, type, isEdit}) {
         participants: [],
         parentNarrative: null,
         events: [],
-        products: []
+        products: [],
+        adaptations: []
     }
     const [entity, setEntity] = useState(initEntity);
 
@@ -353,6 +355,14 @@ export function EditEntityComponent({id, type, isEdit}) {
                 />
             )}
 
+            {/* Entity adaptations section - for non-universes */}
+            {type !== 'universe' && (
+                <EntityAdaptationsSection
+                    adaptations={entity.adaptations || []}
+                    entityName={entity.properties?.name || 'Entity'}
+                />
+            )}
+
             <ConnectionSignalBar
                 entity={entity}
                 entityType={type}
@@ -485,6 +495,17 @@ const ENTITY_FIELDS = `
         type
         startDate
         endDate
+    }
+    adaptations {
+        id
+        cardName
+        flavorText
+        product {
+            id
+            name
+            type
+            gameType
+        }
     }
 `;
 

@@ -2071,7 +2071,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
     {
       id: 'adapt-001',
       productId: 'product-001',
-      entityId: 'char-001',
+      entityId: 'char-002',
       entityType: 'character',
       cardName: 'Lyra, Shadow Dancer',
       flavorText: 'The shadows are not darkness - they are possibility.',
@@ -2083,7 +2083,7 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
     {
       id: 'adapt-002',
       productId: 'product-001',
-      entityId: 'char-002',
+      entityId: 'char-001',
       entityType: 'character',
       cardName: 'Theron, Paladin of Light',
       flavorText: 'His oath to protect burns brighter than any flame.',

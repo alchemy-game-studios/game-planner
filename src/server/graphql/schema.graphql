@@ -165,6 +165,23 @@ type Entity {
   universeId: String
   # Products based on this universe (for Universe entities)
   products: [Product!]
+  # Adaptations of this entity in products (cards, etc.)
+  adaptations: [ProductAdaptation!]
+}
+
+# Adaptation with product info (for entity view)
+type ProductAdaptation {
+  id: String!
+  product: ProductInfo!
+  cardName: String
+  flavorText: String
+}
+
+type ProductInfo {
+  id: String!
+  name: String!
+  type: String!
+  gameType: String
 }
 
 type EntityProperties {
