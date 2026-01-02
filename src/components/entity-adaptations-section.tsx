@@ -82,7 +82,7 @@ export function EntityAdaptationsSection({ adaptations, entityName }: EntityAdap
         {/* Header */}
         <div className="flex items-center gap-2 mb-3">
           <Layers className="h-5 w-5 text-ck-rare" />
-          <h3 className="text-lg font-heading text-ck-bone">In Products</h3>
+          <h3 className="text-base font-semibold text-ck-bone">In Products</h3>
           <span className="text-sm text-muted-foreground">({adaptations.length})</span>
         </div>
 
