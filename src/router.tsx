@@ -2,8 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom"
 import App from "./App"
 import HomePage from "@/pages/home"
 import EditEntityPage from "@/pages/edit-entity"
-import ProductsPage from "@/pages/products"
-import ProductPage from "@/pages/product"
+import EditProductPage from "@/pages/edit-product"
 import LoginPage from "@/pages/login"
 import AccountPage from "@/pages/account"
 import { ProtectedRoute } from "@/components/protected-route"
@@ -34,12 +33,8 @@ const router = createBrowserRouter([
         element: <EditEntityPage />,
       },
       {
-        path: "products",
-        element: <ProductsPage />,
-      },
-      {
-        path: "product/:id",
-        element: <ProductPage />,
+        path: "edit/product/:id",
+        element: <EditProductPage />,
       },
     ],
   },
