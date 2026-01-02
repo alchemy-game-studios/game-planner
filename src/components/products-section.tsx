@@ -44,7 +44,7 @@ export function ProductsSection({ products, universeId, onRefetch }: ProductsSec
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Package2 className="h-5 w-5 text-ck-forge" />
-          <h3 className="text-lg font-heading text-ck-bone">Products</h3>
+          <h3 className="text-base font-semibold text-ck-bone">Products</h3>
           <span className="text-sm text-muted-foreground">({products?.length || 0})</span>
         </div>
         <AddProductDialog
