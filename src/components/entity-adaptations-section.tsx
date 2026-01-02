@@ -15,8 +15,10 @@ interface ProductInfo {
 
 interface Adaptation {
   id: string;
-  cardName?: string;
+  displayName?: string;
   flavorText?: string;
+  role?: string;
+  appearance?: string;
   product: ProductInfo;
 }
 
@@ -160,7 +162,7 @@ export function EntityAdaptationsSection({
                       className="block w-full text-left p-2 pl-4 rounded bg-card/30 hover:bg-card/50 transition-colors border-l-2 border-ck-rare/30 hover:border-ck-rare"
                     >
                       <p className="text-sm font-medium text-ck-bone">
-                        {adaptation.cardName || entityName}
+                        {adaptation.displayName || entityName}
                       </p>
                       {adaptation.flavorText && (
                         <p className="text-xs text-muted-foreground italic mt-1 line-clamp-2">

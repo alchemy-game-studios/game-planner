@@ -506,8 +506,10 @@ const ENTITY_FIELDS = `
     }
     adaptations {
         id
-        cardName
+        displayName
         flavorText
+        role
+        appearance
         product {
             id
             name

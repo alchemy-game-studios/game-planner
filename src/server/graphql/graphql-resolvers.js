@@ -290,8 +290,10 @@ async function getAdaptationsForEntity(entityId) {
     MATCH (e {id: $entityId})<-[:ADAPTS]-(adapt:EntityAdaptation)-[:FOR_PRODUCT]->(p:Product)
     RETURN {
       id: adapt.id,
-      cardName: adapt.cardName,
+      displayName: adapt.displayName,
       flavorText: adapt.flavorText,
+      role: adapt.role,
+      appearance: adapt.appearance,
       product: {
         id: p.id,
         name: p.name,
@@ -333,11 +335,13 @@ async function getProduct(id) {
     WITH p, u, attributes, mechanics, sections,
          collect({
            id: adapt.id,
-           cardName: adapt.cardName,
+           displayName: adapt.displayName,
            flavorText: adapt.flavorText,
            attributeValues: adapt.attributeValues,
            mechanicValues: adapt.mechanicValues,
            artDirection: adapt.artDirection,
+           role: adapt.role,
+           appearance: adapt.appearance,
            sourceEntity: properties(entity),
            sourceType: toLower(labels(entity)[0])
          }) AS adaptations
@@ -617,11 +621,13 @@ async function createEntityAdaptation(input) {
     MATCH (e:${entityLabel} {id: $entityId})
     CREATE (a:EntityAdaptation {
       id: $id,
-      cardName: $cardName,
+      displayName: $displayName,
       flavorText: $flavorText,
       attributeValues: $attributeValues,
       mechanicValues: $mechanicValues,
-      artDirection: $artDirection
+      artDirection: $artDirection,
+      role: $role,
+      appearance: $appearance
     })
     CREATE (a)-[:FOR_PRODUCT]->(p)
     CREATE (a)-[:ADAPTS]->(e)
@@ -629,11 +635,13 @@ async function createEntityAdaptation(input) {
     productId: input.productId,
     entityId: input.entityId,
     id,
-    cardName: input.cardName || '',
+    displayName: input.displayName || '',
     flavorText: input.flavorText || '',
     attributeValues: input.attributeValues || '{}',
     mechanicValues: input.mechanicValues || '{}',
-    artDirection: input.artDirection || ''
+    artDirection: input.artDirection || '',
+    role: input.role || '',
+    appearance: input.appearance || ''
   });
 
   return { message: 'Entity adaptation created successfully' };
@@ -644,11 +652,13 @@ async function updateEntityAdaptation(input) {
   const updates = [];
   const params = { id: input.id };
 
-  if (input.cardName !== undefined) { updates.push('a.cardName = $cardName'); params.cardName = input.cardName; }
+  if (input.displayName !== undefined) { updates.push('a.displayName = $displayName'); params.displayName = input.displayName; }
   if (input.flavorText !== undefined) { updates.push('a.flavorText = $flavorText'); params.flavorText = input.flavorText; }
   if (input.attributeValues !== undefined) { updates.push('a.attributeValues = $attributeValues'); params.attributeValues = input.attributeValues; }
   if (input.mechanicValues !== undefined) { updates.push('a.mechanicValues = $mechanicValues'); params.mechanicValues = input.mechanicValues; }
   if (input.artDirection !== undefined) { updates.push('a.artDirection = $artDirection'); params.artDirection = input.artDirection; }
+  if (input.role !== undefined) { updates.push('a.role = $role'); params.role = input.role; }
+  if (input.appearance !== undefined) { updates.push('a.appearance = $appearance'); params.appearance = input.appearance; }
 
   if (updates.length > 0) {
     await runQuery(`

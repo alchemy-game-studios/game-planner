@@ -366,16 +366,25 @@ type MechanicDefinition {
   valueType: String                       # number, text (if hasValue)
 }
 
-# EntityAdaptation - maps an IP entity to a product with stats/mechanics
+# EntityAdaptation - maps an IP entity to a product with product-specific details
 type EntityAdaptation {
   id: String!
   sourceEntity: EntityProperties!         # The IP entity being adapted
   sourceType: String!                     # character, item, place, event
-  cardName: String                        # Override name for this product
+  product: Product!                       # The product this adaptation belongs to
+
+  # Common fields
+  displayName: String                     # Override name for this product
   flavorText: String                      # Product-specific flavor text
+  artDirection: String                    # Notes for AI/artist
+
+  # Game-specific fields
   attributeValues: String                 # JSON { attrId: value }
   mechanicValues: String                  # JSON { mechId: value/true }
-  artDirection: String                    # Notes for AI/artist
+
+  # Passive media fields
+  role: String                            # protagonist, antagonist, supporting, mentioned, cameo
+  appearance: String                      # How they appear in this product
 }
 
 # Section - for passive media (chapters, scenes, issues)
@@ -426,11 +435,19 @@ input EntityAdaptationInput {
   productId: String!
   entityId: String!
   entityType: String!
-  cardName: String
+
+  # Common fields
+  displayName: String
   flavorText: String
+  artDirection: String
+
+  # Game-specific fields
   attributeValues: String
   mechanicValues: String
-  artDirection: String
+
+  # Passive media fields
+  role: String
+  appearance: String
 }
 
 input SectionInput {

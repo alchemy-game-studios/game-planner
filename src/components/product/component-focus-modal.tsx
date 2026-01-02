@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Layers, ExternalLink, Sparkles, BarChart3, Quote } from 'lucide-react';
+import { Layers, ExternalLink, Sparkles, BarChart3, Quote, User, FileText } from 'lucide-react';
 import { getEntityImage, getPlaceholderImage } from '@/media/util';
 
 // Query to get adaptation details with product definitions
@@ -37,11 +37,13 @@ const GET_ADAPTATION_DETAILS = gql`
       }
       adaptations {
         id
-        cardName
+        displayName
         flavorText
         attributeValues
         mechanicValues
         artDirection
+        role
+        appearance
         sourceEntity {
           id
           name
@@ -61,8 +63,10 @@ interface ProductInfo {
 
 interface AdaptationInfo {
   id: string;
-  cardName?: string;
+  displayName?: string;
   flavorText?: string;
+  role?: string;
+  appearance?: string;
   product: ProductInfo;
 }
 
@@ -85,6 +89,16 @@ function getProductTypeLabel(type: string, gameType?: string): string {
   }
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
+
+// Role display labels
+const ROLE_LABELS: Record<string, string> = {
+  protagonist: 'Protagonist',
+  antagonist: 'Antagonist',
+  supporting: 'Supporting Character',
+  minor: 'Minor Character',
+  mentioned: 'Mentioned Only',
+  cameo: 'Cameo',
+};
 
 // Parse JSON safely
 function parseJson(json: string | null | undefined): Record<string, any> {
@@ -139,8 +153,9 @@ export function ComponentFocusModal({
 
   if (!adaptation) return null;
 
-  const displayName = adaptation.cardName || entityName;
+  const displayName = adaptation.displayName || entityName;
   const isGame = adaptation.product.type === 'game';
+  const isPassiveMedia = !isGame;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -192,7 +207,7 @@ export function ComponentFocusModal({
             </div>
           ) : (
             <>
-              {/* Flavor Text */}
+              {/* Flavor Text / Description */}
               {(adaptation.flavorText || fullAdaptation?.flavorText) && (
                 <div className="mb-4 p-3 rounded-lg bg-card/50 border border-ck-stone/20">
                   <div className="flex items-start gap-2">
@@ -204,6 +219,38 @@ export function ComponentFocusModal({
                 </div>
               )}
 
+              {/* === PASSIVE MEDIA SPECIFIC FIELDS === */}
+              {isPassiveMedia && (
+                <>
+                  {/* Role */}
+                  {fullAdaptation?.role && (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-4 w-4 text-ck-teal" />
+                        <h4 className="text-sm font-medium text-ck-bone">Role</h4>
+                      </div>
+                      <span className="inline-flex items-center px-2.5 py-1 rounded text-sm bg-ck-teal/20 text-ck-teal border border-ck-teal/30">
+                        {ROLE_LABELS[fullAdaptation.role] || fullAdaptation.role}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Appearance Notes */}
+                  {fullAdaptation?.appearance && (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="h-4 w-4 text-ck-rare" />
+                        <h4 className="text-sm font-medium text-ck-bone">Appearance</h4>
+                      </div>
+                      <p className="text-sm text-ck-stone">
+                        {fullAdaptation.appearance}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* === GAME SPECIFIC FIELDS === */}
               {/* Attributes - only for games */}
               {isGame && productData?.attributes?.length > 0 && (
                 <>
@@ -259,12 +306,14 @@ export function ComponentFocusModal({
                 </>
               )}
 
-              {/* Art Direction */}
+              {/* Art Direction / Visual Notes */}
               {fullAdaptation?.artDirection && (
                 <>
                   <Separator className="my-3 opacity-50" />
                   <div className="mb-2">
-                    <h4 className="text-xs font-medium text-muted-foreground mb-1">Art Direction</h4>
+                    <h4 className="text-xs font-medium text-muted-foreground mb-1">
+                      {isGame ? 'Art Direction' : 'Visual Notes'}
+                    </h4>
                     <p className="text-sm text-ck-stone">
                       {fullAdaptation.artDirection}
                     </p>

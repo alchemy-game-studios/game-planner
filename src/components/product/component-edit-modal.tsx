@@ -86,6 +86,40 @@ interface ComponentEditModalProps {
 
 const GENERATION_CREDITS = 5;
 
+// Role options for passive media
+const ROLE_OPTIONS = [
+  { value: 'protagonist', label: 'Protagonist' },
+  { value: 'antagonist', label: 'Antagonist' },
+  { value: 'supporting', label: 'Supporting Character' },
+  { value: 'minor', label: 'Minor Character' },
+  { value: 'mentioned', label: 'Mentioned Only' },
+  { value: 'cameo', label: 'Cameo' },
+];
+
+// Get display name field label based on product type
+function getDisplayNameLabel(type: string, gameType?: string): string {
+  if (type === 'game') {
+    if (gameType === 'card') return 'Card Name';
+    if (gameType === 'board') return 'Component Name';
+    if (gameType === 'ttrpg') return 'Stat Block Name';
+    return 'Component Name';
+  }
+  return 'Display Name';
+}
+
+// Get flavor text label based on product type
+function getFlavorTextLabel(type: string): string {
+  if (type === 'game') return 'Flavor Text';
+  return 'Description';
+}
+
+// Get art direction label based on product type
+function getArtDirectionLabel(type: string): string {
+  if (type === 'game') return 'Art Direction';
+  if (type === 'book' || type === 'comic') return 'Illustration Notes';
+  return 'Visual Notes';
+}
+
 export function ComponentEditModal({
   open,
   onOpenChange,
@@ -96,11 +130,20 @@ export function ComponentEditModal({
   onSave,
 }: ComponentEditModalProps) {
   const [selectedProductId, setSelectedProductId] = useState<string>('');
-  const [cardName, setCardName] = useState('');
+
+  // Common fields
+  const [displayName, setDisplayName] = useState('');
   const [flavorText, setFlavorText] = useState('');
   const [artDirection, setArtDirection] = useState('');
+
+  // Game-specific fields
   const [attributeValues, setAttributeValues] = useState<Record<string, any>>({});
   const [mechanicValues, setMechanicValues] = useState<Record<string, any>>({});
+
+  // Passive media fields
+  const [role, setRole] = useState('');
+  const [appearance, setAppearance] = useState('');
+
   const [isSaving, setIsSaving] = useState(false);
 
   const [fetchProducts, { data: productsData, loading: loadingProducts }] = useLazyQuery(GET_UNIVERSE_PRODUCTS);
@@ -118,34 +161,39 @@ export function ComponentEditModal({
   useEffect(() => {
     if (!open) {
       setSelectedProductId('');
-      setCardName('');
+      setDisplayName('');
       setFlavorText('');
       setArtDirection('');
       setAttributeValues({});
       setMechanicValues({});
+      setRole('');
+      setAppearance('');
     }
   }, [open]);
 
-  // Set default card name when opening
+  // Set default display name when opening
   useEffect(() => {
-    if (open && !cardName) {
-      setCardName(entityName);
+    if (open && !displayName) {
+      setDisplayName(entityName);
     }
-  }, [open, entityName, cardName]);
+  }, [open, entityName, displayName]);
 
   // Fetch product details when a product is selected
   useEffect(() => {
     if (selectedProductId) {
       fetchProductDetails({ variables: { obj: { id: selectedProductId } } });
-      // Reset attribute/mechanic values when product changes
+      // Reset type-specific values when product changes
       setAttributeValues({});
       setMechanicValues({});
+      setRole('');
+      setAppearance('');
     }
   }, [selectedProductId, fetchProductDetails]);
 
   const products = productsData?.universe?.products || [];
   const selectedProduct = productDetailsData?.product;
   const isGame = selectedProduct?.type === 'game';
+  const isPassiveMedia = selectedProduct && !isGame;
 
   const handleAttributeChange = (attrId: string, value: any) => {
     setAttributeValues(prev => ({ ...prev, [attrId]: value }));
@@ -183,15 +231,20 @@ export function ComponentEditModal({
             productId: selectedProductId,
             entityId,
             entityType,
-            cardName: cardName || entityName,
+            // Common fields
+            displayName: displayName || entityName,
             flavorText: flavorText || null,
-            attributeValues: Object.keys(attributeValues).length > 0
+            artDirection: artDirection || null,
+            // Game-specific fields
+            attributeValues: isGame && Object.keys(attributeValues).length > 0
               ? JSON.stringify(attributeValues)
               : null,
-            mechanicValues: Object.keys(mechanicValues).length > 0
+            mechanicValues: isGame && Object.keys(mechanicValues).length > 0
               ? JSON.stringify(mechanicValues)
               : null,
-            artDirection: artDirection || null,
+            // Passive media fields
+            role: isPassiveMedia ? (role || null) : null,
+            appearance: isPassiveMedia ? (appearance || null) : null,
           },
         },
       });
@@ -253,29 +306,65 @@ export function ComponentEditModal({
                 </div>
               )}
 
-              {selectedProductId && !loadingDetails && (
+              {selectedProductId && !loadingDetails && selectedProduct && (
                 <>
-                  {/* Card Name */}
+                  {/* Display Name - label varies by product type */}
                   <div className="space-y-2">
-                    <Label>Card Name</Label>
+                    <Label>{getDisplayNameLabel(selectedProduct.type, selectedProduct.gameType)}</Label>
                     <Input
-                      value={cardName}
-                      onChange={(e) => setCardName(e.target.value)}
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
                       placeholder={entityName}
                     />
                   </div>
 
-                  {/* Flavor Text */}
+                  {/* Flavor Text / Description */}
                   <div className="space-y-2">
-                    <Label>Flavor Text</Label>
+                    <Label>{getFlavorTextLabel(selectedProduct.type)}</Label>
                     <Textarea
                       value={flavorText}
                       onChange={(e) => setFlavorText(e.target.value)}
-                      placeholder="A memorable quote or description..."
+                      placeholder={isGame ? "A memorable quote or description..." : "How this entity is described in this work..."}
                       rows={2}
                     />
                   </div>
 
+                  {/* === PASSIVE MEDIA SPECIFIC FIELDS === */}
+                  {isPassiveMedia && (
+                    <>
+                      <Separator />
+
+                      {/* Role */}
+                      <div className="space-y-2">
+                        <Label className="text-ck-teal">Role</Label>
+                        <Select value={role} onValueChange={setRole}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select role..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ROLE_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Appearance Notes */}
+                      <div className="space-y-2">
+                        <Label>Appearance Notes</Label>
+                        <Textarea
+                          value={appearance}
+                          onChange={(e) => setAppearance(e.target.value)}
+                          placeholder="How does this entity appear in this work? Key scenes, transformations, notable moments..."
+                          rows={3}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* === GAME SPECIFIC FIELDS === */}
                   {/* Attributes - only for games */}
                   {isGame && selectedProduct?.attributes?.length > 0 && (
                     <>
@@ -362,14 +451,14 @@ export function ComponentEditModal({
                     </>
                   )}
 
-                  {/* Art Direction */}
+                  {/* Art Direction / Visual Notes */}
                   <Separator />
                   <div className="space-y-2">
-                    <Label>Art Direction</Label>
+                    <Label>{getArtDirectionLabel(selectedProduct.type)}</Label>
                     <Textarea
                       value={artDirection}
                       onChange={(e) => setArtDirection(e.target.value)}
-                      placeholder="Visual notes for card art..."
+                      placeholder={isGame ? "Visual notes for card art..." : "Visual style, mood, key visual elements..."}
                       rows={2}
                     />
                   </div>
