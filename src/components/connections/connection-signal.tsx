@@ -47,14 +47,14 @@ export function ConnectionSignal({ lens, count, onClick }: ConnectionSignalProps
     <button
       onClick={onClick}
       className={`
-        inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
-        text-sm font-medium transition-all
+        inline-flex items-center gap-2.5 px-4 py-2 rounded-full
+        text-base font-medium transition-all
         ${lens.color.bg} ${lens.color.text} ${lens.color.border}
         border hover:opacity-80 cursor-pointer
       `}
     >
-      {IconComponent && <IconComponent className="h-3.5 w-3.5" />}
-      <span>{label}</span>
+      {IconComponent && <IconComponent className={`h-4 w-4 ${lens.color.text}`} />}
+      <span className={`capitalize ${lens.color.text}`}>{label}</span>
     </button>
   );
 }

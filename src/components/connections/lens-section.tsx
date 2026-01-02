@@ -132,9 +132,9 @@ export function LensSection({
     return (
       <div className="py-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            {IconComponent && <IconComponent className={`h-3.5 w-3.5 ${lens.color.text} opacity-60`} />}
-            <span className="text-sm text-muted-foreground">{lens.label}</span>
+          <div className="flex items-center gap-2">
+            {IconComponent && <IconComponent className={`h-4 w-4 ${lens.color.text} opacity-60`} />}
+            <span className="text-base text-muted-foreground">{lens.label}</span>
           </div>
           <div className="flex gap-1">
             <Button
@@ -254,20 +254,23 @@ export function LensSection({
               <div
                 key={id}
                 className={`
-                  flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer
+                  flex items-center gap-3 px-2 py-2 rounded cursor-pointer
                   transition-colors hover:bg-card/50
                 `}
                 onClick={() => handleEntityClick(e)}
               >
+                <div className={`p-1.5 rounded ${lens.color.bg}`}>
+                  <IconComponent className={`h-4 w-4 ${lens.color.text}`} />
+                </div>
                 <img
                   src={getEntityImage(id, 'hero')}
                   alt={name}
-                  className="w-6 h-6 rounded-full object-cover"
+                  className={`w-8 h-8 rounded-full object-cover ring-2 ring-offset-1 ring-offset-ck-charcoal ${lens.color.ring}`}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = placeholderUrl;
                   }}
                 />
-                <span className={`text-sm truncate ${lens.color.text}`}>
+                <span className={`text-base truncate capitalize ${lens.color.text}`}>
                   {name}
                 </span>
               </div>

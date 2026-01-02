@@ -130,6 +130,19 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  /* CanonKiln brand colors */
+  --color-ck-ember: var(--ck-ember);
+  --color-ck-gold: var(--ck-gold);
+  --color-ck-forge: var(--ck-forge);
+  --color-ck-indigo: var(--ck-indigo);
+  --color-ck-charcoal: var(--ck-charcoal);
+  --color-ck-obsidian: var(--ck-obsidian);
+  --color-ck-teal: var(--ck-teal);
+  --color-ck-ash: var(--ck-ash);
+  --color-ck-stone: var(--ck-stone);
+  --color-ck-danger: var(--ck-danger);
+  --color-ck-rare: var(--ck-rare);
+  --color-ck-bone: #F5F0E6;
   --font-primary: 'Inter', 'sans-serif';
   --font-heading: 'Cinzel', 'serif';
   --font-book: 'Cormorant Garamond', 'serif';

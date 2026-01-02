@@ -1,4 +1,11 @@
 export default {
+    safelist: [
+      // Lens colors for dynamic connection UI
+      'text-ck-ember', 'bg-ck-ember/20', 'border-ck-ember/30',
+      'text-ck-teal', 'bg-ck-teal/20', 'border-ck-teal/30',
+      'text-ck-rare', 'bg-ck-rare/20', 'border-ck-rare/30',
+      'text-ck-gold', 'bg-ck-gold/20', 'border-ck-gold/30',
+    ],
     theme: {
       extend: {
         fontFamily: {

@@ -31,9 +31,9 @@ export function ConnectionSignalBar({
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center gap-2 mb-2">
-        <Network className="h-4 w-4 text-ck-teal" />
-        <h3 className="text-sm font-semibold text-ck-bone">Connections</h3>
+      <div className="flex items-center gap-2 mb-3">
+        <Network className="h-5 w-5 text-ck-teal" />
+        <h3 className="text-base font-semibold text-ck-bone">Connections</h3>
       </div>
       <Separator className="mb-2" />
       {lenses.map((lens, index) => (
