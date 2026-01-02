@@ -146,9 +146,9 @@ const seedData = {
     // Eldoria characters
     {
       id: 'char-001',
-      name: 'Archmage Thalion',
-      description: 'The wise and powerful leader of the Mage Council, guardian of ancient magical knowledge.',
-      type: 'mage',
+      name: 'Theron Brightblade',
+      description: 'A noble paladin who has sworn an oath to protect the innocent and uphold justice throughout Eldoria.',
+      type: 'paladin',
       placeId: PLACE_1_ID
     },
     {
@@ -2091,11 +2091,11 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       mechanicValues: JSON.stringify({ 'mech-004': true, 'mech-005': true }),
       artDirection: 'Theron in gleaming armor, sword raised, divine light emanating from behind.'
     },
-    // Zara the Windweaver as a card
+    // Zara Stormcaller as a card
     {
       id: 'adapt-003',
       productId: 'product-001',
-      entityId: 'char-003',
+      entityId: 'char-013',
       entityType: 'character',
       cardName: 'Zara, Master of Winds',
       flavorText: 'She speaks, and the storm answers.',
@@ -2103,11 +2103,11 @@ The ghosts were at peace at last. And in the machine that was the city, somethin
       mechanicValues: JSON.stringify({ 'mech-001': true, 'mech-006': 2 }),
       artDirection: 'Zara floating mid-air surrounded by swirling winds and arcane runes.'
     },
-    // Grimjaw the Unyielding as a card
+    // Grimjaw the Merchant as a card
     {
       id: 'adapt-004',
       productId: 'product-001',
-      entityId: 'char-004',
+      entityId: 'char-006',
       entityType: 'character',
       cardName: 'Grimjaw, Stone Sentinel',
       flavorText: 'Mountains crumble. Grimjaw stands.',

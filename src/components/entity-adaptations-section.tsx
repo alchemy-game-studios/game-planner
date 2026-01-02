@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Layers, ChevronRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { ProductFocusModal } from '@/components/product/product-focus-modal';
+import { ComponentFocusModal } from '@/components/product/component-focus-modal';
 
 interface ProductInfo {
   id: string;
@@ -51,8 +52,13 @@ function groupByProduct(adaptations: Adaptation[]): Map<string, { product: Produ
 }
 
 export function EntityAdaptationsSection({ adaptations, entityName }: EntityAdaptationsSectionProps) {
+  // Product modal state
   const [selectedProduct, setSelectedProduct] = useState<ProductInfo | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [productModalOpen, setProductModalOpen] = useState(false);
+
+  // Component modal state
+  const [selectedAdaptation, setSelectedAdaptation] = useState<Adaptation | null>(null);
+  const [componentModalOpen, setComponentModalOpen] = useState(false);
 
   if (!adaptations || adaptations.length === 0) {
     return null;
@@ -62,7 +68,12 @@ export function EntityAdaptationsSection({ adaptations, entityName }: EntityAdap
 
   const handleProductClick = (product: ProductInfo) => {
     setSelectedProduct(product);
-    setModalOpen(true);
+    setProductModalOpen(true);
+  };
+
+  const handleAdaptationClick = (adaptation: Adaptation) => {
+    setSelectedAdaptation(adaptation);
+    setComponentModalOpen(true);
   };
 
   return (
@@ -81,7 +92,7 @@ export function EntityAdaptationsSection({ adaptations, entityName }: EntityAdap
         <div className="space-y-4">
           {Array.from(groupedAdaptations.entries()).map(([productId, { product, items }]) => (
             <div key={productId}>
-              {/* Product header - opens modal */}
+              {/* Product header - opens product modal */}
               <button
                 onClick={() => handleProductClick(product)}
                 className="flex items-center gap-2 mb-2 p-2 rounded bg-ck-forge/10 hover:bg-ck-forge/20 transition-colors group w-full text-left"
@@ -95,12 +106,12 @@ export function EntityAdaptationsSection({ adaptations, entityName }: EntityAdap
                 <ChevronRight className="h-3 w-3 ml-auto text-ck-forge opacity-50 group-hover:opacity-100 transition-opacity" />
               </button>
 
-              {/* Adaptations for this product - also open modal */}
+              {/* Adaptations for this product - opens component modal */}
               <div className="space-y-1">
                 {items.map((adaptation) => (
                   <button
                     key={adaptation.id}
-                    onClick={() => handleProductClick(product)}
+                    onClick={() => handleAdaptationClick(adaptation)}
                     className="block w-full text-left p-2 pl-4 rounded bg-card/30 hover:bg-card/50 transition-colors border-l-2 border-ck-rare/30 hover:border-ck-rare"
                   >
                     <p className="text-sm font-medium text-ck-bone">
@@ -119,11 +130,19 @@ export function EntityAdaptationsSection({ adaptations, entityName }: EntityAdap
         </div>
       </div>
 
-      {/* Product Focus Modal */}
+      {/* Product Focus Modal - for product headers */}
       <ProductFocusModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
+        open={productModalOpen}
+        onOpenChange={setProductModalOpen}
         product={selectedProduct}
+      />
+
+      {/* Component Focus Modal - for individual adaptations */}
+      <ComponentFocusModal
+        open={componentModalOpen}
+        onOpenChange={setComponentModalOpen}
+        adaptation={selectedAdaptation}
+        entityName={entityName}
       />
     </>
   );
