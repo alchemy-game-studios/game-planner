@@ -513,7 +513,7 @@ export function GenerationDrawer({
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-          {/* Prompt */}
+          {/* Prompt - Always visible */}
           <div className="space-y-2">
             <label className="text-sm font-medium">
               Describe what you want
@@ -527,252 +527,263 @@ export function GenerationDrawer({
             />
           </div>
 
-          {/* Quantity */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="text-sm font-medium">Quantity</label>
-              <span className="text-xs text-muted-foreground">{quantity} {targetType}{quantity > 1 ? 's' : ''}</span>
+          {/* Summary counts - Always visible */}
+          <div className="flex flex-wrap gap-3 text-sm">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <span className="font-medium text-foreground">{quantity}</span>
+              {targetType}{quantity > 1 ? 's' : ''} to generate
             </div>
-            <div className="flex gap-2">
-              {[1, 3, 5].map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setQuantity(n)}
-                  className={`flex-1 py-1.5 text-sm rounded border transition-colors ${
-                    quantity === n
-                      ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
-                      : 'bg-card border-border text-muted-foreground hover:border-muted-foreground'
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
+            {selectedTagIds.length > 0 && (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Tag className="h-3.5 w-3.5" />
+                <span className="font-medium text-foreground">{selectedTagIds.length}</span>
+                tag{selectedTagIds.length !== 1 ? 's' : ''}
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <span className="font-medium text-foreground">{(context?.parentChain?.length || 1) + selectedContextIds.length}</span>
+              context entities
             </div>
           </div>
 
-          {/* Tags - Grouped by Type */}
-          {context?.availableTags?.length > 0 && (
-            <TooltipProvider delayDuration={200}>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Style Tags</label>
-                {Object.entries(
-                  context.availableTags.reduce((acc: Record<string, any[]>, tag: any) => {
-                    const type = tag.type || 'descriptor';
-                    if (!acc[type]) acc[type] = [];
-                    acc[type].push(tag);
-                    return acc;
-                  }, {})
-                ).map(([type, tags]) => {
-                  const config = TAG_TYPE_CONFIG[type] || TAG_TYPE_CONFIG.descriptor;
-                  const TypeIcon = config.icon;
-                  return (
-                    <div key={type} className="space-y-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <TypeIcon className={`h-4 w-4 ${config.color}`} />
-                        <span className={`text-sm font-medium ${config.color}`}>{config.label}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {(tags as any[]).map((tag: any) => (
-                          <Tooltip key={tag.id}>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => toggleTag(tag.id)}
-                                className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
-                                  selectedTagIds.includes(tag.id)
-                                    ? `${config.bgColor} ${config.borderColor} ${config.color}`
-                                    : 'bg-card border-border text-muted-foreground hover:border-muted-foreground'
-                                }`}
-                              >
-                                {tag.name}
-                              </button>
-                            </TooltipTrigger>
-                            {tag.description && (
-                              <TooltipContent side="bottom" className="max-w-[250px] text-xs">
-                                {tag.description}
-                              </TooltipContent>
-                            )}
-                          </Tooltip>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </TooltipProvider>
-          )}
-
-          {/* Advanced Section - Context Selection */}
+          {/* Advanced Section - Everything else */}
           <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground hover:text-foreground -mx-2">
                 <span className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Context entities
-                  <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
-                    {(context?.parentChain?.length || 1) + selectedContextIds.length}
-                  </span>
+                  Advanced options
                 </span>
                 <ChevronDown className={`h-4 w-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="pt-4 space-y-4">
-              {/* Auto-included context */}
+            <CollapsibleContent className="pt-4 space-y-6">
+              {/* Quantity */}
               <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Included automatically
-                </p>
-                <div className="space-y-1.5">
-                  {context?.parentChain?.map((entity: any) => {
-                    const entityConfig = ENTITY_CONFIG[entity._nodeType] || ENTITY_CONFIG.universe;
-                    const EntityIcon = entityConfig.icon;
-                    return (
-                      <div
-                        key={entity.id}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30"
-                      >
-                        <EntityIcon className={`h-3.5 w-3.5 ${entityConfig.color}`} />
-                        <span className="text-sm truncate">{entity.name}</span>
-                        <span className="text-xs text-muted-foreground ml-auto">auto</span>
-                      </div>
-                    );
-                  })}
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Quantity</label>
+                  <span className="text-xs text-muted-foreground">{quantity} {targetType}{quantity > 1 ? 's' : ''}</span>
+                </div>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setQuantity(n)}
+                      className={`flex-1 py-1.5 text-sm rounded border transition-colors ${
+                        quantity === n
+                          ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
+                          : 'bg-card border-border text-muted-foreground hover:border-muted-foreground'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Add more context with search */}
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Add more context
-                </p>
-
-                {/* Search input */}
-                <div className="relative" ref={searchRef}>
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder="Search entities..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setShowSearchResults(true);
-                    }}
-                    onFocus={() => setShowSearchResults(true)}
-                    className="pl-8 h-8 text-sm"
-                  />
-                  {searchTerm && (
-                    <button
-                      onClick={() => {
-                        setSearchTerm('');
-                        setShowSearchResults(false);
-                      }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-
-                  {/* Search results dropdown */}
-                  {showSearchResults && searchTerm.length >= 2 && (
-                    <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-48 overflow-auto">
-                      {searchLoading ? (
-                        <div className="px-3 py-2 text-xs text-muted-foreground">Searching...</div>
-                      ) : !searchData?.searchEntities?.length ? (
-                        <div className="px-3 py-2 text-xs text-muted-foreground">No results found</div>
-                      ) : (
-                        searchData.searchEntities
-                          .filter((e: any) => !selectedContextIds.includes(e.id) && e.id !== sourceEntity.id)
-                          .slice(0, 8)
-                          .map((entity: any) => {
-                            const entityConfig = ENTITY_CONFIG[entity._nodeType] || ENTITY_CONFIG.character;
-                            const EntityIcon = entityConfig.icon;
-                            const name = entity.properties?.name || entity.name;
-                            return (
-                              <button
-                                key={entity.id}
-                                onClick={() => {
-                                  setSelectedContextIds(prev => [...prev, entity.id]);
-                                  setSelectedEntities(prev => [...prev, {
-                                    id: entity.id,
-                                    name,
-                                    description: entity.properties?.description || '',
-                                    _nodeType: entity._nodeType
-                                  }]);
-                                  setSearchTerm('');
-                                  setShowSearchResults(false);
-                                }}
-                                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/50 text-left"
-                              >
-                                <EntityIcon className={`h-3.5 w-3.5 ${entityConfig.color}`} />
-                                <span className="text-sm truncate">{name}</span>
-                                <span className="text-xs text-muted-foreground ml-auto">{entity._nodeType}</span>
-                              </button>
-                            );
-                          })
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Selected entities from search */}
-                {selectedEntities.length > 0 && (
-                  <div className="space-y-1.5">
-                    {selectedEntities.map((entity: any) => {
-                      const entityConfig = ENTITY_CONFIG[entity._nodeType] || ENTITY_CONFIG.character;
-                      const EntityIcon = entityConfig.icon;
+              {/* Tags - Grouped by Type */}
+              {context?.availableTags?.length > 0 && (
+                <TooltipProvider delayDuration={200}>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Style Tags</label>
+                    {Object.entries(
+                      context.availableTags.reduce((acc: Record<string, any[]>, tag: any) => {
+                        const type = tag.type || 'descriptor';
+                        if (!acc[type]) acc[type] = [];
+                        acc[type].push(tag);
+                        return acc;
+                      }, {})
+                    ).map(([type, tags]) => {
+                      const config = TAG_TYPE_CONFIG[type] || TAG_TYPE_CONFIG.descriptor;
+                      const TypeIcon = config.icon;
                       return (
-                        <div
-                          key={entity.id}
-                          className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-purple-500/10 border border-purple-500/50"
-                        >
-                          <EntityIcon className={`h-3.5 w-3.5 ${entityConfig.color}`} />
-                          <span className="text-sm truncate flex-1">{entity.name}</span>
-                          <button
-                            onClick={() => {
-                              setSelectedContextIds(prev => prev.filter(id => id !== entity.id));
-                              setSelectedEntities(prev => prev.filter(e => e.id !== entity.id));
-                            }}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
+                        <div key={type} className="space-y-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <TypeIcon className={`h-4 w-4 ${config.color}`} />
+                            <span className={`text-sm font-medium ${config.color}`}>{config.label}</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {(tags as any[]).map((tag: any) => (
+                              <Tooltip key={tag.id}>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() => toggleTag(tag.id)}
+                                    className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                                      selectedTagIds.includes(tag.id)
+                                        ? `${config.bgColor} ${config.borderColor} ${config.color}`
+                                        : 'bg-card border-border text-muted-foreground hover:border-muted-foreground'
+                                    }`}
+                                  >
+                                    {tag.name}
+                                  </button>
+                                </TooltipTrigger>
+                                {tag.description && (
+                                  <TooltipContent side="bottom" className="max-w-[250px] text-xs">
+                                    {tag.description}
+                                  </TooltipContent>
+                                )}
+                              </Tooltip>
+                            ))}
+                          </div>
                         </div>
                       );
                     })}
                   </div>
-                )}
+                </TooltipProvider>
+              )}
 
-                {/* Suggested siblings */}
-                {availableContextEntities.length > 0 && (
-                  <div className="space-y-1.5 max-h-[120px] overflow-y-auto">
-                    <p className="text-xs text-muted-foreground">Suggestions:</p>
-                    {availableContextEntities.slice(0, 5).map((entity: any) => {
-                      const entityConfig = ENTITY_CONFIG[entity._nodeType] || ENTITY_CONFIG.character;
+              {/* Context Selection */}
+              <div className="space-y-4">
+                {/* Auto-included context */}
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Context entities (included automatically)
+                  </p>
+                  <div className="space-y-1.5">
+                    {context?.parentChain?.map((entity: any) => {
+                      const entityConfig = ENTITY_CONFIG[entity._nodeType] || ENTITY_CONFIG.universe;
                       const EntityIcon = entityConfig.icon;
-                      const isSelected = selectedContextIds.includes(entity.id);
-                      if (isSelected) return null;
                       return (
-                        <button
+                        <div
                           key={entity.id}
-                          onClick={() => {
-                            setSelectedContextIds(prev => [...prev, entity.id]);
-                            setSelectedEntities(prev => [...prev, entity]);
-                          }}
-                          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border border-transparent hover:bg-muted/30 text-left"
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30"
                         >
-                          <Plus className="h-3 w-3 text-muted-foreground" />
                           <EntityIcon className={`h-3.5 w-3.5 ${entityConfig.color}`} />
                           <span className="text-sm truncate">{entity.name}</span>
-                        </button>
+                          <span className="text-xs text-muted-foreground ml-auto">auto</span>
+                        </div>
                       );
                     })}
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* Context summary */}
-              <div className="pt-2 border-t border-border/50">
-                <p className="text-xs text-muted-foreground">
-                  AI will use {(context?.parentChain?.length || 1) + selectedContextIds.length} entities for context when generating.
-                </p>
+                {/* Add more context with search */}
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Add more context
+                  </p>
+
+                  {/* Search input */}
+                  <div className="relative" ref={searchRef}>
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Search entities..."
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setShowSearchResults(true);
+                      }}
+                      onFocus={() => setShowSearchResults(true)}
+                      className="pl-8 h-8 text-sm"
+                    />
+                    {searchTerm && (
+                      <button
+                        onClick={() => {
+                          setSearchTerm('');
+                          setShowSearchResults(false);
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+
+                    {/* Search results dropdown */}
+                    {showSearchResults && searchTerm.length >= 2 && (
+                      <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-48 overflow-auto">
+                        {searchLoading ? (
+                          <div className="px-3 py-2 text-xs text-muted-foreground">Searching...</div>
+                        ) : !searchData?.searchEntities?.length ? (
+                          <div className="px-3 py-2 text-xs text-muted-foreground">No results found</div>
+                        ) : (
+                          searchData.searchEntities
+                            .filter((e: any) => !selectedContextIds.includes(e.id) && e.id !== sourceEntity.id)
+                            .slice(0, 8)
+                            .map((entity: any) => {
+                              const entityConfig = ENTITY_CONFIG[entity._nodeType] || ENTITY_CONFIG.character;
+                              const EntityIcon = entityConfig.icon;
+                              const name = entity.properties?.name || entity.name;
+                              return (
+                                <button
+                                  key={entity.id}
+                                  onClick={() => {
+                                    setSelectedContextIds(prev => [...prev, entity.id]);
+                                    setSelectedEntities(prev => [...prev, {
+                                      id: entity.id,
+                                      name,
+                                      description: entity.properties?.description || '',
+                                      _nodeType: entity._nodeType
+                                    }]);
+                                    setSearchTerm('');
+                                    setShowSearchResults(false);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/50 text-left"
+                                >
+                                  <EntityIcon className={`h-3.5 w-3.5 ${entityConfig.color}`} />
+                                  <span className="text-sm truncate">{name}</span>
+                                  <span className="text-xs text-muted-foreground ml-auto">{entity._nodeType}</span>
+                                </button>
+                              );
+                            })
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Selected entities from search */}
+                  {selectedEntities.length > 0 && (
+                    <div className="space-y-1.5">
+                      {selectedEntities.map((entity: any) => {
+                        const entityConfig = ENTITY_CONFIG[entity._nodeType] || ENTITY_CONFIG.character;
+                        const EntityIcon = entityConfig.icon;
+                        return (
+                          <div
+                            key={entity.id}
+                            className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-purple-500/10 border border-purple-500/50"
+                          >
+                            <EntityIcon className={`h-3.5 w-3.5 ${entityConfig.color}`} />
+                            <span className="text-sm truncate flex-1">{entity.name}</span>
+                            <button
+                              onClick={() => {
+                                setSelectedContextIds(prev => prev.filter(id => id !== entity.id));
+                                setSelectedEntities(prev => prev.filter(e => e.id !== entity.id));
+                              }}
+                              className="text-muted-foreground hover:text-foreground"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Suggested siblings */}
+                  {availableContextEntities.length > 0 && (
+                    <div className="space-y-1.5 max-h-[120px] overflow-y-auto">
+                      <p className="text-xs text-muted-foreground">Suggestions:</p>
+                      {availableContextEntities.slice(0, 5).map((entity: any) => {
+                        const entityConfig = ENTITY_CONFIG[entity._nodeType] || ENTITY_CONFIG.character;
+                        const EntityIcon = entityConfig.icon;
+                        const isSelected = selectedContextIds.includes(entity.id);
+                        if (isSelected) return null;
+                        return (
+                          <button
+                            key={entity.id}
+                            onClick={() => {
+                              setSelectedContextIds(prev => [...prev, entity.id]);
+                              setSelectedEntities(prev => [...prev, entity]);
+                            }}
+                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border border-transparent hover:bg-muted/30 text-left"
+                          >
+                            <Plus className="h-3 w-3 text-muted-foreground" />
+                            <EntityIcon className={`h-3.5 w-3.5 ${entityConfig.color}`} />
+                            <span className="text-sm truncate">{entity.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             </CollapsibleContent>
           </Collapsible>
