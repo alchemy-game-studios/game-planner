@@ -1,0 +1,316 @@
+import React, { useState, useEffect } from 'react';
+import { useMutation } from '@apollo/client';
+import EntityCard from "@/client-graphql/edit-entity/entity-card.tsx"
+import EditDrawer from "@/client-graphql/edit-entity/edit-drawer.tsx"
+import { EntitySearch } from "@/components/entity-search"
+import { AddEntityDialog } from "@/components/add-entity-dialog"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { useNavigate } from "react-router-dom"
+import { getEntityImage } from "@/media/util"
+import { X, Plus } from "lucide-react"
+import { getRelateContainsMutation, getRelateTaggedMutation } from '@/utils/graphql-utils';
+import { GenerateButton } from "@/components/generation/generate-button";
+import { GenerationDrawer } from "@/components/generation/generation-drawer";
+
+// Credit costs for generating each entity type (based on complexity)
+// Tags are auto-generated as part of each entity generation
+const GENERATION_CREDITS: Record<string, number> = {
+  // World-building entities
+  item: 10,            // Basic object with properties
+  place: 15,           // Location with description and atmosphere
+  event: 20,           // Scene with actions and participants
+  character: 25,       // Complex personality, backstory, traits
+  narrative: 50,       // Full story arc with multiple events
+
+  // Product entities
+  attribute: 5,        // Single stat definition
+  mechanic: 10,        // Ability or game mechanic
+  section: 15,         // Chapter, scene, or issue
+  adaptation: 30,      // Full entity adaptation with stats and flavor
+};
+
+interface EditableNodeListProps {
+  initContents: any[];
+  parentId: string;
+  parentName?: string;
+  parentType: string;
+  entityType: 'place' | 'character' | 'item' | 'tag' | 'event' | 'narrative';
+  isTagRelation?: boolean;
+  maxItems?: number;
+  onUpdate?: () => void;
+  universeId?: string;
+}
+
+export function EditableNodeList({
+  initContents,
+  parentId,
+  parentName = 'Entity',
+  parentType,
+  entityType,
+  isTagRelation = false,
+  maxItems = 0,
+  onUpdate,
+  universeId
+}: EditableNodeListProps) {
+  const [contents, setContents] = useState(initContents);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedContent, setSelectedContent] = useState(null);
+  const [drawerKey, setDrawerKey] = useState(0);
+  const [editMode, setEditMode] = useState(false);
+  const [generationDrawerOpen, setGenerationDrawerOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const mutation = isTagRelation ? getRelateTaggedMutation() : getRelateContainsMutation();
+  const [updateRelation] = useMutation(mutation);
+
+  useEffect(() => {
+    setContents(initContents);
+  }, [initContents]);
+
+  const handleOpen = (content: any) => {
+    setSelectedContent(content);
+    setEditMode(false);
+    setDrawerOpen(true);
+  };
+
+  const handleEditMode = () => {
+    setSelectedContent(null);
+    setEditMode(true);
+    setDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setEditMode(false);
+    setDrawerKey(prev => prev + 1);
+  };
+
+  const handleClick = (id: string, type: string) => {
+    console.log('EntityCard clicked:', id, type);
+    navigate(`/edit/${type}/${id}`);
+  };
+
+  const handleAddEntity = async (entity: any) => {
+    console.log('handleAddEntity called with:', entity);
+    console.log('Current contents:', contents);
+    console.log('Parent ID:', parentId);
+    console.log('Is tag relation:', isTagRelation);
+    
+    try {
+      const currentIds = contents.map(c => c.id || c.properties?.id);
+      const newIds = [...currentIds, entity.id];
+      
+      console.log('Current IDs:', currentIds);
+      console.log('New IDs after adding:', newIds);
+      
+      const variables = isTagRelation ? {
+        relation: {
+          id: parentId,
+          tagIds: newIds
+        }
+      } : {
+        relation: {
+          id: parentId,
+          childIds: newIds
+        }
+      };
+
+      console.log('Relation mutation variables:', variables);
+      const result = await updateRelation({ variables });
+      console.log('Relation mutation result:', result);
+      
+      // Update local state
+      setContents([...contents, entity]);
+      console.log('Updated local contents');
+      
+      // Close the drawer
+      setDrawerOpen(false);
+      
+      if (onUpdate) {
+        console.log('Calling onUpdate');
+        onUpdate();
+      }
+    } catch (error) {
+      console.error('Error adding entity:', error);
+      alert(`Error adding ${entityType}: ${error.message}`);
+    }
+  };
+
+  const handleRemoveEntity = async (entityId: string) => {
+    try {
+      const newIds = contents
+        .filter(c => (c.id || c.properties?.id) !== entityId)
+        .map(c => c.id || c.properties?.id);
+      
+      const variables = isTagRelation ? {
+        relation: {
+          id: parentId,
+          tagIds: newIds
+        }
+      } : {
+        relation: {
+          id: parentId,
+          childIds: newIds
+        }
+      };
+
+      await updateRelation({ variables });
+      
+      // Update local state
+      setContents(contents.filter(c => (c.id || c.properties?.id) !== entityId));
+      
+      if (onUpdate) {
+        onUpdate();
+      }
+    } catch (error) {
+      console.error('Error removing entity:', error);
+    }
+  };
+
+  const existingIds = contents.map(c => c.id || c.properties?.id);
+  
+  // For tags, the structure is simpler (no properties wrapper)
+  const normalizedContents = isTagRelation ? 
+    contents.map(c => c.properties ? c : { properties: c }) :
+    contents;
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-medium text-muted-foreground">
+          {entityType.charAt(0).toUpperCase() + entityType.slice(1)}s
+        </h3>
+        <div className="flex gap-1">
+          {universeId && !isTagRelation && (
+            <GenerateButton
+              onClick={() => setGenerationDrawerOpen(true)}
+              cost={GENERATION_CREDITS[entityType] || 10}
+              label={entityType.charAt(0).toUpperCase() + entityType.slice(1)}
+              size="sm"
+            />
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleEditMode}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add
+          </Button>
+        </div>
+      </div>
+      
+      <ol
+        className={`-mr-3 space-y-1 ${maxItems > 0 ? 'overflow-y-auto pr-1' : ''}`}
+        style={maxItems > 0 ? { maxHeight: `${maxItems * 52}px` } : undefined}
+      >
+        {normalizedContents.map((content) => {
+          const contentId = content.properties?.id || content.id;
+          const contentData = content.properties || content;
+          const contentType = content._nodeType || entityType;
+          const eventDay = contentType === 'event' ? contentData.day : undefined;
+
+          return (
+            <li key={contentId} className="relative group">
+              <EntityCard
+                name={contentData.name}
+                avatarUrl={getEntityImage(contentId, "avatar")}
+                fallbackText="CN"
+                day={eventDay}
+                onClick={() => handleClick(contentId, contentType)}
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveEntity(contentId);
+                }}
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-card rounded p-1 hover:bg-muted"
+                aria-label="Remove"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      {maxItems > 0 && normalizedContents.length > maxItems && (
+        <div className="text-xs text-muted-foreground mt-1 text-center">
+          Scroll for more ({normalizedContents.length} total)
+        </div>
+      )}
+
+      {(selectedContent || editMode) && (
+        <EditDrawer
+          key={drawerKey}
+          label={editMode ? `Add ${entityType}s` : `${parentType} -> ${selectedContent?.properties?.name || selectedContent?.name}`}
+          open={drawerOpen}
+          setOpen={setDrawerOpen}
+          onForceClose={closeDrawer}
+        >
+          {editMode ? (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium mb-2">Search existing {entityType}s</h3>
+                <EntitySearch
+                  entityType={entityType}
+                  onSelect={handleAddEntity}
+                  excludeIds={existingIds}
+                  placeholder={`Search ${entityType}s to add...`}
+                />
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className="text-sm font-medium mb-2">Or create a new one</h3>
+                <AddEntityDialog
+                  entityType={entityType}
+                  onEntityCreated={handleAddEntity}
+                  triggerButton={false}
+                />
+              </div>
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {selectedContent?.properties?.contents?.map((child: any) => (
+                <EntityCard
+                  key={child.properties.id}
+                  name={child.properties.name}
+                  avatarUrl={getEntityImage(child.properties.id, "avatar")}
+                  fallbackText="CN"
+                  onClick={() => {
+                    handleClick(child.properties.id, child._nodeType);
+                    setDrawerOpen(false);
+                  }}
+                />
+              ))}
+            </ul>
+          )}
+        </EditDrawer>
+      )}
+
+      {/* Generation Drawer */}
+      {universeId && (
+        <GenerationDrawer
+          open={generationDrawerOpen}
+          onOpenChange={setGenerationDrawerOpen}
+          sourceEntity={{
+            id: parentId,
+            name: parentName,
+            type: parentType,
+            _nodeType: parentType.toLowerCase(),
+          }}
+          universeId={universeId}
+          defaultTargetType={entityType}
+          onGenerated={(entity) => {
+            // Add generated entity to list
+            handleAddEntity(entity);
+            setGenerationDrawerOpen(false);
+          }}
+        />
+      )}
+    </>
+  );
+}
