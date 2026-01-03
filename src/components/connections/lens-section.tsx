@@ -224,8 +224,9 @@ export function LensSection({
             }}
             universeId={universeId}
             defaultTargetType={lens.singularLabel}
-            onGenerated={(newEntity) => {
-              handleAddEntity(newEntity);
+            onGenerated={() => {
+              // Entity and relationships already created by mutation, just refetch
+              onRefetch();
               setShowGenerationDrawer(false);
             }}
           />
@@ -375,8 +376,9 @@ export function LensSection({
           }}
           universeId={universeId}
           defaultTargetType={lens.singularLabel}
-          onGenerated={(newEntity) => {
-            handleAddEntity(newEntity);
+          onGenerated={() => {
+            // Entity and relationships already created by mutation, just refetch
+            onRefetch();
             setShowGenerationDrawer(false);
           }}
         />

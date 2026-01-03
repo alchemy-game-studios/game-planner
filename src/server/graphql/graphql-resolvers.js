@@ -748,6 +748,286 @@ async function deleteSection(id) {
   return { message: 'Section deleted successfully' };
 }
 
+// ============================================
+// Entity Generation Helper
+// ============================================
+
+// Fake name generators by entity type
+const FAKE_NAMES = {
+  character: {
+    first: ['Alaric', 'Brynn', 'Caelan', 'Dara', 'Eira', 'Finn', 'Gwen', 'Hawk', 'Isla', 'Jace', 'Kira', 'Liam', 'Mira', 'Nox', 'Orin', 'Pax', 'Quinn', 'Raven', 'Sage', 'Thane', 'Uma', 'Vex', 'Wren', 'Xara', 'Yara', 'Zephyr'],
+    last: ['Blackwood', 'Coldwater', 'Darkholm', 'Evernight', 'Firebrand', 'Grimshaw', 'Holloway', 'Ironforge', 'Jadewing', 'Kingsley', 'Lightfoot', 'Moonshadow', 'Nightingale', 'Oakenshield', 'Proudfoot', 'Quicksilver', 'Ravencrest', 'Stormwind', 'Thornwood', 'Underhill', 'Voidwalker', 'Whitmore', 'Wyrmbane'],
+    types: ['warrior', 'mage', 'rogue', 'healer', 'scholar', 'merchant', 'noble', 'commoner', 'artisan', 'hunter']
+  },
+  place: {
+    prefixes: ['Shadow', 'Crystal', 'Iron', 'Storm', 'Moon', 'Sun', 'Dark', 'Silver', 'Golden', 'Ancient', 'Forgotten', 'Hidden', 'Lost', 'Sacred', 'Cursed'],
+    suffixes: ['vale', 'haven', 'hold', 'keep', 'tower', 'gate', 'bridge', 'falls', 'grove', 'peak', 'depths', 'crossing', 'port', 'market', 'sanctum'],
+    types: ['city', 'village', 'fortress', 'ruins', 'temple', 'forest', 'mountain', 'cave', 'lake', 'island']
+  },
+  item: {
+    prefixes: ['Ancient', 'Enchanted', 'Cursed', 'Blessed', 'Legendary', 'Mysterious', 'Glowing', 'Rusted', 'Ornate', 'Simple'],
+    items: ['Sword', 'Staff', 'Amulet', 'Ring', 'Crown', 'Chalice', 'Tome', 'Orb', 'Cloak', 'Dagger', 'Shield', 'Bow', 'Helm', 'Gauntlet', 'Pendant'],
+    suffixes: ['of Power', 'of Shadows', 'of Light', 'of the Ancients', 'of Destiny', 'of Whispers', 'of Storms', 'of Ice', 'of Flame'],
+    types: ['weapon', 'armor', 'accessory', 'artifact', 'consumable', 'key item', 'treasure']
+  },
+  event: {
+    prefixes: ['The Great', 'The First', 'The Last', 'The Battle of', 'The Fall of', 'The Rise of', 'The Siege of', 'The Discovery of', 'The Betrayal at'],
+    suffixes: ['War', 'Rebellion', 'Festival', 'Council', 'Tournament', 'Plague', 'Migration', 'Revolution', 'Coronation'],
+    types: ['battle', 'celebration', 'disaster', 'discovery', 'political', 'religious', 'cultural']
+  },
+  narrative: {
+    prefixes: ['The Legend of', 'The Tale of', 'Chronicles of', 'The Rise of', 'The Fall of', 'Secrets of', 'The Quest for', 'Journey to'],
+    suffixes: ['Darkness', 'Light', 'Redemption', 'Vengeance', 'Hope', 'Destiny', 'the Lost Kingdom', 'the Forgotten Realm'],
+    types: ['epic', 'tragedy', 'comedy', 'mystery', 'adventure', 'romance']
+  }
+};
+
+// Description templates by entity type
+const DESCRIPTION_TEMPLATES = {
+  character: [
+    'A {type} known for their {trait1} nature and {trait2} demeanor. They carry themselves with {bearing} and speak with {voice}.',
+    'Once a simple {origin}, {name} rose to prominence through {means}. Now they are known throughout the land as a formidable {type}.',
+    'With {feature1} and {feature2}, {name} cuts a striking figure. Their past is shrouded in {mystery}, but their {skill} is undeniable.',
+  ],
+  place: [
+    'A {type} nestled in the {location}. The air here carries the scent of {scent}, and travelers speak of its {reputation}.',
+    'Once a thriving {original}, this {type} now stands as a testament to {history}. {feature} dominates the landscape.',
+    'Hidden from most maps, this {type} is known only to {knowers}. Its {notable} draws the {visitors} from distant lands.',
+  ],
+  item: [
+    'A {type} of remarkable craftsmanship. Its surface {surface}, and those who hold it feel {sensation}.',
+    'Forged in the {origin} by {creator}, this {type} has passed through many hands. It is said to grant its wielder {power}.',
+    'An unassuming {type} at first glance, but upon closer inspection, {detail}. Its true purpose remains {mystery}.',
+  ],
+  event: [
+    'A pivotal {type} that reshaped the balance of power in the region. When {trigger}, everything changed.',
+    'The {type} began as {start}, but quickly escalated into something far greater. The consequences are still felt today.',
+    'Remembered by {rememberers} as the day when {happening}. The {type} marked the end of an era.',
+  ],
+  narrative: [
+    'An {type} spanning generations, telling the story of {subject}. At its heart lies a tale of {theme}.',
+    'This {type} weaves together the fates of {characters}. Through {trials}, they discover {discovery}.',
+    'A gripping {type} that explores the nature of {concept}. Those who hear it are forever changed.',
+  ]
+};
+
+const TRAITS = ['cunning', 'brave', 'mysterious', 'jovial', 'stern', 'gentle', 'fierce', 'wise', 'reckless', 'calculating'];
+const FEATURES = ['piercing eyes', 'weathered hands', 'a knowing smile', 'ancient scars', 'elaborate tattoos', 'distinctive garb'];
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function generateFakeName(targetType) {
+  const names = FAKE_NAMES[targetType] || FAKE_NAMES.character;
+
+  switch (targetType) {
+    case 'character':
+      return `${pickRandom(names.first)} ${pickRandom(names.last)}`;
+    case 'place':
+      return `${pickRandom(names.prefixes)}${pickRandom(names.suffixes)}`;
+    case 'item':
+      return `${pickRandom(names.prefixes)} ${pickRandom(names.items)} ${pickRandom(names.suffixes)}`;
+    case 'event':
+      return `${pickRandom(names.prefixes)} ${pickRandom(names.suffixes)}`;
+    case 'narrative':
+      return `${pickRandom(names.prefixes)} ${pickRandom(names.suffixes)}`;
+    default:
+      return `New ${targetType}`;
+  }
+}
+
+function generateFakeType(targetType) {
+  const names = FAKE_NAMES[targetType];
+  return names?.types ? pickRandom(names.types) : '';
+}
+
+function generateFakeDescription(targetType, name, entityType) {
+  const templates = DESCRIPTION_TEMPLATES[targetType] || DESCRIPTION_TEMPLATES.character;
+  let desc = pickRandom(templates);
+
+  // Replace placeholders
+  desc = desc.replace('{name}', name);
+  desc = desc.replace('{type}', entityType || targetType);
+  desc = desc.replace('{trait1}', pickRandom(TRAITS));
+  desc = desc.replace('{trait2}', pickRandom(TRAITS));
+  desc = desc.replace('{feature1}', pickRandom(FEATURES));
+  desc = desc.replace('{feature2}', pickRandom(FEATURES));
+  desc = desc.replace(/{[^}]+}/g, pickRandom(['remarkable', 'ancient', 'mysterious', 'legendary', 'forgotten']));
+
+  return desc;
+}
+
+/**
+ * Generate entities and create relationships based on context
+ * @param {Object} input - Generation input
+ * @param {string} input.parentEntityId - Parent entity ID for CONTAINS relationship
+ * @param {string} input.targetType - Type of entity to generate
+ * @param {string} input.prompt - Optional prompt for generation
+ * @param {number} input.quantity - Number of entities to generate
+ * @param {string[]} input.tagIds - Tag IDs to apply
+ * @param {string[]} input.contextEntityIds - Additional context entity IDs
+ * @param {string} userId - User ID for credit deduction
+ * @returns {Promise<{entities: Object[], creditsUsed: number}>}
+ */
+async function generateEntitiesWithRelationships(input, userId) {
+  const {
+    parentEntityId,
+    targetType,
+    prompt,
+    quantity = 1,
+    tagIds = [],
+    contextEntityIds = []
+  } = input;
+
+  // Get the entity label (capitalized)
+  const entityLabel = targetType.charAt(0).toUpperCase() + targetType.slice(1);
+
+  // Fetch selected context entities for LLM prompt
+  let contextEntities = [];
+  if (contextEntityIds.length > 0) {
+    const result = await runQuery(`
+      UNWIND $ids AS entityId
+      MATCH (e {id: entityId})
+      RETURN {
+        id: e.id,
+        name: e.name,
+        description: e.description,
+        type: e.type,
+        _nodeType: toLower(labels(e)[0])
+      } AS entity
+    `, { ids: contextEntityIds });
+    contextEntities = result.records.map(r => r.get('entity'));
+  }
+
+  // Assemble full context using the context assembler (for future LLM use)
+  const context = await contextAssembler.assemble({
+    entityId: parentEntityId,
+    targetType,
+    selectedContext: {
+      entities: contextEntities,
+      tags: tagIds
+    }
+  }, 'markdown');
+
+  // Calculate credits (using cost calculator)
+  const creditCost = costCalculator.estimateCost({
+    targetType,
+    entityCount: quantity,
+    contextCount: contextEntityIds.length,
+    tagCount: tagIds.length
+  });
+
+  // Deduct credits only if user is authenticated
+  if (userId) {
+    await updateUserCredits(userId, -creditCost, `Generated ${quantity} ${targetType}(s)`, 'generation');
+  }
+
+  // Get tag info upfront for all entities
+  let appliedTags = [];
+  if (tagIds.length > 0) {
+    const tagResult = await runQuery(`
+      MATCH (t:Tag)
+      WHERE t.id IN $tagIds
+      RETURN {
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        type: t.type
+      } AS tag
+    `, { tagIds });
+    appliedTags = tagResult.records.map(r => r.get('tag'));
+  }
+
+  // Generate fake entities
+  const generatedEntities = [];
+
+  for (let i = 0; i < quantity; i++) {
+    const entityId = uuidv4();
+    const entityName = generateFakeName(targetType);
+    const entityType = generateFakeType(targetType);
+    const entityDescription = generateFakeDescription(targetType, entityName, entityType);
+
+    // Get parent entity type to determine correct relationship
+    const parentResult = await runQuery(`
+      MATCH (parent {id: $parentId})
+      RETURN labels(parent)[0] AS parentType
+    `, { parentId: parentEntityId });
+
+    const parentType = parentResult.records[0]?.get('parentType')?.toLowerCase();
+
+    // Create the entity
+    await runQuery(`
+      CREATE (e:${entityLabel} {
+        id: $id,
+        name: $name,
+        description: $description,
+        type: $type
+      })
+    `, {
+      id: entityId,
+      name: entityName,
+      description: entityDescription,
+      type: entityType
+    });
+
+    // Create appropriate relationship based on parent type and target type
+    // Events use INVOLVES for characters/items and OCCURS_AT for places
+    // Everything else uses CONTAINS
+    let relationship = 'CONTAINS';
+    if (parentType === 'event') {
+      if (targetType === 'character' || targetType === 'item') {
+        relationship = 'INVOLVES';
+      } else if (targetType === 'place') {
+        relationship = 'OCCURS_AT';
+      }
+    } else if (parentType === 'section') {
+      // Sections (for products) also use INVOLVES/OCCURS_AT like events
+      if (targetType === 'character' || targetType === 'item') {
+        relationship = 'INVOLVES';
+      } else if (targetType === 'place') {
+        relationship = 'OCCURS_AT';
+      }
+    }
+
+    await runQuery(`
+      MATCH (parent {id: $parentId})
+      MATCH (child:${entityLabel} {id: $childId})
+      CREATE (parent)-[:${relationship}]->(child)
+    `, {
+      parentId: parentEntityId,
+      childId: entityId
+    });
+
+    // Create TAGGED relationships for each selected tag
+    if (tagIds.length > 0) {
+      await runQuery(`
+        MATCH (e:${entityLabel} {id: $entityId})
+        UNWIND $tagIds AS tagId
+        MATCH (t:Tag {id: tagId})
+        CREATE (e)-[:TAGGED]->(t)
+      `, {
+        entityId,
+        tagIds
+      });
+    }
+
+    generatedEntities.push({
+      id: entityId,
+      name: entityName,
+      description: entityDescription,
+      type: entityType,
+      _nodeType: targetType.toLowerCase(),
+      tags: appliedTags
+    });
+  }
+
+  return {
+    entities: generatedEntities,
+    creditsUsed: userId ? creditCost : 0
+  };
+}
+
 // Helper to get locations for a section
 async function getLocationsForSection(sectionId) {
   const result = await runQuery(`
@@ -2002,6 +2282,40 @@ export default {
       console.timeEnd('confirmSubscription:getUserWithLimits');
       console.timeEnd('confirmSubscription:total');
       return result;
+    },
+
+    // Entity generation mutation
+    generateEntity: async (_, { input }, context) => {
+      // TODO: Remove this delay - only for testing loading state
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Optional authentication - if user exists, check credits
+      const user = context.user;
+      let userId = null;
+
+      if (user) {
+        const userWithLimits = await getUserWithLimits(user.id);
+        const estimatedCost = costCalculator.estimateCost({
+          targetType: input.targetType,
+          entityCount: input.quantity || 1,
+          contextCount: (input.contextEntityIds || []).length,
+          tagCount: (input.tagIds || []).length
+        });
+
+        if (userWithLimits.credits < estimatedCost) {
+          throw new Error(`Insufficient credits. Need ${estimatedCost}, have ${userWithLimits.credits}`);
+        }
+        userId = user.id;
+      }
+
+      // Generate entities with relationships
+      const result = await generateEntitiesWithRelationships(input, userId);
+
+      return {
+        entities: result.entities,
+        creditsUsed: result.creditsUsed,
+        message: `Successfully generated ${result.entities.length} ${input.targetType}(s)`
+      };
     },
 
     // Stripe Elements: Create payment intent for credit purchase

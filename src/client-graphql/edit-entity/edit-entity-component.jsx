@@ -373,7 +373,11 @@ export function EditEntityComponent({id, type, isEdit}) {
                 entityType={type}
                 entityId={id}
                 universeId={entity.universeId}
-                onRefetch={() => Get({ variables: { obj: { id } } })}
+                onRefetch={() => Get({ variables: { obj: { id } } }).then(result => {
+                    if (result.data?.[type]) {
+                        setEntity(result.data[type]);
+                    }
+                })}
             />
         </div>
         </div>

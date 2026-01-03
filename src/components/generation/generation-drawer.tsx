@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { gql, useQuery, useLazyQuery } from '@apollo/client';
+import { gql, useQuery, useLazyQuery, useMutation } from '@apollo/client';
+import { toast } from 'sonner';
 import {
   Sheet,
   SheetContent,
@@ -225,6 +226,26 @@ const SEARCH_ENTITIES = gql`
   }
 `;
 
+const GENERATE_ENTITY = gql`
+  mutation GenerateEntity($input: GenerateEntityInput!) {
+    generateEntity(input: $input) {
+      entities {
+        id
+        name
+        description
+        type
+        _nodeType
+        tags {
+          id
+          name
+        }
+      }
+      creditsUsed
+      message
+    }
+  }
+`;
+
 interface GenerationDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -283,6 +304,69 @@ export function GenerationDrawer({
     skip: !searchTerm || searchTerm.length < 2,
   });
 
+  // Generate entity mutation
+  const [generateEntity, { loading: generating }] = useMutation(GENERATE_ENTITY, {
+    onCompleted: (data) => {
+      const generated = data.generateEntity;
+      console.log('Generation complete:', generated);
+
+      // Show special AI generation success toast
+      const entity = generated.entities[0];
+      const entityUrl = `/edit/${entity._nodeType}/${entity.id}`;
+
+      toast.custom(
+        (t) => (
+          <div className="bg-gradient-to-r from-purple-900/90 to-pink-900/90 border border-purple-500/50 rounded-lg p-4 shadow-lg backdrop-blur-sm">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-purple-500/20 rounded-full">
+                <Sparkles className="h-5 w-5 text-purple-300" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-white flex items-center gap-2">
+                  AI Generated
+                  <span className="text-xs px-2 py-0.5 bg-purple-500/30 rounded-full text-purple-200">
+                    {targetType}
+                  </span>
+                </p>
+                <p className="text-purple-100 mt-1">{entity.name}</p>
+                <a
+                  href={entityUrl}
+                  className="inline-flex items-center gap-1 mt-2 text-sm text-purple-300 hover:text-white transition-colors"
+                  onClick={() => toast.dismiss(t)}
+                >
+                  View {targetType} →
+                </a>
+              </div>
+              <button
+                onClick={() => toast.dismiss(t)}
+                className="text-purple-300 hover:text-white"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          duration: 10000, // Keep visible for 10 seconds
+          id: 'generation-success',
+        }
+      );
+
+      if (onGenerated && generated.entities.length > 0) {
+        // Notify parent to trigger refetch
+        onGenerated(generated.entities[0]);
+      }
+      onOpenChange(false);
+    },
+    onError: (error) => {
+      console.error('Generation error:', error);
+      toast.error('Generation failed', {
+        description: error.message,
+      });
+    },
+    refetchQueries: ['GetUserCredits'], // Refresh credits after generation
+  });
+
   useEffect(() => {
     if (open && sourceEntity.id) {
       fetchContext({
@@ -339,11 +423,31 @@ export function GenerationDrawer({
   };
   const cost = costData?.estimateGenerationCost?.credits ?? 0;
   const userCredits = userData?.me?.credits ?? 0;
-  const hasEnoughCredits = userCredits >= cost;
+  // Allow generation without auth (fake generation) or with sufficient credits
+  const isAuthenticated = !!userData?.me;
+  const hasEnoughCredits = !isAuthenticated || userCredits >= cost;
 
   const handleGenerate = () => {
-    // TODO: Call mutation to generate entity
-    onOpenChange(false);
+    // Show loading toast
+    toast.loading(`Generating ${quantity} ${targetType}(s)...`, {
+      id: 'generation',
+    });
+
+    generateEntity({
+      variables: {
+        input: {
+          parentEntityId: sourceEntity.id,
+          targetType,
+          prompt: prompt || undefined,
+          quantity,
+          tagIds: selectedTagIds,
+          contextEntityIds: selectedContextIds,
+        },
+      },
+    }).finally(() => {
+      // Dismiss loading toast
+      toast.dismiss('generation');
+    });
   };
 
   const toggleContext = (entityId: string) => {
@@ -692,15 +796,15 @@ export function GenerationDrawer({
             </Button>
             <Button
               onClick={handleGenerate}
-              disabled={!hasEnoughCredits || contextLoading}
+              disabled={!hasEnoughCredits || contextLoading || generating}
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
             >
-              {contextLoading ? (
+              {contextLoading || generating ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
                 <Sparkles className="h-4 w-4 mr-2" />
               )}
-              Generate
+              {generating ? 'Generating...' : 'Generate'}
               <span className="ml-1.5 flex items-center gap-1 text-white/80">
                 <Coins className="h-3.5 w-3.5" />
                 {cost}

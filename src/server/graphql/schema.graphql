@@ -151,6 +151,9 @@ type Mutation {
   createSubscription(tier: String!): SubscriptionSetupResponse!
   createCreditPaymentIntent(packageId: String!): PaymentIntentResponse!
   confirmSubscription(paymentIntentId: String!, tier: String!): User!
+
+  # Generation mutation (calls LLM, creates entity with relationships)
+  generateEntity(input: GenerateEntityInput!): GenerateEntityResponse!
 }
 
 # Common types
@@ -708,4 +711,38 @@ input GenerationConstraintsInput {
 input SubgraphScopeItem {
   entityType: String!
   count: Int!
+}
+
+# Input for entity generation
+input GenerateEntityInput {
+  # The parent entity that will CONTAINS the new entity
+  parentEntityId: String!
+  # Type of entity to generate (character, place, item, event)
+  targetType: String!
+  # Optional prompt describing what to generate
+  prompt: String
+  # Number of entities to generate (default 1)
+  quantity: Int
+  # Tag IDs to apply TAGGED relationships
+  tagIds: [String!]
+  # Additional context entity IDs to include in LLM context
+  contextEntityIds: [String!]
+}
+
+# Result of entity generation
+type GeneratedEntity {
+  id: String!
+  name: String!
+  description: String
+  type: String
+  _nodeType: String!
+  # Tags that were applied
+  tags: [TagInfo!]!
+}
+
+# Response from generateEntity mutation
+type GenerateEntityResponse {
+  entities: [GeneratedEntity!]!
+  creditsUsed: Int!
+  message: String!
 }
