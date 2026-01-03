@@ -7,7 +7,6 @@ import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from '@/components/ui/badge';
 import { NodeList } from './node-list.jsx';
-import { EditableNodeList } from './editable-node-list.tsx';
 import { Textarea } from "@/components/ui/textarea"
 import { removeTypeName } from '../util.js'
 import { HoverEditableText } from './hover-editable-text.jsx';
@@ -265,7 +264,7 @@ export function EditEntityComponent({id, type, isEdit}) {
             style={{ backgroundImage: `url(${backgroundImageUrl})` }}
         />
         <div className="relative z-10">
-            <div className="fixed top-10 left-0 w-full bg-background z-50">
+            <div className="fixed top-14 left-0 w-full bg-background z-50">
                 <div className="flex">
                     <Avatar className="size-15 ml-9 mb-3.5 mt-6.5">
                         <AvatarImage src={avatarImageUrl} />
@@ -284,9 +283,9 @@ export function EditEntityComponent({id, type, isEdit}) {
                 </div>
                 <Separator />
             </div>
-            <div className="flex mt-30 gap-6 h-[calc(100vh-10rem)]">
-            <div className="flex-1 pr-4 overflow-y-auto">
-                <div className="rounded mt-5 relative w-full">
+            <div className="flex mt-52 gap-6 h-[calc(100vh-16rem)]">
+            <div className="flex-1 pr-4 overflow-y-auto pt-4">
+                <div className="rounded relative w-full">
                         <ImageGallery
                             images={entity.images || []}
                             allImages={entity.allImages || []}
@@ -326,8 +325,6 @@ export function EditEntityComponent({id, type, isEdit}) {
                     readOnly={!editMode}
                 />
 
-
-
           {/* <div id="related-contains" class="flex justify-end m-auto w-full">
             {Object.entries(relationGroups).map(([_type, items]) => (
               <div key={_type}>
@@ -341,7 +338,7 @@ export function EditEntityComponent({id, type, isEdit}) {
           </div> */}
           </div>
 
-        <div id="related-contains" className="w-72 flex-shrink-0 mt-5 overflow-y-auto">
+        <div id="related-contains" className="w-80 flex-shrink-0 pt-4 overflow-y-auto">
             {/* Products section - only for universes */}
             {type === 'universe' && (
                 <ProductsSection

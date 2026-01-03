@@ -37,6 +37,24 @@ type Query {
   creditPackages: [CreditPackage!]!
   subscriptionTiers: [TierInfo!]!
   billingHistory(limit: Int, cursor: String): BillingHistory!
+
+  # Generation queries (context assembly, no LLM calls)
+  generationContext(input: GenerationContextInput!): GenerationContext!
+  estimateGenerationCost(
+    targetType: String!
+    entityCount: Int
+    creativity: Float
+    contextCount: Int
+    tagCount: Int
+    isRegeneration: Boolean
+    isVariation: Boolean
+  ): CostEstimate!
+  estimateSubgraphCost(
+    scope: [SubgraphScopeItem!]!
+    creativity: Float
+    contextCount: Int
+    tagCount: Int
+  ): SubgraphCostEstimate!
 }
 
 # Mutation type for modifying data
@@ -562,4 +580,110 @@ type TaggedEntitiesResponse {
   entities: [Entity!]!
   total: Int!
   hasMore: Boolean!
+}
+
+# ============================================
+# Generation System Types
+# ============================================
+
+# Context for generation UI (no LLM call, just data assembly)
+type GenerationContext {
+  sourceEntity: GenerationEntity!
+  parentChain: [GenerationEntity!]!
+  universe: GenerationEntity
+  siblingEntities: [GenerationEntity!]!
+  childEntities: [GenerationEntity!]!
+  availableTags: [TagInfo!]!
+  suggestedContext: [GenerationEntity!]!
+  summary: ContextSummary!
+}
+
+# Simplified entity for generation context
+type GenerationEntity {
+  id: String!
+  name: String!
+  description: String
+  type: String
+  _nodeType: String!
+  tags: [TagInfo!]
+}
+
+# Tag with entity count for generation UI
+type TagInfo {
+  id: String!
+  name: String!
+  description: String
+  type: String
+  entityCount: Int
+}
+
+# Summary of context for UI display
+type ContextSummary {
+  entityCount: Int!
+  tagCount: Int!
+  hasInvolvements: Boolean!
+}
+
+# Cost estimation (no LLM call, just calculation)
+type CostEstimate {
+  credits: Int!
+  breakdown: [CostBreakdownItem!]!
+  summary: String!
+}
+
+type CostBreakdownItem {
+  label: String!
+  credits: Int!
+  isBase: Boolean
+  isModifier: Boolean
+  phase: String
+}
+
+# Subgraph cost estimation (multiple entities)
+type SubgraphCostEstimate {
+  outlineCost: Int!
+  detailCost: Int!
+  totalCost: Int!
+  breakdown: [CostBreakdownItem!]!
+  summary: String!
+}
+
+# Tone settings for generation
+type ToneSettings {
+  formality: Float!  # 0-1 (casual to formal)
+  mood: Float!       # 0-1 (light to dark)
+}
+
+# Generation constraints
+type GenerationConstraints {
+  tagIds: [String!]!
+  tone: ToneSettings
+  creativity: Float!
+  additionalPrompt: String
+}
+
+# Input types for generation
+
+input GenerationContextInput {
+  sourceEntityId: String!
+  targetType: String!
+  includeEntityIds: [String!]
+}
+
+input ToneSettingsInput {
+  formality: Float  # 0-1 (casual to formal)
+  mood: Float       # 0-1 (light to dark)
+}
+
+input GenerationConstraintsInput {
+  tagIds: [String!]
+  formality: Float
+  mood: Float
+  creativity: Float
+  additionalPrompt: String
+}
+
+input SubgraphScopeItem {
+  entityType: String!
+  count: Int!
 }

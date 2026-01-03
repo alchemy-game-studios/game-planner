@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useNavigate } from "react-router-dom"
 import { getEntityImage } from "@/media/util"
-import { X, Plus, Sparkles, Coins } from "lucide-react"
+import { X, Plus } from "lucide-react"
 import { getRelateContainsMutation, getRelateTaggedMutation } from '@/utils/graphql-utils';
+import { GenerateButton } from "@/components/generation/generate-button";
+import { GenerationDrawer } from "@/components/generation/generation-drawer";
 
 // Credit costs for generating each entity type (based on complexity)
 // Tags are auto-generated as part of each entity generation
@@ -31,27 +33,32 @@ const GENERATION_CREDITS: Record<string, number> = {
 interface EditableNodeListProps {
   initContents: any[];
   parentId: string;
+  parentName?: string;
   parentType: string;
   entityType: 'place' | 'character' | 'item' | 'tag' | 'event' | 'narrative';
   isTagRelation?: boolean;
   maxItems?: number;
   onUpdate?: () => void;
+  universeId?: string;
 }
 
 export function EditableNodeList({
   initContents,
   parentId,
+  parentName = 'Entity',
   parentType,
   entityType,
   isTagRelation = false,
   maxItems = 0,
-  onUpdate
+  onUpdate,
+  universeId
 }: EditableNodeListProps) {
   const [contents, setContents] = useState(initContents);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
   const [drawerKey, setDrawerKey] = useState(0);
   const [editMode, setEditMode] = useState(false);
+  const [generationDrawerOpen, setGenerationDrawerOpen] = useState(false);
   const navigate = useNavigate();
 
   const mutation = isTagRelation ? getRelateTaggedMutation() : getRelateContainsMutation();
@@ -175,19 +182,14 @@ export function EditableNodeList({
           {entityType.charAt(0).toUpperCase() + entityType.slice(1)}s
         </h3>
         <div className="flex gap-1">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {/* TODO: implement generation */}}
-            className="relative bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-0 before:absolute before:inset-0 before:rounded-md before:p-[1px] before:bg-gradient-to-r before:from-purple-500 before:to-pink-500 before:-z-10 before:content-[''] after:absolute after:inset-[1px] after:rounded-[5px] after:bg-zinc-900 after:-z-10 after:content-[''] text-purple-300 hover:text-purple-200 hover:from-purple-500/20 hover:to-pink-500/20"
-          >
-            <Sparkles className="h-4 w-4 mr-1" />
-            {entityType.charAt(0).toUpperCase() + entityType.slice(1)}
-            <span className="ml-2 flex items-center gap-0.5 text-[10px] opacity-60">
-              <Coins className="h-3 w-3" />
-              {GENERATION_CREDITS[entityType] || 10}
-            </span>
-          </Button>
+          {universeId && !isTagRelation && (
+            <GenerateButton
+              onClick={() => setGenerationDrawerOpen(true)}
+              cost={GENERATION_CREDITS[entityType] || 10}
+              label={entityType.charAt(0).toUpperCase() + entityType.slice(1)}
+              size="sm"
+            />
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -258,9 +260,9 @@ export function EditableNodeList({
                   placeholder={`Search ${entityType}s to add...`}
                 />
               </div>
-              
+
               <Separator />
-              
+
               <div>
                 <h3 className="text-sm font-medium mb-2">Or create a new one</h3>
                 <AddEntityDialog
@@ -287,6 +289,27 @@ export function EditableNodeList({
             </ul>
           )}
         </EditDrawer>
+      )}
+
+      {/* Generation Drawer */}
+      {universeId && (
+        <GenerationDrawer
+          open={generationDrawerOpen}
+          onOpenChange={setGenerationDrawerOpen}
+          sourceEntity={{
+            id: parentId,
+            name: parentName,
+            type: parentType,
+            _nodeType: parentType.toLowerCase(),
+          }}
+          universeId={universeId}
+          defaultTargetType={entityType}
+          onGenerated={(entity) => {
+            // Add generated entity to list
+            handleAddEntity(entity);
+            setGenerationDrawerOpen(false);
+          }}
+        />
       )}
     </>
   );

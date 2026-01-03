@@ -8,11 +8,13 @@ import { EntitySearch } from '@/components/entity-search';
 import { AddEntityDialog } from '@/components/add-entity-dialog';
 import { AddProductDialog } from '@/components/add-product-dialog';
 import { getEntityImage, getPlaceholderImage } from '@/media/util';
+import { GenerationDrawer } from '@/components/generation/generation-drawer';
 import {
   ChevronDown,
   ChevronUp,
   Plus,
   Maximize2,
+  Sparkles,
   BookOpen,
   MapPin,
   Users,
@@ -95,8 +97,12 @@ export function LensSection({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showAddSearch, setShowAddSearch] = useState(false);
+  const [showGenerationDrawer, setShowGenerationDrawer] = useState(false);
 
   const [relateContains] = useMutation(RELATE_CONTAINS);
+
+  // Check if this lens type supports generation (entity types, not products)
+  const supportsGeneration = universeId && !['product'].includes(lens.singularLabel);
 
   const entities = getLensData(entity, lens);
   const count = entities.length;
@@ -140,6 +146,17 @@ export function LensSection({
             <span className="text-base text-muted-foreground">{lens.label}</span>
           </div>
           <div className="flex gap-1">
+            {supportsGeneration && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+                onClick={() => setShowGenerationDrawer(true)}
+                title={`Generate ${lens.singularLabel} with AI`}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -194,6 +211,25 @@ export function LensSection({
           universeId={universeId}
           onAddEntity={handleAddEntity}
         />
+        {/* Generation drawer */}
+        {supportsGeneration && universeId && (
+          <GenerationDrawer
+            open={showGenerationDrawer}
+            onOpenChange={setShowGenerationDrawer}
+            sourceEntity={{
+              id: parentId,
+              name: entity.properties?.name || entity.name || 'Entity',
+              type: parentType,
+              _nodeType: parentType.toLowerCase(),
+            }}
+            universeId={universeId}
+            defaultTargetType={lens.singularLabel}
+            onGenerated={(newEntity) => {
+              handleAddEntity(newEntity);
+              setShowGenerationDrawer(false);
+            }}
+          />
+        )}
       </div>
     );
   }
@@ -214,6 +250,17 @@ export function LensSection({
           )}
         </button>
         <div className="flex gap-1">
+          {supportsGeneration && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+              onClick={() => setShowGenerationDrawer(true)}
+              title={`Generate ${lens.singularLabel} with AI`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -315,6 +362,25 @@ export function LensSection({
         universeId={universeId}
         onAddEntity={handleAddEntity}
       />
+      {/* Generation drawer */}
+      {supportsGeneration && universeId && (
+        <GenerationDrawer
+          open={showGenerationDrawer}
+          onOpenChange={setShowGenerationDrawer}
+          sourceEntity={{
+            id: parentId,
+            name: entity.properties?.name || entity.name || 'Entity',
+            type: parentType,
+            _nodeType: parentType.toLowerCase(),
+          }}
+          universeId={universeId}
+          defaultTargetType={lens.singularLabel}
+          onGenerated={(newEntity) => {
+            handleAddEntity(newEntity);
+            setShowGenerationDrawer(false);
+          }}
+        />
+      )}
     </div>
   );
 }

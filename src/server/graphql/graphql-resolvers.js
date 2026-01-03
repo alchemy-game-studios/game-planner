@@ -3,6 +3,8 @@ import neo4j from 'neo4j-driver';
 import { getImageUrl, deleteImage as deleteS3Image } from '../storage/s3-client.js';
 import { SUBSCRIPTION_TIERS, CREDIT_PACKAGES, getTierLimits, formatPrice, getCreditPackage } from '../config/tiers.js';
 import Stripe from 'stripe';
+import * as contextAssembler from '../services/context-assembler.js';
+import * as costCalculator from '../services/cost-calculator.js';
 
 // Initialize Stripe (will be null if no key configured)
 const stripe = process.env.STRIPE_SECRET_KEY
@@ -14,6 +16,8 @@ let driver = null;
 
 export function setDriver(neo4jDriver) {
   driver = neo4jDriver;
+  // Also set driver for context assembler
+  contextAssembler.setDriver(neo4jDriver);
 }
 
 // Helper to run Neo4j queries
@@ -1290,6 +1294,89 @@ export default {
         }),
         hasMore,
         nextCursor: hasMore ? items[items.length - 1]?.id : null
+      };
+    },
+
+    // ============================================
+    // Generation Queries
+    // ============================================
+
+    // Get context for generation UI (assembles relevant data, no LLM call)
+    generationContext: async (_, { input }) => {
+      const context = await contextAssembler.assembleEntityContext({
+        sourceEntityId: input.sourceEntityId,
+        targetType: input.targetType,
+        includeEntityIds: input.includeEntityIds || []
+      });
+
+      // Transform to match GraphQL schema
+      return {
+        sourceEntity: {
+          ...context.sourceEntity,
+          tags: context.sourceEntity.tags || []
+        },
+        parentChain: context.parentChain.map(e => ({
+          ...e,
+          tags: []
+        })),
+        universe: context.universe ? {
+          ...context.universe,
+          _nodeType: 'universe',
+          tags: []
+        } : null,
+        siblingEntities: context.siblingEntities.map(e => ({
+          ...e,
+          tags: []
+        })),
+        childEntities: context.childEntities.map(e => ({
+          ...e,
+          tags: []
+        })),
+        availableTags: context.availableTags,
+        suggestedContext: context.suggestedContext.map(e => ({
+          ...e,
+          tags: []
+        })),
+        summary: context.summary
+      };
+    },
+
+    // Estimate cost for single entity generation
+    estimateGenerationCost: async (_, args) => {
+      const breakdown = costCalculator.getBreakdown({
+        targetType: args.targetType,
+        entityCount: args.entityCount || 1,
+        creativity: args.creativity || 0.5,
+        contextCount: args.contextCount || 0,
+        tagCount: args.tagCount || 0,
+        isRegeneration: args.isRegeneration || false,
+        isVariation: args.isVariation || false
+      });
+
+      return {
+        credits: breakdown.total,
+        breakdown: breakdown.items,
+        summary: breakdown.summary
+      };
+    },
+
+    // Estimate cost for subgraph expansion
+    estimateSubgraphCost: async (_, args) => {
+      const estimate = costCalculator.estimateSubgraphCost(
+        args.scope,
+        {
+          creativity: args.creativity || 0.5,
+          contextCount: args.contextCount || 0,
+          tagCount: args.tagCount || 0
+        }
+      );
+
+      return {
+        outlineCost: estimate.outlineCost,
+        detailCost: estimate.detailCost,
+        totalCost: estimate.totalCost,
+        breakdown: estimate.items,
+        summary: estimate.summary
       };
     }
   },

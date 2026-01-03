@@ -48,7 +48,8 @@ export function Breadcrumbs() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] flex items-center justify-between gap-2 px-4 py-2 bg-black border-b border-border">
+    <div className="fixed top-0 left-0 right-0 z-[60]">
+      <div className="flex items-center justify-between gap-2 px-4 py-2 bg-black">
       <div className="flex items-center gap-2">
         {/* Logo */}
         <button
@@ -94,6 +95,9 @@ export function Breadcrumbs() {
       </div>
 
       <UserMenu />
+      </div>
+      {/* Gradient underline */}
+      <div className="h-[2px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
     </div>
   );
 }
