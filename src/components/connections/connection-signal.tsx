@@ -33,7 +33,7 @@ const ICON_MAP: Record<LensIcon, LucideIcon> = {
 interface ConnectionSignalProps {
   lens: LensDefinition;
   count: number;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 export function ConnectionSignal({ lens, count, onClick }: ConnectionSignalProps) {
@@ -45,8 +45,9 @@ export function ConnectionSignal({ lens, count, onClick }: ConnectionSignalProps
 
   const IconComponent = ICON_MAP[lens.icon];
 
+  // Use div to avoid nested button issues when parent is also a button
   return (
-    <button
+    <div
       onClick={onClick}
       className={`
         inline-flex items-center gap-2.5 px-4 py-2 rounded-full
@@ -57,6 +58,6 @@ export function ConnectionSignal({ lens, count, onClick }: ConnectionSignalProps
     >
       {IconComponent && <IconComponent className={`h-4 w-4 ${lens.color.text}`} />}
       <span className={`capitalize ${lens.color.text}`}>{label}</span>
-    </button>
+    </div>
   );
 }

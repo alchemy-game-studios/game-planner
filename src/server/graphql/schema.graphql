@@ -40,6 +40,7 @@ type Query {
 
   # Generation queries (context assembly, no LLM calls)
   generationContext(input: GenerationContextInput!): GenerationContext!
+  generationContextPreview(input: GenerationContextPreviewInput!): GenerationContextPreview!
   estimateGenerationCost(
     targetType: String!
     entityCount: Int
@@ -594,8 +595,22 @@ type GenerationContext {
   siblingEntities: [GenerationEntity!]!
   childEntities: [GenerationEntity!]!
   availableTags: [TagInfo!]!
+  sourceTagIds: [String!]!
   suggestedContext: [GenerationEntity!]!
   summary: ContextSummary!
+}
+
+# Context preview for debugging - shows the assembled markdown
+type GenerationContextPreview {
+  markdown: String!
+  entityCount: Int!
+  providerSummaries: [ProviderSummary!]!
+}
+
+type ProviderSummary {
+  provider: String!
+  count: Int!
+  summary: String!
 }
 
 # Simplified entity for generation context
@@ -668,6 +683,13 @@ input GenerationContextInput {
   sourceEntityId: String!
   targetType: String!
   includeEntityIds: [String!]
+}
+
+input GenerationContextPreviewInput {
+  sourceEntityId: String!
+  targetType: String!
+  tagIds: [String!]
+  contextEntityIds: [String!]
 }
 
 input ToneSettingsInput {

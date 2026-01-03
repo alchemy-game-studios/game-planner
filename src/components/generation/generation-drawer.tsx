@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { gql, useQuery, useLazyQuery } from '@apollo/client';
 import {
   Sheet,
@@ -7,9 +7,17 @@ import {
   SheetTitle,
   SheetFooter,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Collapsible,
   CollapsibleContent,
@@ -36,6 +44,9 @@ import {
   Tag,
   Heart,
   Plus,
+  Eye,
+  Search,
+  X,
 } from 'lucide-react';
 
 // Tag type configuration - matches tag-pills.tsx colors
@@ -152,6 +163,7 @@ const GET_GENERATION_CONTEXT = gql`
         type
         entityCount
       }
+      sourceTagIds
       summary {
         entityCount
         tagCount
@@ -176,10 +188,39 @@ const ESTIMATE_COST = gql`
   }
 `;
 
+const GET_CONTEXT_PREVIEW = gql`
+  query GetContextPreview($input: GenerationContextPreviewInput!) {
+    generationContextPreview(input: $input) {
+      markdown
+      entityCount
+      providerSummaries {
+        provider
+        count
+        summary
+      }
+    }
+  }
+`;
+
 const GET_USER_CREDITS = gql`
   query GetUserCredits {
     me {
       credits
+    }
+  }
+`;
+
+const SEARCH_ENTITIES = gql`
+  query SearchEntities($query: String!, $universeId: String) {
+    searchEntities(query: $query, universeId: $universeId) {
+      id
+      _nodeType
+      properties {
+        id
+        name
+        description
+        type
+      }
     }
   }
 `;
@@ -209,8 +250,13 @@ export function GenerationDrawer({
   const [prompt, setPrompt] = useState('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [selectedContextIds, setSelectedContextIds] = useState<string[]>([]);
+  const [selectedEntities, setSelectedEntities] = useState<any[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const targetType = defaultTargetType;
   const targetLabel = targetType.charAt(0).toUpperCase() + targetType.slice(1);
@@ -218,14 +264,24 @@ export function GenerationDrawer({
   const TargetIcon = targetConfig.icon;
 
   // Fetch context data
-  const [fetchContext, { data: contextData, loading: contextLoading }] =
+  const [fetchContext, { data: contextData, loading: contextLoading, error: contextError }] =
     useLazyQuery(GET_GENERATION_CONTEXT);
 
   // Fetch cost estimate
   const [fetchCost, { data: costData }] = useLazyQuery(ESTIMATE_COST);
 
+  // Fetch context preview (markdown)
+  const [fetchPreview, { data: previewData, loading: previewLoading }] =
+    useLazyQuery(GET_CONTEXT_PREVIEW);
+
   // Fetch user credits
   const { data: userData } = useQuery(GET_USER_CREDITS, { skip: !open });
+
+  // Search entities
+  const { data: searchData, loading: searchLoading } = useQuery(SEARCH_ENTITIES, {
+    variables: { query: searchTerm, universeId },
+    skip: !searchTerm || searchTerm.length < 2,
+  });
 
   useEffect(() => {
     if (open && sourceEntity.id) {
@@ -248,25 +304,45 @@ export function GenerationDrawer({
       setPrompt('');
       setSelectedTagIds([]);
       setSelectedContextIds([]);
+      setSelectedEntities([]);
       setQuantity(1);
       setShowAdvanced(false);
+      setShowPreview(false);
+      setSearchTerm('');
+      setShowSearchResults(false);
     }
   }, [open]);
 
   const context = contextData?.generationContext;
+
+  // Auto-select source entity's tags when context loads
+  useEffect(() => {
+    if (context?.sourceTagIds?.length > 0 && selectedTagIds.length === 0) {
+      setSelectedTagIds(context.sourceTagIds);
+    }
+  }, [context?.sourceTagIds]);
+
+  const preview = previewData?.generationContextPreview;
+
+  const handlePreviewContext = () => {
+    fetchPreview({
+      variables: {
+        input: {
+          sourceEntityId: sourceEntity.id,
+          targetType,
+          tagIds: selectedTagIds,
+          contextEntityIds: selectedContextIds,
+        },
+      },
+    });
+    setShowPreview(true);
+  };
   const cost = costData?.estimateGenerationCost?.credits ?? 0;
   const userCredits = userData?.me?.credits ?? 0;
   const hasEnoughCredits = userCredits >= cost;
 
   const handleGenerate = () => {
-    console.log('Generation request:', {
-      sourceEntityId: sourceEntity.id,
-      targetType,
-      quantity,
-      prompt,
-      tagIds: selectedTagIds,
-      contextEntityIds: selectedContextIds,
-    });
+    // TODO: Call mutation to generate entity
     onOpenChange(false);
   };
 
@@ -276,13 +352,23 @@ export function GenerationDrawer({
     );
   };
 
-  // Combine all available context entities
+  // Get IDs of entities already included automatically (parent chain + source)
+  const autoIncludedIds = new Set([
+    sourceEntity.id,
+    ...(context?.parentChain?.map((e: any) => e.id) || []),
+  ]);
+
+  // Show siblings and suggested context as selectable options
+  // These are related entities the user can optionally include
   const availableContextEntities = [
     ...(context?.siblingEntities || []),
     ...(context?.childEntities || []),
     ...(context?.suggestedContext || []),
   ].filter((entity, index, self) =>
-    self.findIndex(e => e.id === entity.id) === index
+    // Dedupe by ID
+    self.findIndex(e => e.id === entity.id) === index &&
+    // Exclude entities already in the auto-included set
+    !autoIncludedIds.has(entity.id)
   );
 
   const toggleTag = (tagId: string) => {
@@ -449,48 +535,134 @@ export function GenerationDrawer({
                 </div>
               </div>
 
-              {/* Optional additional context */}
-              {availableContextEntities.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Add more context
-                  </p>
-                  <div className="space-y-1.5 max-h-[180px] overflow-y-auto">
-                    {availableContextEntities.map((entity: any) => {
+              {/* Add more context with search */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Add more context
+                </p>
+
+                {/* Search input */}
+                <div className="relative" ref={searchRef}>
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search entities..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setShowSearchResults(true);
+                    }}
+                    onFocus={() => setShowSearchResults(true)}
+                    className="pl-8 h-8 text-sm"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => {
+                        setSearchTerm('');
+                        setShowSearchResults(false);
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+
+                  {/* Search results dropdown */}
+                  {showSearchResults && searchTerm.length >= 2 && (
+                    <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-48 overflow-auto">
+                      {searchLoading ? (
+                        <div className="px-3 py-2 text-xs text-muted-foreground">Searching...</div>
+                      ) : !searchData?.searchEntities?.length ? (
+                        <div className="px-3 py-2 text-xs text-muted-foreground">No results found</div>
+                      ) : (
+                        searchData.searchEntities
+                          .filter((e: any) => !selectedContextIds.includes(e.id) && e.id !== sourceEntity.id)
+                          .slice(0, 8)
+                          .map((entity: any) => {
+                            const entityConfig = ENTITY_CONFIG[entity._nodeType] || ENTITY_CONFIG.character;
+                            const EntityIcon = entityConfig.icon;
+                            const name = entity.properties?.name || entity.name;
+                            return (
+                              <button
+                                key={entity.id}
+                                onClick={() => {
+                                  setSelectedContextIds(prev => [...prev, entity.id]);
+                                  setSelectedEntities(prev => [...prev, {
+                                    id: entity.id,
+                                    name,
+                                    description: entity.properties?.description || '',
+                                    _nodeType: entity._nodeType
+                                  }]);
+                                  setSearchTerm('');
+                                  setShowSearchResults(false);
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/50 text-left"
+                              >
+                                <EntityIcon className={`h-3.5 w-3.5 ${entityConfig.color}`} />
+                                <span className="text-sm truncate">{name}</span>
+                                <span className="text-xs text-muted-foreground ml-auto">{entity._nodeType}</span>
+                              </button>
+                            );
+                          })
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Selected entities from search */}
+                {selectedEntities.length > 0 && (
+                  <div className="space-y-1.5">
+                    {selectedEntities.map((entity: any) => {
                       const entityConfig = ENTITY_CONFIG[entity._nodeType] || ENTITY_CONFIG.character;
                       const EntityIcon = entityConfig.icon;
-                      const isSelected = selectedContextIds.includes(entity.id);
                       return (
-                        <label
+                        <div
                           key={entity.id}
-                          className={`flex items-start gap-3 px-2 py-1.5 rounded-md border cursor-pointer transition-colors ${
-                            isSelected
-                              ? 'bg-purple-500/10 border-purple-500/50'
-                              : 'border-transparent hover:bg-muted/30'
-                          }`}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-purple-500/10 border border-purple-500/50"
                         >
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleContext(entity.id)}
-                            className="mt-0.5"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <EntityIcon className={`h-3.5 w-3.5 ${entityConfig.color}`} />
-                              <span className="text-sm truncate">{entity.name}</span>
-                            </div>
-                            {entity.description && (
-                              <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                                {entity.description}
-                              </p>
-                            )}
-                          </div>
-                        </label>
+                          <EntityIcon className={`h-3.5 w-3.5 ${entityConfig.color}`} />
+                          <span className="text-sm truncate flex-1">{entity.name}</span>
+                          <button
+                            onClick={() => {
+                              setSelectedContextIds(prev => prev.filter(id => id !== entity.id));
+                              setSelectedEntities(prev => prev.filter(e => e.id !== entity.id));
+                            }}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
-                </div>
-              )}
+                )}
+
+                {/* Suggested siblings */}
+                {availableContextEntities.length > 0 && (
+                  <div className="space-y-1.5 max-h-[120px] overflow-y-auto">
+                    <p className="text-xs text-muted-foreground">Suggestions:</p>
+                    {availableContextEntities.slice(0, 5).map((entity: any) => {
+                      const entityConfig = ENTITY_CONFIG[entity._nodeType] || ENTITY_CONFIG.character;
+                      const EntityIcon = entityConfig.icon;
+                      const isSelected = selectedContextIds.includes(entity.id);
+                      if (isSelected) return null;
+                      return (
+                        <button
+                          key={entity.id}
+                          onClick={() => {
+                            setSelectedContextIds(prev => [...prev, entity.id]);
+                            setSelectedEntities(prev => [...prev, entity]);
+                          }}
+                          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border border-transparent hover:bg-muted/30 text-left"
+                        >
+                          <Plus className="h-3 w-3 text-muted-foreground" />
+                          <EntityIcon className={`h-3.5 w-3.5 ${entityConfig.color}`} />
+                          <span className="text-sm truncate">{entity.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
               {/* Context summary */}
               <div className="pt-2 border-t border-border/50">
@@ -504,34 +676,97 @@ export function GenerationDrawer({
 
         {/* Footer */}
         <SheetFooter className="px-6 py-4 border-t bg-card/50">
-          <div className="w-full flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Coins className="h-4 w-4" />
-              <span>{cost} credits</span>
-              {!hasEnoughCredits && (
-                <span className="text-amber-500 ml-2">(need {cost - userCredits} more)</span>
+          <div className="w-full flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePreviewContext}
+              disabled={contextLoading}
+              title="Preview context that will be sent to AI"
+            >
+              <Eye className="h-4 w-4 mr-1" />
+              Preview
+            </Button>
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleGenerate}
+              disabled={!hasEnoughCredits || contextLoading}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
+            >
+              {contextLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Sparkles className="h-4 w-4 mr-2" />
               )}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleGenerate}
-                disabled={!hasEnoughCredits || contextLoading}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
-              >
-                {contextLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Sparkles className="h-4 w-4 mr-2" />
-                )}
-                Generate
-              </Button>
-            </div>
+              Generate
+              <span className="ml-1.5 flex items-center gap-1 text-white/80">
+                <Coins className="h-3.5 w-3.5" />
+                {cost}
+              </span>
+            </Button>
           </div>
         </SheetFooter>
       </SheetContent>
+
+      {/* Context Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
+          <DialogHeader className="shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-purple-400" />
+              Context Preview
+              {preview && (
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  ({preview.entityCount} entities)
+                </span>
+              )}
+            </DialogTitle>
+            {/* Selection summary */}
+            {(selectedTagIds.length > 0 || selectedContextIds.length > 0) && (
+              <p className="text-xs text-muted-foreground">
+                Selected: {selectedTagIds.length} tags, {selectedContextIds.length} context entities
+              </p>
+            )}
+          </DialogHeader>
+
+          {previewLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+            </div>
+          ) : preview ? (
+            <div className="flex-1 min-h-0 flex flex-col gap-4">
+              {/* Provider summaries */}
+              {preview.providerSummaries.length > 0 && (
+                <div className="flex flex-wrap gap-2 shrink-0">
+                  {preview.providerSummaries.map((p: any) => (
+                    <div
+                      key={p.provider}
+                      className="text-xs bg-muted px-2 py-1 rounded"
+                      title={p.summary}
+                    >
+                      <span className="font-medium">{p.provider}</span>
+                      <span className="text-muted-foreground ml-1">({p.count})</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Markdown content - scrollable */}
+              <div className="flex-1 min-h-0 border rounded-md bg-zinc-950 overflow-auto">
+                <pre className="p-4 text-sm text-zinc-300 whitespace-pre-wrap font-mono">
+                  {preview.markdown || 'No context assembled.'}
+                </pre>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              No preview available.
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Sheet>
   );
 }

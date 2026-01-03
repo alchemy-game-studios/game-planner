@@ -3,7 +3,8 @@ import neo4j from 'neo4j-driver';
 import { getImageUrl, deleteImage as deleteS3Image } from '../storage/s3-client.js';
 import { SUBSCRIPTION_TIERS, CREDIT_PACKAGES, getTierLimits, formatPrice, getCreditPackage } from '../config/tiers.js';
 import Stripe from 'stripe';
-import * as contextAssembler from '../services/context-assembler.js';
+import * as legacyContextAssembler from '../services/context-assembler.js';
+import { createContextAssembler } from '../services/generation/index.js';
 import * as costCalculator from '../services/cost-calculator.js';
 
 // Initialize Stripe (will be null if no key configured)
@@ -13,11 +14,20 @@ const stripe = process.env.STRIPE_SECRET_KEY
 
 // Neo4j driver will be injected
 let driver = null;
+// New modular context assembler instance
+let contextAssembler = null;
 
 export function setDriver(neo4jDriver) {
   driver = neo4jDriver;
-  // Also set driver for context assembler
-  contextAssembler.setDriver(neo4jDriver);
+  // Initialize new modular context assembler
+  contextAssembler = createContextAssembler(neo4jDriver);
+  // Also set driver for legacy context assembler (backward compatibility)
+  legacyContextAssembler.setDriver(neo4jDriver);
+}
+
+// Export context assembler for external use (e.g., LangChain integration)
+export function getContextAssembler() {
+  return contextAssembler;
 }
 
 // Helper to run Neo4j queries
@@ -1120,6 +1130,7 @@ export default {
           WITH DISTINCT e
           RETURN {
             id: e.id,
+            _nodeType: toLower(labels(e)[0]),
             properties: properties(e),
             contents: [],
             tags: []
@@ -1133,6 +1144,7 @@ export default {
           WHERE e.name =~ $pattern
           RETURN {
             id: e.id,
+            _nodeType: toLower(labels(e)[0]),
             properties: properties(e),
             contents: [],
             tags: []
@@ -1303,19 +1315,23 @@ export default {
 
     // Get context for generation UI (assembles relevant data, no LLM call)
     generationContext: async (_, { input }) => {
+      // Use new modular context assembler with backward-compatible method
       const context = await contextAssembler.assembleEntityContext({
-        sourceEntityId: input.sourceEntityId,
+        entityId: input.sourceEntityId,
         targetType: input.targetType,
-        includeEntityIds: input.includeEntityIds || []
+        selectedContext: {
+          entities: [], // Will be populated by UI
+          tags: []
+        }
       });
 
       // Transform to match GraphQL schema
       return {
-        sourceEntity: {
+        sourceEntity: context.sourceEntity ? {
           ...context.sourceEntity,
           tags: context.sourceEntity.tags || []
-        },
-        parentChain: context.parentChain.map(e => ({
+        } : null,
+        parentChain: (context.parentChain || []).map(e => ({
           ...e,
           tags: []
         })),
@@ -1324,20 +1340,57 @@ export default {
           _nodeType: 'universe',
           tags: []
         } : null,
-        siblingEntities: context.siblingEntities.map(e => ({
+        siblingEntities: (context.siblingEntities || []).map(e => ({
           ...e,
           tags: []
         })),
-        childEntities: context.childEntities.map(e => ({
+        childEntities: [], // Not directly provided by new assembler, derived from siblings
+        availableTags: context.availableTags || [],
+        sourceTagIds: context.sourceTagIds || [],
+        suggestedContext: (context.suggestedContext || []).map(e => ({
           ...e,
           tags: []
         })),
-        availableTags: context.availableTags,
-        suggestedContext: context.suggestedContext.map(e => ({
-          ...e,
-          tags: []
-        })),
-        summary: context.summary
+        summary: context.summary || { entityCount: 0, tagCount: 0, hasInvolvements: false }
+      };
+    },
+
+    // Get context preview (full markdown) for debugging
+    generationContextPreview: async (_, { input }) => {
+      // Fetch selected context entities if any IDs provided
+      let selectedEntities = [];
+      if (input.contextEntityIds && input.contextEntityIds.length > 0) {
+        const result = await runQuery(`
+          UNWIND $ids AS entityId
+          MATCH (e {id: entityId})
+          RETURN {
+            id: e.id,
+            name: e.name,
+            description: e.description,
+            type: e.type,
+            _nodeType: toLower(labels(e)[0])
+          } AS entity
+        `, { ids: input.contextEntityIds });
+        selectedEntities = result.records.map(r => r.get('entity'));
+      }
+
+      const context = await contextAssembler.assemble({
+        entityId: input.sourceEntityId,
+        targetType: input.targetType,
+        selectedContext: {
+          entities: selectedEntities,
+          tags: input.tagIds || []
+        }
+      }, 'markdown');
+
+      return {
+        markdown: context.combinedContent || '',
+        entityCount: context.entities?.length || 0,
+        providerSummaries: (context.providers || []).map(p => ({
+          provider: p.provider,
+          count: p.count,
+          summary: p.summary || ''
+        }))
       };
     },
 
