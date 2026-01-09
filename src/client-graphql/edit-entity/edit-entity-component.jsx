@@ -16,10 +16,11 @@ import { ImageGallery } from "@/components/image-gallery"
 import { useBreadcrumbs } from "@/context/breadcrumb-context"
 import { Link } from 'react-router-dom';
 import { RichTextEditor } from "@/components/rich-text-editor";
-import { ConnectionSignalBar, MentionToastContainer } from "@/components/connections";
+import { MentionToastContainer } from "@/components/connections";
 import { useMentionRelationship } from "@/hooks/use-mention-relationship";
 import { ProductsSection } from "@/components/products-section";
 import { EntityAdaptationsSection } from "@/components/entity-adaptations-section";
+import { RelationshipsList } from "@/components/relationships-list";
 
 
 
@@ -59,7 +60,8 @@ export function EditEntityComponent({id, type, isEdit}) {
         parentNarrative: null,
         events: [],
         products: [],
-        adaptations: []
+        adaptations: [],
+        relationships: []
     }
     const [entity, setEntity] = useState(initEntity);
 
@@ -368,17 +370,21 @@ export function EditEntityComponent({id, type, isEdit}) {
                 />
             )}
 
-            <ConnectionSignalBar
-                entity={entity}
-                entityType={type}
-                entityId={id}
-                universeId={entity.universeId}
-                onRefetch={() => Get({ variables: { obj: { id } } }).then(result => {
-                    if (result.data?.[type]) {
-                        setEntity(result.data[type]);
-                    }
-                })}
-            />
+            {/* Relationships section */}
+            <div className="mb-4">
+                <RelationshipsList
+                    relationships={entity.relationships || []}
+                    entityId={id}
+                    entityType={type}
+                    entityName={entity.properties?.name}
+                    universeId={entity.universeId}
+                    onRefetch={() => Get({ variables: { obj: { id } } }).then(result => {
+                        if (result.data?.[type]) {
+                            setEntity(result.data[type]);
+                        }
+                    })}
+                />
+            </div>
         </div>
         </div>
         </div>
@@ -517,6 +523,19 @@ const ENTITY_FIELDS = `
             type
             gameType
         }
+    }
+    relationships {
+        id
+        relationshipType
+        customLabel
+        direction
+        targetEntity {
+            id
+            name
+            description
+            type
+        }
+        targetType
     }
 `;
 

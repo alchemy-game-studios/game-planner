@@ -106,6 +106,9 @@ type Mutation {
   addInvolves(relation: EventParticipantsInput!): Response
   addOccursAt(relation: EventLocationInput!): Response
 
+  # Semantic relationship mutation (creates typed relationship edges)
+  createRelationship(input: CreateRelationshipInput!): Response
+
   # Event relationship mutations
   relateOccursAt(relation: EventLocationInput!): Response
   relateInvolves(relation: EventParticipantsInput!): Response
@@ -189,6 +192,18 @@ type Entity {
   products: [Product!]
   # Adaptations of this entity in products (cards, etc.)
   adaptations: [ProductAdaptation!]
+  # Relationships to other entities (born_in, lives_in, knows, etc.)
+  relationships: [EntityRelationship!]
+}
+
+# Relationship to another entity
+type EntityRelationship {
+  id: String!
+  relationshipType: String!
+  customLabel: String
+  direction: String!  # "outgoing" or "incoming"
+  targetEntity: EntityProperties!
+  targetType: String!
 }
 
 # Adaptation with product info (for entity view)
@@ -331,6 +346,13 @@ input NarrativeInput {
 input RelatableInput {
   id: String!
   childIds: [String!]!
+}
+
+input CreateRelationshipInput {
+  sourceId: String!
+  targetId: String!
+  relationshipType: String!
+  customLabel: String
 }
 
 input TagRelationInput {
@@ -713,6 +735,16 @@ input SubgraphScopeItem {
   count: Int!
 }
 
+# Input for defining relationships during entity generation
+input RelationshipInput {
+  # ID of the target entity to relate to
+  entityId: String!
+  # Type of relationship (born_in, lives_in, knows, custom, etc.)
+  relationshipType: String!
+  # Custom label when relationshipType is 'custom'
+  customLabel: String
+}
+
 # Input for entity generation
 input GenerateEntityInput {
   # The parent entity that will CONTAINS the new entity
@@ -727,6 +759,8 @@ input GenerateEntityInput {
   tagIds: [String!]
   # Additional context entity IDs to include in LLM context
   contextEntityIds: [String!]
+  # Relationships to existing entities that the LLM should incorporate
+  relationships: [RelationshipInput!]
 }
 
 # Result of entity generation

@@ -94,14 +94,15 @@ export class EntityGenerator {
    * @param {string} params.targetType - Entity type to generate
    * @param {Array} params.tags - Style tags to apply (user-selected)
    * @param {Array} params.availableTags - All available universe tags for selection
+   * @param {Array} params.relationships - Required relationships to existing entities
    * @param {string} params.prompt - Optional user prompt/requirements
    * @returns {Promise<Object>} Generated entity { name, description, type, existingTagIds, newTags }
    */
   async generateOne(params) {
-    const { context, targetType, tags = [], availableTags = [], prompt = '' } = params;
+    const { context, targetType, tags = [], availableTags = [], relationships = [], prompt = '' } = params;
 
     // Build requirements string
-    const requirements = this.buildRequirements({ tags, prompt, targetType });
+    const requirements = this.buildRequirements({ tags, prompt, targetType, relationships });
 
     // Format available tags for the prompt
     const availableTagsFormatted = formatAvailableTagsForPrompt(availableTags);
@@ -175,10 +176,10 @@ export class EntityGenerator {
   }
 
   /**
-   * Build requirements string from tags and user prompt
+   * Build requirements string from tags, user prompt, and relationships
    * @private
    */
-  buildRequirements({ tags, prompt, targetType }) {
+  buildRequirements({ tags, prompt, targetType, relationships = [] }) {
     const parts = [];
 
     // Add user prompt if provided
@@ -189,6 +190,11 @@ export class EntityGenerator {
     // Add tag requirements if any
     if (tags && tags.length > 0) {
       parts.push(`Style and tone:\n${formatTagsForPrompt(tags)}`);
+    }
+
+    // Add relationship constraints if any
+    if (relationships && relationships.length > 0) {
+      parts.push(this.formatRelationshipConstraints(relationships, targetType));
     }
 
     // Add type-specific hints
@@ -205,6 +211,29 @@ export class EntityGenerator {
     }
 
     return parts.length > 0 ? parts.join('\n\n') : 'Create a fitting entity for this world.';
+  }
+
+  /**
+   * Format relationship constraints for the LLM prompt
+   * @private
+   * @param {Array} relationships - Array of relationship definitions
+   * @param {string} targetType - The type of entity being generated
+   * @returns {string} Formatted relationship constraints
+   */
+  formatRelationshipConstraints(relationships, targetType) {
+    const lines = relationships.map(rel => {
+      const label = rel.customLabel || rel.relationshipType.replace(/_/g, ' ');
+      return `- ${label}: "${rel.entityName}" (${rel.entityType}, ID: ${rel.entityId})`;
+    });
+
+    return `# Required Relationships
+This ${targetType} MUST have the following relationships to existing entities:
+${lines.join('\n')}
+
+IMPORTANT:
+- Weave these relationships naturally into the description
+- Do NOT invent new places, characters, or items
+- Only reference the entities listed above when describing connections to other entities`;
   }
 }
 

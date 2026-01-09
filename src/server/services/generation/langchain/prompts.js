@@ -22,7 +22,13 @@ When generating content:
 - Use the context provided to inform your generation
 - Pay attention to entity relationships and hierarchies
 - Respect the established style and tone of the world
-- Be creative while staying consistent`;
+- Be creative while staying consistent
+
+CRITICAL CONSTRAINTS:
+- Only reference entities explicitly provided in the context or relationships
+- Never invent new places, characters, items, or events unless the context specifically allows it
+- When relationships are specified, incorporate them naturally and prominently into the description
+- The generated entity must fit seamlessly into the existing world`;
 
 /**
  * Entity generation prompt template

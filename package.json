@@ -16,6 +16,7 @@
     "db:wait": "node ./scripts/wait-for-neo4j.js",
     "db:seed": "node ./scripts/seed.js",
     "db:migrate-images": "node ./scripts/migrate-images.js",
+    "db:migrate-contains": "node --import graphql-import-node/register.js ./scripts/migrate-contains.js",
     "db:reset": "npm run db:stop && docker volume rm game-planner_neo4j_data game-planner_neo4j_logs game-planner_minio_data 2>/dev/null; npm run db:start && npm run db:wait && npm run db:seed",
     "setup": "npm install && npm run db:start && npm run db:wait && npm run db:seed",
     "start": "npm run dev",

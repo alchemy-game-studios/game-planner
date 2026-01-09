@@ -2239,7 +2239,7 @@ async function seedPlaces(session) {
       `CREATE (p:Place {id: $id, name: $name, description: $description, type: $type})
        WITH p
        MATCH (u:Universe {id: $universeId})
-       CREATE (u)-[:CONTAINS]->(p)`,
+       CREATE (p)-[:LOCATED_IN]->(u)`,
       place
     );
   }
@@ -2252,7 +2252,7 @@ async function seedCharacters(session) {
       `CREATE (c:Character {id: $id, name: $name, description: $description, type: $type})
        WITH c
        MATCH (p:Place {id: $placeId})
-       CREATE (p)-[:CONTAINS]->(c)`,
+       CREATE (c)-[:LIVES_IN]->(p)`,
       character
     );
   }
@@ -2265,7 +2265,7 @@ async function seedItems(session) {
       `CREATE (i:Item {id: $id, name: $name, description: $description, type: $type})
        WITH i
        MATCH (c:Character {id: $characterId})
-       CREATE (c)-[:CONTAINS]->(i)`,
+       CREATE (i)-[:HELD_BY]->(c)`,
       item
     );
   }
@@ -2299,7 +2299,7 @@ async function seedNarratives(session) {
       `CREATE (n:Narrative {id: $id, name: $name, description: $description, type: $type})
        WITH n
        MATCH (u:Universe {id: $universeId})
-       CREATE (u)-[:CONTAINS]->(n)`,
+       CREATE (n)-[:PART_OF]->(u)`,
       narrative
     );
   }
@@ -2312,7 +2312,7 @@ async function seedEvents(session) {
       `CREATE (e:Event {id: $id, name: $name, description: $description, type: $type, day: $day, startDate: $startDate, endDate: $endDate})
        WITH e
        MATCH (n:Narrative {id: $narrativeId})
-       CREATE (n)-[:CONTAINS]->(e)`,
+       CREATE (e)-[:PART_OF]->(n)`,
       event
     );
   }

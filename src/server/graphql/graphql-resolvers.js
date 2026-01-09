@@ -42,11 +42,12 @@ async function runQuery(cypher, params = {}) {
   }
 }
 
-// Helper to get the universe ID for any entity by traversing up the CONTAINS chain
+// Helper to get the universe ID for any entity by traversing up semantic relationships
+// All containment relationships flow child→parent: LOCATED_IN, LIVES_IN, HELD_BY, PART_OF
 async function getUniverseForEntity(entityId) {
   const result = await runQuery(`
     MATCH (e {id: $entityId})
-    OPTIONAL MATCH path = (u:Universe)-[:CONTAINS*0..]->(e)
+    OPTIONAL MATCH path = (e)-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF*0..]->(u:Universe)
     WHERE u IS NOT NULL
     RETURN u.id AS universeId, properties(u) AS universe
     LIMIT 1
@@ -85,8 +86,8 @@ async function getImagesForEntity(entityId) {
 
 // Helper to get all images from entity and all descendants (recursive)
 async function getAllImagesForEntity(entityId) {
-  // Use variable-length path to get all descendants via CONTAINS relationship
-  // Then collect images from the entity itself and all descendants
+  // Use variable-length path to get all descendants via semantic relationships
+  // Descendants point TO parent, so we match incoming relationships
   const result = await runQuery(`
     MATCH (root {id: $entityId})
 
@@ -99,8 +100,8 @@ async function getAllImagesForEntity(entityId) {
       depth: 0
     }) AS rootImages
 
-    // Get all descendant entities and their images (recursive CONTAINS)
-    OPTIONAL MATCH path = (root)-[:CONTAINS*1..]->(descendant)
+    // Get all descendant entities and their images (incoming semantic relationships)
+    OPTIONAL MATCH path = (root)<-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF*1..]-(descendant)
     OPTIONAL MATCH (descendant)-[r2:HAS_IMAGE]->(img2:Image)
     WITH root, rootImages, collect({
       image: img2,
@@ -148,8 +149,8 @@ async function getAllContentsForEntity(entityId) {
   const result = await runQuery(`
     MATCH (root {id: $entityId})
 
-    // Get all descendant entities via CONTAINS (recursive)
-    OPTIONAL MATCH path = (root)-[:CONTAINS*1..]->(descendant)
+    // Get all descendant entities via semantic relationships (incoming)
+    OPTIONAL MATCH path = (root)<-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF*1..]-(descendant)
     WHERE descendant IS NOT NULL
 
     // Get the immediate parent of each descendant (use shortest path to avoid duplicates)
@@ -211,7 +212,7 @@ async function getParticipantsForEvent(eventId) {
 // Helper to get parent narrative for an event
 async function getParentNarrativeForEvent(eventId) {
   const result = await runQuery(`
-    MATCH (n:Narrative)-[:CONTAINS]->(e:Event {id: $eventId})
+    MATCH (e:Event {id: $eventId})-[:PART_OF]->(n:Narrative)
     RETURN properties(n) AS narrative
   `, { eventId });
 
@@ -222,7 +223,8 @@ async function getParentNarrativeForEvent(eventId) {
 // Helper to get aggregated places from all events in a narrative
 async function getAggregatedLocationsForNarrative(narrativeId) {
   const result = await runQuery(`
-    MATCH (n:Narrative {id: $narrativeId})-[:CONTAINS]->(e:Event)-[:OCCURS_AT]->(p:Place)
+    MATCH (e:Event)-[:PART_OF]->(n:Narrative {id: $narrativeId})
+    MATCH (e)-[:OCCURS_AT]->(p:Place)
     RETURN DISTINCT properties(p) AS place
     ORDER BY place.name
   `, { narrativeId });
@@ -233,7 +235,8 @@ async function getAggregatedLocationsForNarrative(narrativeId) {
 // Helper to get aggregated characters and items from all events in a narrative
 async function getAggregatedParticipantsForNarrative(narrativeId) {
   const result = await runQuery(`
-    MATCH (n:Narrative {id: $narrativeId})-[:CONTAINS]->(e:Event)-[:INVOLVES]->(p)
+    MATCH (e:Event)-[:PART_OF]->(n:Narrative {id: $narrativeId})
+    MATCH (e)-[:INVOLVES]->(p)
     RETURN DISTINCT properties(p) AS participant,
            CASE
              WHEN p:Character THEN 'character'
@@ -789,7 +792,8 @@ async function generateEntitiesWithRelationships(input, userId) {
     prompt,
     quantity = 1,
     tagIds = [],
-    contextEntityIds = []
+    contextEntityIds = [],
+    relationships = []
   } = input;
 
   // Get the entity label (capitalized)
@@ -810,6 +814,32 @@ async function generateEntitiesWithRelationships(input, userId) {
       } AS entity
     `, { ids: contextEntityIds });
     contextEntities = result.records.map(r => r.get('entity'));
+  }
+
+  // Enrich relationships with entity names for LLM prompt
+  let enrichedRelationships = [];
+  if (relationships.length > 0) {
+    const relationshipIds = relationships.map(r => r.entityId);
+    const relEntitiesResult = await runQuery(`
+      UNWIND $ids AS entityId
+      MATCH (e {id: entityId})
+      RETURN {
+        id: e.id,
+        name: e.name,
+        _nodeType: toLower(labels(e)[0])
+      } AS entity
+    `, { ids: relationshipIds });
+    const entityMap = new Map(
+      relEntitiesResult.records.map(r => {
+        const entity = r.get('entity');
+        return [entity.id, entity];
+      })
+    );
+    enrichedRelationships = relationships.map(rel => ({
+      ...rel,
+      entityName: entityMap.get(rel.entityId)?.name || 'Unknown',
+      entityType: entityMap.get(rel.entityId)?._nodeType || 'entity'
+    }));
   }
 
   // Assemble full context using the context assembler
@@ -896,6 +926,7 @@ async function generateEntitiesWithRelationships(input, userId) {
         quantity,
         tags: appliedTags,
         availableTags,
+        relationships: enrichedRelationships,
         prompt,
       });
       console.log('LLM generation complete:', llmGeneratedEntities.map(e => e.name));
@@ -938,9 +969,16 @@ async function generateEntitiesWithRelationships(input, userId) {
     });
 
     // Create appropriate relationship based on parent type and target type
-    // Events use INVOLVES for characters/items and OCCURS_AT for places
-    // Everything else uses CONTAINS
-    let relationship = 'CONTAINS';
+    // Use semantic relationships: child points to parent
+    // - Place -> Universe: LOCATED_IN
+    // - Character -> Place: LIVES_IN
+    // - Item -> Character: HELD_BY
+    // - Narrative -> Universe: PART_OF
+    // - Event -> Narrative: PART_OF
+    // Events use INVOLVES for characters/items and OCCURS_AT for places (outgoing from event)
+    let relationship = null;
+    let reverseDirection = false; // true means child -> parent
+
     if (parentType === 'event') {
       if (targetType === 'character' || targetType === 'item') {
         relationship = 'INVOLVES';
@@ -954,16 +992,54 @@ async function generateEntitiesWithRelationships(input, userId) {
       } else if (targetType === 'place') {
         relationship = 'OCCURS_AT';
       }
+    } else if (parentType === 'universe') {
+      if (targetType === 'place') {
+        relationship = 'LOCATED_IN';
+        reverseDirection = true;
+      } else if (targetType === 'narrative') {
+        relationship = 'PART_OF';
+        reverseDirection = true;
+      }
+    } else if (parentType === 'place') {
+      if (targetType === 'character') {
+        relationship = 'LIVES_IN';
+        reverseDirection = true;
+      }
+    } else if (parentType === 'character') {
+      if (targetType === 'item') {
+        relationship = 'HELD_BY';
+        reverseDirection = true;
+      }
+    } else if (parentType === 'narrative') {
+      if (targetType === 'event') {
+        relationship = 'PART_OF';
+        reverseDirection = true;
+      }
     }
 
-    await runQuery(`
-      MATCH (parent {id: $parentId})
-      MATCH (child:${entityLabel} {id: $childId})
-      CREATE (parent)-[:${relationship}]->(child)
-    `, {
-      parentId: parentEntityId,
-      childId: entityId
-    });
+    if (relationship) {
+      if (reverseDirection) {
+        // Child points to parent (semantic relationships)
+        await runQuery(`
+          MATCH (parent {id: $parentId})
+          MATCH (child:${entityLabel} {id: $childId})
+          CREATE (child)-[:${relationship}]->(parent)
+        `, {
+          parentId: parentEntityId,
+          childId: entityId
+        });
+      } else {
+        // Parent points to child (event relationships)
+        await runQuery(`
+          MATCH (parent {id: $parentId})
+          MATCH (child:${entityLabel} {id: $childId})
+          CREATE (parent)-[:${relationship}]->(child)
+        `, {
+          parentId: parentEntityId,
+          childId: entityId
+        });
+      }
+    }
 
     // Collect all tag IDs to link (user-selected + LLM-selected existing)
     const allTagIds = new Set([
@@ -1023,6 +1099,37 @@ async function generateEntitiesWithRelationships(input, userId) {
       });
     }
 
+    // Create user-defined relationships to existing entities
+    if (enrichedRelationships.length > 0) {
+      for (const rel of enrichedRelationships) {
+        // Use uppercase relationship type for Neo4j convention
+        const relType = rel.relationshipType.toUpperCase();
+
+        // For custom relationships, store the label as a property
+        if (rel.relationshipType === 'custom' && rel.customLabel) {
+          await runQuery(`
+            MATCH (source:${entityLabel} {id: $sourceId})
+            MATCH (target {id: $targetId})
+            CREATE (source)-[:CUSTOM_RELATION {label: $label}]->(target)
+          `, {
+            sourceId: entityId,
+            targetId: rel.entityId,
+            label: rel.customLabel
+          });
+        } else {
+          await runQuery(`
+            MATCH (source:${entityLabel} {id: $sourceId})
+            MATCH (target {id: $targetId})
+            CREATE (source)-[:${relType}]->(target)
+          `, {
+            sourceId: entityId,
+            targetId: rel.entityId
+          });
+        }
+        console.log(`Created relationship: ${entityName} -[${relType}]-> ${rel.entityName}`);
+      }
+    }
+
     // Build final tag list for response
     const entityTags = [
       ...appliedTags,
@@ -1079,7 +1186,8 @@ async function getEntity(type, id) {
   const result = await runQuery(`
     MATCH (e:${type} {id: $id})
 
-    OPTIONAL MATCH (e)-[:CONTAINS]->(child)
+    // Get children via incoming semantic relationships (child points to parent)
+    OPTIONAL MATCH (e)<-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF]-(child)
     WITH e, child,
       CASE WHEN child IS NOT NULL THEN {
         _nodeType: toLower(labels(child)[0]),
@@ -1145,7 +1253,8 @@ async function getAllEntities(type) {
   const result = await runQuery(`
     MATCH (e:${type})
 
-    OPTIONAL MATCH (e)-[:CONTAINS]->(child)
+    // Get children via incoming semantic relationships (child points to parent)
+    OPTIONAL MATCH (e)<-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF]-(child)
     WITH e, child,
       CASE WHEN child IS NOT NULL THEN {
         _nodeType: toLower(labels(child)[0]),
@@ -1422,8 +1531,9 @@ export default {
 
       if (universeId) {
         // Filter to entities within the specified universe
+        // Entities point TO their parent via semantic relationships
         cypher = `
-          MATCH (u:Universe {id: $universeId})-[:CONTAINS*0..]->(e${typeFilter})
+          MATCH (e${typeFilter})-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF*0..]->(u:Universe {id: $universeId})
           WHERE e.name =~ $pattern
           WITH DISTINCT e
           RETURN {
@@ -1457,8 +1567,9 @@ export default {
 
     // Get all entities in a universe (for @ mentions)
     entitiesInUniverse: async (_, { universeId, excludeId }) => {
+      // Entities point TO their parent via semantic relationships
       const result = await runQuery(`
-        MATCH (u:Universe {id: $universeId})-[:CONTAINS*0..]->(e)
+        MATCH (e)-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF*0..]->(u:Universe {id: $universeId})
         WHERE e.id <> $excludeId
         WITH DISTINCT e
         RETURN {
@@ -1878,6 +1989,23 @@ export default {
       }
 
       return { message: 'Contains relationship added' };
+    },
+
+    // Create a semantic relationship between two entities
+    createRelationship: async (_, { input }) => {
+      const { sourceId, targetId, relationshipType, customLabel } = input;
+
+      // Create the relationship with optional custom label
+      const relType = relationshipType.toUpperCase().replace(/\s+/g, '_');
+
+      await runQuery(`
+        MATCH (source {id: $sourceId})
+        MATCH (target {id: $targetId})
+        MERGE (source)-[r:${relType}]->(target)
+        SET r.label = $customLabel
+      `, { sourceId, targetId, customLabel: customLabel || null });
+
+      return { message: `Created ${relType} relationship` };
     },
 
     // Additive relationship: INVOLVES (adds without removing existing)
@@ -2388,9 +2516,72 @@ export default {
         return entity.id;
       }
 
-      // Otherwise, traverse up the CONTAINS chain to find the universe
+      // Otherwise, traverse up semantic relationships to find the universe
       const universe = await getUniverseForEntity(entity.id);
       return universe?.id || null;
+    },
+
+    relationships: async (entity) => {
+      if (!entity.id) return [];
+
+      // Query for both outgoing and incoming relationships
+      // Exclude structural/metadata relationships:
+      // - CONTAINS: deprecated, replaced by semantic relationships
+      // - TAGGED: tag assignments
+      // - HAS_IMAGE: image attachments
+      // - HAS_ADAPTATION: product adaptations
+      // - HAS_SECTION: product sections
+      // - OWNS: user ownership
+      // - ADAPTS: adaptation links
+      // - FOR_PRODUCT: product associations
+      // - USES_IP: product IP usage
+      // - INVOLVES: event/section participation (shown separately)
+      // - OCCURS_AT: event/section locations (shown separately)
+      const excludedTypes = [
+        'CONTAINS', 'TAGGED', 'HAS_IMAGE', 'HAS_ADAPTATION', 'HAS_SECTION',
+        'OWNS', 'ADAPTS', 'FOR_PRODUCT', 'USES_IP', 'INVOLVES', 'OCCURS_AT'
+      ];
+
+      const result = await runQuery(`
+        MATCH (source {id: $entityId})
+        OPTIONAL MATCH (source)-[outRel]->(outTarget)
+        WHERE NOT type(outRel) IN $excludedTypes
+          AND outTarget.name IS NOT NULL
+        WITH source, collect({
+          id: outTarget.id,
+          relationshipType: type(outRel),
+          customLabel: outRel.label,
+          direction: 'outgoing',
+          targetEntity: {
+            id: outTarget.id,
+            name: outTarget.name,
+            description: outTarget.description,
+            type: outTarget.type
+          },
+          targetType: toLower(labels(outTarget)[0])
+        }) as outgoing
+        OPTIONAL MATCH (inSource)-[inRel]->(source)
+        WHERE NOT type(inRel) IN $excludedTypes
+          AND inSource.name IS NOT NULL
+        WITH outgoing, collect({
+          id: inSource.id,
+          relationshipType: type(inRel),
+          customLabel: inRel.label,
+          direction: 'incoming',
+          targetEntity: {
+            id: inSource.id,
+            name: inSource.name,
+            description: inSource.description,
+            type: inSource.type
+          },
+          targetType: toLower(labels(inSource)[0])
+        }) as incoming
+        RETURN outgoing + incoming as relationships
+      `, { entityId: entity.id, excludedTypes });
+
+      const relationships = result.records[0]?.get('relationships') || [];
+      // Filter out null relationships (from unmatched optional matches)
+      return relationships.filter(r => r.id !== null);
     }
   }
 };

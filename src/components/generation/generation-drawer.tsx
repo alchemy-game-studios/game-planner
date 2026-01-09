@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { gql, useQuery, useLazyQuery, useMutation } from '@apollo/client';
 import { toast } from 'sonner';
+import { RelationshipCard } from './relationship-card';
+import { RelationshipDefinition, getRelationshipTypesForEntity } from '@/lib/relationship-config';
 import {
   Sheet,
   SheetContent,
@@ -48,6 +50,7 @@ import {
   Eye,
   Search,
   X,
+  Link2,
 } from 'lucide-react';
 
 // Tag type configuration - matches tag-pills.tsx colors
@@ -278,6 +281,10 @@ export function GenerationDrawer({
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [relationships, setRelationships] = useState<RelationshipDefinition[]>([]);
+  const [showRelationshipSearch, setShowRelationshipSearch] = useState(false);
+  const [relationshipSearchTerm, setRelationshipSearchTerm] = useState('');
+  const relationshipSearchRef = useRef<HTMLDivElement>(null);
 
   const targetType = defaultTargetType;
   const targetLabel = targetType.charAt(0).toUpperCase() + targetType.slice(1);
@@ -298,10 +305,16 @@ export function GenerationDrawer({
   // Fetch user credits
   const { data: userData } = useQuery(GET_USER_CREDITS, { skip: !open });
 
-  // Search entities
+  // Search entities for context
   const { data: searchData, loading: searchLoading } = useQuery(SEARCH_ENTITIES, {
     variables: { query: searchTerm, universeId },
     skip: !searchTerm || searchTerm.length < 2,
+  });
+
+  // Search entities for relationships
+  const { data: relationshipSearchData, loading: relationshipSearchLoading } = useQuery(SEARCH_ENTITIES, {
+    variables: { query: relationshipSearchTerm, universeId },
+    skip: !relationshipSearchTerm || relationshipSearchTerm.length < 2,
   });
 
   // Generate entity mutation
@@ -394,6 +407,9 @@ export function GenerationDrawer({
       setShowPreview(false);
       setSearchTerm('');
       setShowSearchResults(false);
+      setRelationships([]);
+      setShowRelationshipSearch(false);
+      setRelationshipSearchTerm('');
     }
   }, [open]);
 
@@ -433,6 +449,13 @@ export function GenerationDrawer({
       id: 'generation',
     });
 
+    // Transform relationships for GraphQL input
+    const relationshipInputs = relationships.map((rel) => ({
+      entityId: rel.entityId,
+      relationshipType: rel.relationshipType,
+      customLabel: rel.customLabel || undefined,
+    }));
+
     generateEntity({
       variables: {
         input: {
@@ -442,6 +465,7 @@ export function GenerationDrawer({
           quantity,
           tagIds: selectedTagIds,
           contextEntityIds: selectedContextIds,
+          relationships: relationshipInputs.length > 0 ? relationshipInputs : undefined,
         },
       },
     }).finally(() => {
@@ -540,6 +564,13 @@ export function GenerationDrawer({
                 tag{selectedTagIds.length !== 1 ? 's' : ''}
               </div>
             )}
+            {relationships.length > 0 && (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Link2 className="h-3.5 w-3.5" />
+                <span className="font-medium text-foreground">{relationships.length}</span>
+                relationship{relationships.length !== 1 ? 's' : ''}
+              </div>
+            )}
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <span className="font-medium text-foreground">{(context?.parentChain?.length || 1) + selectedContextIds.length}</span>
               context entities
@@ -630,6 +661,128 @@ export function GenerationDrawer({
                   </div>
                 </TooltipProvider>
               )}
+
+              {/* Relationship Definitions */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Link2 className="h-4 w-4 text-purple-400" />
+                    <label className="text-sm font-medium">Define Relationships</label>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowRelationshipSearch(true)}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    Add
+                  </Button>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Define relationships to existing entities. The AI will weave these into the description.
+                </p>
+
+                {/* Relationship Search Input */}
+                {showRelationshipSearch && (
+                  <div className="relative" ref={relationshipSearchRef}>
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Search for an entity to relate to..."
+                      value={relationshipSearchTerm}
+                      onChange={(e) => setRelationshipSearchTerm(e.target.value)}
+                      className="pl-8 h-8 text-sm"
+                      autoFocus
+                    />
+                    {relationshipSearchTerm && (
+                      <button
+                        onClick={() => {
+                          setRelationshipSearchTerm('');
+                          setShowRelationshipSearch(false);
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+
+                    {/* Relationship search results */}
+                    {relationshipSearchTerm.length >= 2 && (
+                      <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-48 overflow-auto">
+                        {relationshipSearchLoading ? (
+                          <div className="px-3 py-2 text-xs text-muted-foreground">Searching...</div>
+                        ) : !relationshipSearchData?.searchEntities?.length ? (
+                          <div className="px-3 py-2 text-xs text-muted-foreground">No results found</div>
+                        ) : (
+                          relationshipSearchData.searchEntities
+                            .filter((e: any) =>
+                              !relationships.some((r) => r.entityId === e.id) &&
+                              e.id !== sourceEntity.id
+                            )
+                            .slice(0, 8)
+                            .map((entity: any) => {
+                              const entityConfig = ENTITY_CONFIG[entity._nodeType] || ENTITY_CONFIG.character;
+                              const EntityIcon = entityConfig.icon;
+                              const name = entity.properties?.name || entity.name;
+                              const entityType = entity._nodeType;
+                              const defaultRelType = getRelationshipTypesForEntity(entityType)[0]?.value || 'custom';
+                              return (
+                                <button
+                                  key={entity.id}
+                                  onClick={() => {
+                                    setRelationships((prev) => [
+                                      ...prev,
+                                      {
+                                        entityId: entity.id,
+                                        entityName: name,
+                                        entityType,
+                                        relationshipType: defaultRelType,
+                                      },
+                                    ]);
+                                    setRelationshipSearchTerm('');
+                                    setShowRelationshipSearch(false);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/50 text-left"
+                                >
+                                  <EntityIcon className={`h-3.5 w-3.5 ${entityConfig.color}`} />
+                                  <span className="text-sm truncate">{name}</span>
+                                  <span className="text-xs text-muted-foreground ml-auto">{entityType}</span>
+                                </button>
+                              );
+                            })
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Defined relationships */}
+                {relationships.length > 0 && (
+                  <div className="space-y-2">
+                    {relationships.map((rel, idx) => (
+                      <RelationshipCard
+                        key={`${rel.entityId}-${idx}`}
+                        relationship={rel}
+                        onUpdate={(updated) => {
+                          setRelationships((prev) =>
+                            prev.map((r, i) => (i === idx ? updated : r))
+                          );
+                        }}
+                        onRemove={() => {
+                          setRelationships((prev) => prev.filter((_, i) => i !== idx));
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {relationships.length === 0 && !showRelationshipSearch && (
+                  <div className="text-xs text-muted-foreground italic py-2">
+                    No relationships defined. Click "Add" to define relationships to existing entities.
+                  </div>
+                )}
+              </div>
 
               {/* Context Selection */}
               <div className="space-y-4">
