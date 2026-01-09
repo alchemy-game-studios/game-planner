@@ -1,38 +1,30 @@
-import { useState, useEffect } from "react";
-import fetch from 'isomorphic-fetch';
-import { Message, Places } from './client-graphql/graphql-components'
-import './App.css';
+import { Outlet, useLocation } from "react-router-dom";
+import { Toaster } from "sonner";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const App = () => {
-    const [apiResponse, setApiResponse] = useState('Loading Data...')
-
-    // const callApi = () => {
-    //     fetch("http://localhost:3000/testApi")
-    //         .then(res => res.text())
-    //         .then (res => setApiResponse(res))
-    //         .catch(err => err);
-    // }
-
-    // const postApi = () => {
-    //     fetch("http://localhost:3000/testApi", {
-    //         method: "POST",
-    //         headers: {
-    //           "Content-Type": "application/json"
-    //         },
-    //         body: JSON.stringify({})
-    //     }).then(res => res.text())
-    //     .then (res => setApiResponse(res))
-    //     .catch(err => err);
-    // }
-
-  
+    const location = useLocation();
+    const isHome = location.pathname === '/';
 
     return (
         <div className="app">
-          <Places />
+           <Breadcrumbs />
+           {/* Spacer for fixed breadcrumbs (not needed on home) */}
+           {!isHome && <div className="h-10" />}
+           <Outlet />
+           <Toaster
+             position="bottom-right"
+             theme="dark"
+             toastOptions={{
+               style: {
+                 background: '#1a1a1a',
+                 border: '1px solid #333',
+                 color: '#fff',
+               },
+             }}
+           />
         </div>
     );
-    
 }
 
 export default App;
