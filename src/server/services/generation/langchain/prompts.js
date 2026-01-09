@@ -32,6 +32,9 @@ export const entityGenerationPrompt = ChatPromptTemplate.fromMessages([
   HumanMessagePromptTemplate.fromTemplate(`# Context
 {context}
 
+# Available Tags
+{availableTags}
+
 # Task
 Generate a {targetType} for this world with the following requirements:
 {requirements}
@@ -41,6 +44,8 @@ Provide your response as a JSON object with these fields:
 - name: A fitting name for the {targetType}
 - description: A detailed description (2-4 paragraphs)
 - type: A subtype classification (e.g., for characters: "warrior", "merchant", "scholar")
+- existingTagIds: Array of tag IDs from Available Tags that fit this entity (pick 0-3 most relevant)
+- newTags: Array of new tag suggestions (0-2) as objects with "name", "description", and "type" (either "descriptor" or "feeling")
 
 Generate the {targetType}:`)
 ]);

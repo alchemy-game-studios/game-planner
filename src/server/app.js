@@ -31,6 +31,13 @@ setUploadDriver(driver);
 setAuthDriver(driver);
 setWebhookDriver(driver);
 
+// Check for OpenAI API key (required for AI generation)
+if (!process.env.OPENAI_API_KEY) {
+  console.warn('⚠️  OPENAI_API_KEY not set - AI generation will use fallback mode');
+} else {
+  console.log('✓ OpenAI API key configured');
+}
+
 const app = express();
 const __dirname = import.meta.dirname;
 

@@ -5,6 +5,7 @@ import { SUBSCRIPTION_TIERS, CREDIT_PACKAGES, getTierLimits, formatPrice, getCre
 import Stripe from 'stripe';
 import * as legacyContextAssembler from '../services/context-assembler.js';
 import { createContextAssembler } from '../services/generation/index.js';
+import { getEntityGenerator } from '../services/generation/langchain/entity-generator.js';
 import * as costCalculator from '../services/cost-calculator.js';
 
 // Initialize Stripe (will be null if no key configured)
@@ -752,110 +753,21 @@ async function deleteSection(id) {
 // Entity Generation Helper
 // ============================================
 
-// Fake name generators by entity type
-const FAKE_NAMES = {
-  character: {
-    first: ['Alaric', 'Brynn', 'Caelan', 'Dara', 'Eira', 'Finn', 'Gwen', 'Hawk', 'Isla', 'Jace', 'Kira', 'Liam', 'Mira', 'Nox', 'Orin', 'Pax', 'Quinn', 'Raven', 'Sage', 'Thane', 'Uma', 'Vex', 'Wren', 'Xara', 'Yara', 'Zephyr'],
-    last: ['Blackwood', 'Coldwater', 'Darkholm', 'Evernight', 'Firebrand', 'Grimshaw', 'Holloway', 'Ironforge', 'Jadewing', 'Kingsley', 'Lightfoot', 'Moonshadow', 'Nightingale', 'Oakenshield', 'Proudfoot', 'Quicksilver', 'Ravencrest', 'Stormwind', 'Thornwood', 'Underhill', 'Voidwalker', 'Whitmore', 'Wyrmbane'],
-    types: ['warrior', 'mage', 'rogue', 'healer', 'scholar', 'merchant', 'noble', 'commoner', 'artisan', 'hunter']
-  },
-  place: {
-    prefixes: ['Shadow', 'Crystal', 'Iron', 'Storm', 'Moon', 'Sun', 'Dark', 'Silver', 'Golden', 'Ancient', 'Forgotten', 'Hidden', 'Lost', 'Sacred', 'Cursed'],
-    suffixes: ['vale', 'haven', 'hold', 'keep', 'tower', 'gate', 'bridge', 'falls', 'grove', 'peak', 'depths', 'crossing', 'port', 'market', 'sanctum'],
-    types: ['city', 'village', 'fortress', 'ruins', 'temple', 'forest', 'mountain', 'cave', 'lake', 'island']
-  },
-  item: {
-    prefixes: ['Ancient', 'Enchanted', 'Cursed', 'Blessed', 'Legendary', 'Mysterious', 'Glowing', 'Rusted', 'Ornate', 'Simple'],
-    items: ['Sword', 'Staff', 'Amulet', 'Ring', 'Crown', 'Chalice', 'Tome', 'Orb', 'Cloak', 'Dagger', 'Shield', 'Bow', 'Helm', 'Gauntlet', 'Pendant'],
-    suffixes: ['of Power', 'of Shadows', 'of Light', 'of the Ancients', 'of Destiny', 'of Whispers', 'of Storms', 'of Ice', 'of Flame'],
-    types: ['weapon', 'armor', 'accessory', 'artifact', 'consumable', 'key item', 'treasure']
-  },
-  event: {
-    prefixes: ['The Great', 'The First', 'The Last', 'The Battle of', 'The Fall of', 'The Rise of', 'The Siege of', 'The Discovery of', 'The Betrayal at'],
-    suffixes: ['War', 'Rebellion', 'Festival', 'Council', 'Tournament', 'Plague', 'Migration', 'Revolution', 'Coronation'],
-    types: ['battle', 'celebration', 'disaster', 'discovery', 'political', 'religious', 'cultural']
-  },
-  narrative: {
-    prefixes: ['The Legend of', 'The Tale of', 'Chronicles of', 'The Rise of', 'The Fall of', 'Secrets of', 'The Quest for', 'Journey to'],
-    suffixes: ['Darkness', 'Light', 'Redemption', 'Vengeance', 'Hope', 'Destiny', 'the Lost Kingdom', 'the Forgotten Realm'],
-    types: ['epic', 'tragedy', 'comedy', 'mystery', 'adventure', 'romance']
-  }
-};
+// Feature flag for fake generation (fallback when no API key)
+const USE_FAKE_GENERATION = process.env.USE_FAKE_GENERATION === 'true' || !process.env.OPENAI_API_KEY;
 
-// Description templates by entity type
-const DESCRIPTION_TEMPLATES = {
-  character: [
-    'A {type} known for their {trait1} nature and {trait2} demeanor. They carry themselves with {bearing} and speak with {voice}.',
-    'Once a simple {origin}, {name} rose to prominence through {means}. Now they are known throughout the land as a formidable {type}.',
-    'With {feature1} and {feature2}, {name} cuts a striking figure. Their past is shrouded in {mystery}, but their {skill} is undeniable.',
-  ],
-  place: [
-    'A {type} nestled in the {location}. The air here carries the scent of {scent}, and travelers speak of its {reputation}.',
-    'Once a thriving {original}, this {type} now stands as a testament to {history}. {feature} dominates the landscape.',
-    'Hidden from most maps, this {type} is known only to {knowers}. Its {notable} draws the {visitors} from distant lands.',
-  ],
-  item: [
-    'A {type} of remarkable craftsmanship. Its surface {surface}, and those who hold it feel {sensation}.',
-    'Forged in the {origin} by {creator}, this {type} has passed through many hands. It is said to grant its wielder {power}.',
-    'An unassuming {type} at first glance, but upon closer inspection, {detail}. Its true purpose remains {mystery}.',
-  ],
-  event: [
-    'A pivotal {type} that reshaped the balance of power in the region. When {trigger}, everything changed.',
-    'The {type} began as {start}, but quickly escalated into something far greater. The consequences are still felt today.',
-    'Remembered by {rememberers} as the day when {happening}. The {type} marked the end of an era.',
-  ],
-  narrative: [
-    'An {type} spanning generations, telling the story of {subject}. At its heart lies a tale of {theme}.',
-    'This {type} weaves together the fates of {characters}. Through {trials}, they discover {discovery}.',
-    'A gripping {type} that explores the nature of {concept}. Those who hear it are forever changed.',
-  ]
-};
-
-const TRAITS = ['cunning', 'brave', 'mysterious', 'jovial', 'stern', 'gentle', 'fierce', 'wise', 'reckless', 'calculating'];
-const FEATURES = ['piercing eyes', 'weathered hands', 'a knowing smile', 'ancient scars', 'elaborate tattoos', 'distinctive garb'];
-
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function generateFakeName(targetType) {
-  const names = FAKE_NAMES[targetType] || FAKE_NAMES.character;
-
-  switch (targetType) {
-    case 'character':
-      return `${pickRandom(names.first)} ${pickRandom(names.last)}`;
-    case 'place':
-      return `${pickRandom(names.prefixes)}${pickRandom(names.suffixes)}`;
-    case 'item':
-      return `${pickRandom(names.prefixes)} ${pickRandom(names.items)} ${pickRandom(names.suffixes)}`;
-    case 'event':
-      return `${pickRandom(names.prefixes)} ${pickRandom(names.suffixes)}`;
-    case 'narrative':
-      return `${pickRandom(names.prefixes)} ${pickRandom(names.suffixes)}`;
-    default:
-      return `New ${targetType}`;
-  }
-}
-
-function generateFakeType(targetType) {
-  const names = FAKE_NAMES[targetType];
-  return names?.types ? pickRandom(names.types) : '';
-}
-
-function generateFakeDescription(targetType, name, entityType) {
-  const templates = DESCRIPTION_TEMPLATES[targetType] || DESCRIPTION_TEMPLATES.character;
-  let desc = pickRandom(templates);
-
-  // Replace placeholders
-  desc = desc.replace('{name}', name);
-  desc = desc.replace('{type}', entityType || targetType);
-  desc = desc.replace('{trait1}', pickRandom(TRAITS));
-  desc = desc.replace('{trait2}', pickRandom(TRAITS));
-  desc = desc.replace('{feature1}', pickRandom(FEATURES));
-  desc = desc.replace('{feature2}', pickRandom(FEATURES));
-  desc = desc.replace(/{[^}]+}/g, pickRandom(['remarkable', 'ancient', 'mysterious', 'legendary', 'forgotten']));
-
-  return desc;
+// Simple fallback name generators (used when OPENAI_API_KEY not set)
+function generateFallbackEntity(targetType) {
+  const timestamp = Date.now().toString(36);
+  const names = {
+    character: [`Traveler ${timestamp}`, 'wanderer', 'A mysterious figure from distant lands.'],
+    place: [`Location ${timestamp}`, 'settlement', 'A place of significance in this world.'],
+    item: [`Artifact ${timestamp}`, 'artifact', 'An object of unknown origin and purpose.'],
+    event: [`Event ${timestamp}`, 'occurrence', 'A moment in history that shaped the world.'],
+    narrative: [`Tale ${timestamp}`, 'story', 'A narrative waiting to be told.'],
+  };
+  const [name, type, description] = names[targetType] || names.character;
+  return { name, type, description };
 }
 
 /**
@@ -900,7 +812,7 @@ async function generateEntitiesWithRelationships(input, userId) {
     contextEntities = result.records.map(r => r.get('entity'));
   }
 
-  // Assemble full context using the context assembler (for future LLM use)
+  // Assemble full context using the context assembler
   const context = await contextAssembler.assemble({
     entityId: parentEntityId,
     targetType,
@@ -919,11 +831,13 @@ async function generateEntitiesWithRelationships(input, userId) {
   });
 
   // Deduct credits only if user is authenticated
+  let creditsDeducted = false;
   if (userId) {
     await updateUserCredits(userId, -creditCost, `Generated ${quantity} ${targetType}(s)`, 'generation');
+    creditsDeducted = true;
   }
 
-  // Get tag info upfront for all entities
+  // Get user-selected tags
   let appliedTags = [];
   if (tagIds.length > 0) {
     const tagResult = await runQuery(`
@@ -939,22 +853,74 @@ async function generateEntitiesWithRelationships(input, userId) {
     appliedTags = tagResult.records.map(r => r.get('tag'));
   }
 
-  // Generate fake entities
+  // Get ALL universe tags for LLM to choose from
+  const universeId = context.universeId;
+  let availableTags = [];
+  if (universeId) {
+    const allTagsResult = await runQuery(`
+      MATCH (u:Universe {id: $universeId})-[:TAGGED]->(t:Tag)
+      RETURN {
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        type: t.type
+      } AS tag
+    `, { universeId });
+    availableTags = allTagsResult.records.map(r => r.get('tag'));
+  }
+
+  // Get parent entity type to determine correct relationship
+  const parentResult = await runQuery(`
+    MATCH (parent {id: $parentId})
+    RETURN labels(parent)[0] AS parentType
+  `, { parentId: parentEntityId });
+  const parentType = parentResult.records[0]?.get('parentType')?.toLowerCase();
+
+  // Generate entities using LLM or fallback
+  let llmGeneratedEntities;
+  try {
+    if (USE_FAKE_GENERATION) {
+      console.log('Using fallback generation (no OPENAI_API_KEY set)');
+      llmGeneratedEntities = Array.from({ length: quantity }, () => ({
+        ...generateFallbackEntity(targetType),
+        existingTagIds: [],
+        newTags: []
+      }));
+    } else {
+      console.log(`Generating ${quantity} ${targetType}(s) with LLM...`);
+      console.log(`Available tags for selection: ${availableTags.length}`);
+      const generator = getEntityGenerator();
+      llmGeneratedEntities = await generator.generate({
+        context: context.combinedContent,
+        targetType,
+        quantity,
+        tags: appliedTags,
+        availableTags,
+        prompt,
+      });
+      console.log('LLM generation complete:', llmGeneratedEntities.map(e => e.name));
+      console.log('Tags selected/suggested:', llmGeneratedEntities.map(e => ({
+        existing: e.existingTagIds,
+        new: e.newTags?.map(t => t.name)
+      })));
+    }
+  } catch (error) {
+    console.error('Entity generation failed:', error);
+    // Refund credits if we already deducted them
+    if (creditsDeducted && creditCost > 0) {
+      await updateUserCredits(userId, creditCost, 'Generation failed - refund', 'refund');
+    }
+    throw new Error(`Generation failed: ${error.message}`);
+  }
+
+  // Create entities and relationships in the database
   const generatedEntities = [];
 
-  for (let i = 0; i < quantity; i++) {
+  for (const llmEntity of llmGeneratedEntities) {
     const entityId = uuidv4();
-    const entityName = generateFakeName(targetType);
-    const entityType = generateFakeType(targetType);
-    const entityDescription = generateFakeDescription(targetType, entityName, entityType);
-
-    // Get parent entity type to determine correct relationship
-    const parentResult = await runQuery(`
-      MATCH (parent {id: $parentId})
-      RETURN labels(parent)[0] AS parentType
-    `, { parentId: parentEntityId });
-
-    const parentType = parentResult.records[0]?.get('parentType')?.toLowerCase();
+    const entityName = llmEntity.name;
+    const entityType = llmEntity.type || targetType;
+    const entityDescription = llmEntity.description || '';
 
     // Create the entity
     await runQuery(`
@@ -999,8 +965,53 @@ async function generateEntitiesWithRelationships(input, userId) {
       childId: entityId
     });
 
-    // Create TAGGED relationships for each selected tag
-    if (tagIds.length > 0) {
+    // Collect all tag IDs to link (user-selected + LLM-selected existing)
+    const allTagIds = new Set([
+      ...tagIds,
+      ...(llmEntity.existingTagIds || [])
+    ]);
+
+    // Create new tags suggested by LLM
+    const createdTags = [];
+    if (llmEntity.newTags && llmEntity.newTags.length > 0) {
+      for (const newTag of llmEntity.newTags) {
+        const newTagId = uuidv4();
+        await runQuery(`
+          CREATE (t:Tag {
+            id: $id,
+            name: $name,
+            description: $description,
+            type: $type
+          })
+        `, {
+          id: newTagId,
+          name: newTag.name,
+          description: newTag.description,
+          type: newTag.type
+        });
+
+        // Link new tag to universe
+        if (universeId) {
+          await runQuery(`
+            MATCH (u:Universe {id: $universeId})
+            MATCH (t:Tag {id: $tagId})
+            CREATE (u)-[:TAGGED]->(t)
+          `, { universeId, tagId: newTagId });
+        }
+
+        allTagIds.add(newTagId);
+        createdTags.push({
+          id: newTagId,
+          name: newTag.name,
+          description: newTag.description,
+          type: newTag.type
+        });
+        console.log(`Created new tag: ${newTag.name} (${newTagId})`);
+      }
+    }
+
+    // Create TAGGED relationships for all tags
+    if (allTagIds.size > 0) {
       await runQuery(`
         MATCH (e:${entityLabel} {id: $entityId})
         UNWIND $tagIds AS tagId
@@ -1008,9 +1019,16 @@ async function generateEntitiesWithRelationships(input, userId) {
         CREATE (e)-[:TAGGED]->(t)
       `, {
         entityId,
-        tagIds
+        tagIds: Array.from(allTagIds)
       });
     }
+
+    // Build final tag list for response
+    const entityTags = [
+      ...appliedTags,
+      ...availableTags.filter(t => llmEntity.existingTagIds?.includes(t.id)),
+      ...createdTags
+    ];
 
     generatedEntities.push({
       id: entityId,
@@ -1018,13 +1036,13 @@ async function generateEntitiesWithRelationships(input, userId) {
       description: entityDescription,
       type: entityType,
       _nodeType: targetType.toLowerCase(),
-      tags: appliedTags
+      tags: entityTags
     });
   }
 
   return {
     entities: generatedEntities,
-    creditsUsed: userId ? creditCost : 0
+    creditsUsed: creditsDeducted ? creditCost : 0
   };
 }
 
@@ -2286,9 +2304,6 @@ export default {
 
     // Entity generation mutation
     generateEntity: async (_, { input }, context) => {
-      // TODO: Remove this delay - only for testing loading state
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
       // Optional authentication - if user exists, check credits
       const user = context.user;
       let userId = null;
