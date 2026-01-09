@@ -174,18 +174,23 @@ function RelationshipItem({
   const EntityIcon = ENTITY_ICONS[relationship.targetType] || User;
   const entityColor = ENTITY_COLORS[relationship.targetType] || 'text-muted-foreground';
 
-  // Format the relationship label
-  const label = relationship.customLabel ||
-    getRelationshipLabel(relationship.relationshipType, relationship.targetType);
-
   const isOutgoing = relationship.direction === 'outgoing';
+
+  // Format the relationship label with correct direction
+  const label = relationship.customLabel ||
+    getRelationshipLabel(
+      relationship.relationshipType,
+      relationship.targetType,
+      undefined,
+      isOutgoing ? 'outgoing' : 'incoming'
+    );
 
   return (
     <Link
       to={`/edit/${relationship.targetType}/${relationship.targetEntity.id}`}
       className="block p-2 rounded-lg border border-border bg-card/50 hover:bg-card hover:border-purple-500/30 transition-colors group"
     >
-      {/* Row 1: Direction + relationship label */}
+      {/* Row 1: Direction + relationship label + entity type */}
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
         {isOutgoing ? (
           <ArrowRight className="h-3 w-3 text-purple-400 shrink-0" />
@@ -193,6 +198,7 @@ function RelationshipItem({
           <ArrowLeft className="h-3 w-3 text-blue-400 shrink-0" />
         )}
         <span>{label}</span>
+        <span className="text-muted-foreground/60 capitalize">• {relationship.targetType}</span>
       </div>
 
       {/* Row 2: Entity icon + name */}
