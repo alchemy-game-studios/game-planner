@@ -44,3 +44,9 @@ export {
   formatTagsForPrompt,
   formatEntitiesForPrompt
 } from './prompts.js';
+
+// Entity Generator
+export {
+  EntityGenerator,
+  getEntityGenerator
+} from './entity-generator.js';
