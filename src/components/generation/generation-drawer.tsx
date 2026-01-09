@@ -263,6 +263,16 @@ interface GenerationDrawerProps {
   onGenerated?: (entity: any) => void;
 }
 
+// Define which entity types can be generated from each source type
+const VALID_TARGET_TYPES: Record<string, string[]> = {
+  universe: ['place', 'character', 'narrative', 'item'],
+  place: ['character', 'item'],
+  character: ['item'],
+  narrative: ['event'],
+  event: [],
+  item: [],
+};
+
 export function GenerationDrawer({
   open,
   onOpenChange,
@@ -286,7 +296,17 @@ export function GenerationDrawer({
   const [relationshipSearchTerm, setRelationshipSearchTerm] = useState('');
   const relationshipSearchRef = useRef<HTMLDivElement>(null);
 
-  const targetType = defaultTargetType;
+  // Get valid target types for the source entity
+  const sourceType = sourceEntity?._nodeType || sourceEntity?.type || 'universe';
+  const validTargetTypes = VALID_TARGET_TYPES[sourceType] || ['character'];
+
+  // Target type state - initialize with defaultTargetType if valid, otherwise first valid type
+  const [targetType, setTargetType] = useState(() => {
+    if (validTargetTypes.includes(defaultTargetType)) {
+      return defaultTargetType;
+    }
+    return validTargetTypes[0] || 'character';
+  });
   const targetLabel = targetType.charAt(0).toUpperCase() + targetType.slice(1);
   const targetConfig = ENTITY_CONFIG[targetType] || ENTITY_CONFIG.character;
   const TargetIcon = targetConfig.icon;
@@ -407,6 +427,10 @@ export function GenerationDrawer({
       setShowPreview(false);
       setSearchTerm('');
       setShowSearchResults(false);
+      // Reset target type to first valid option for the source entity
+      const srcType = sourceEntity?._nodeType || sourceEntity?.type || 'universe';
+      const validTypes = VALID_TARGET_TYPES[srcType] || ['character'];
+      setTargetType(validTypes[0] || 'character');
       setRelationships([]);
       setShowRelationshipSearch(false);
       setRelationshipSearchTerm('');
@@ -537,6 +561,34 @@ export function GenerationDrawer({
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+          {/* Entity Type Selector - Only show if multiple options */}
+          {validTargetTypes.length > 1 && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">What to generate</label>
+              <div className="flex flex-wrap gap-2">
+                {validTargetTypes.map((type) => {
+                  const config = ENTITY_CONFIG[type] || ENTITY_CONFIG.character;
+                  const Icon = config.icon;
+                  const isSelected = targetType === type;
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => setTargetType(type)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
+                        isSelected
+                          ? `${config.bgColor} border-white/20 ${config.color}`
+                          : 'border-border bg-card/50 text-muted-foreground hover:border-white/10 hover:bg-card'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="capitalize text-sm">{type}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Prompt - Always visible */}
           <div className="space-y-2">
             <label className="text-sm font-medium">
