@@ -774,6 +774,49 @@ function generateFallbackEntity(targetType) {
 }
 
 /**
+ * Format entity name references in a description as @ mention chips.
+ * Converts plain text references to entities into clickable mention HTML.
+ *
+ * @param {string} description - The generated description text
+ * @param {Array} relationships - Array of relationship objects with entityId, entityName, entityType
+ * @returns {string} Description with entity names converted to mention HTML
+ */
+function formatMentionsInDescription(description, relationships) {
+  if (!description || !relationships || relationships.length === 0) {
+    return description;
+  }
+
+  let result = description;
+
+  // Sort relationships by name length (longest first) to avoid partial matches
+  const sortedRelationships = [...relationships].sort(
+    (a, b) => (b.entityName?.length || 0) - (a.entityName?.length || 0)
+  );
+
+  for (const rel of sortedRelationships) {
+    if (!rel.entityName || !rel.entityId || !rel.entityType) continue;
+
+    // Create a regex that matches the entity name with word boundaries
+    // Escape special regex characters in the entity name
+    const escapedName = rel.entityName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Match the name with word boundaries, case-insensitive
+    // But not if it's already inside a mention-chip (avoid double-formatting)
+    const regex = new RegExp(
+      `(?<!data-label=")(?<!@)\\b(${escapedName})\\b(?![^<]*</a>)`,
+      'gi'
+    );
+
+    // Generate the mention HTML chip
+    const mentionHtml = `<a class="mention-chip" href="/edit/${rel.entityType}/${rel.entityId}" data-id="${rel.entityId}" data-type="${rel.entityType}" data-label="${rel.entityName}">@$1</a>`;
+
+    result = result.replace(regex, mentionHtml);
+  }
+
+  return result;
+}
+
+/**
  * Generate entities and create relationships based on context
  * @param {Object} input - Generation input
  * @param {string} input.parentEntityId - Parent entity ID for CONTAINS relationship
@@ -899,12 +942,24 @@ async function generateEntitiesWithRelationships(input, userId) {
     availableTags = allTagsResult.records.map(r => r.get('tag'));
   }
 
-  // Get parent entity type to determine correct relationship
+  // Get parent entity type and name to determine correct relationship and for mention formatting
   const parentResult = await runQuery(`
     MATCH (parent {id: $parentId})
-    RETURN labels(parent)[0] AS parentType
+    RETURN labels(parent)[0] AS parentType, parent.name AS parentName
   `, { parentId: parentEntityId });
   const parentType = parentResult.records[0]?.get('parentType')?.toLowerCase();
+  const parentName = parentResult.records[0]?.get('parentName');
+
+  // Build mention entities list (includes parent + explicit relationships for formatting descriptions)
+  // This is separate from enrichedRelationships which goes to the LLM and requires relationshipType
+  const mentionEntities = [
+    ...enrichedRelationships,
+    ...(parentName && parentType ? [{
+      entityId: parentEntityId,
+      entityName: parentName,
+      entityType: parentType
+    }] : [])
+  ];
 
   // Generate entities using LLM or fallback
   let llmGeneratedEntities;
@@ -951,7 +1006,10 @@ async function generateEntitiesWithRelationships(input, userId) {
     const entityId = uuidv4();
     const entityName = llmEntity.name;
     const entityType = llmEntity.type || targetType;
-    const entityDescription = llmEntity.description || '';
+
+    // Format entity references as @ mentions in the description
+    const rawDescription = llmEntity.description || '';
+    const entityDescription = formatMentionsInDescription(rawDescription, mentionEntities);
 
     // Create the entity
     await runQuery(`
