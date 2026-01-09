@@ -7,6 +7,7 @@ import * as legacyContextAssembler from '../services/context-assembler.js';
 import { createContextAssembler } from '../services/generation/index.js';
 import { getEntityGenerator } from '../services/generation/langchain/entity-generator.js';
 import * as costCalculator from '../services/cost-calculator.js';
+import { generateEntityImage, isImageGenerationAvailable } from '../services/image-generation/index.js';
 
 // Initialize Stripe (will be null if no key configured)
 const stripe = process.env.STRIPE_SECRET_KEY
@@ -836,7 +837,10 @@ async function generateEntitiesWithRelationships(input, userId) {
     quantity = 1,
     tagIds = [],
     contextEntityIds = [],
-    relationships = []
+    relationships = [],
+    generateImage = true,  // Default to true (on by default)
+    imageSize = '1024x1024',
+    imageStyle = 'vivid'
   } = input;
 
   // Get the entity label (capitalized)
@@ -1051,7 +1055,8 @@ async function generateEntitiesWithRelationships(input, userId) {
         relationship = 'OCCURS_AT';
       }
     } else if (parentType === 'universe') {
-      if (targetType === 'place') {
+      if (targetType === 'place' || targetType === 'character') {
+        // Characters can be directly in a universe (no place required)
         relationship = 'LOCATED_IN';
         reverseDirection = true;
       } else if (targetType === 'narrative') {
@@ -1205,9 +1210,94 @@ async function generateEntitiesWithRelationships(input, userId) {
     });
   }
 
+  // Generate image for the first entity if requested
+  let generatedImageResult = null;
+  let imageCreditsUsed = 0;
+
+  if (generateImage && generatedEntities.length > 0 && isImageGenerationAvailable()) {
+    const firstEntity = generatedEntities[0];
+    try {
+      // Calculate image credit cost
+      const imageCost = costCalculator.estimateImageCost?.({ size: imageSize }) || 8;
+
+      // Deduct credits for image generation
+      if (userId) {
+        await updateUserCredits(userId, -imageCost, `Generated image for ${firstEntity.name}`, 'image_generation');
+      }
+      imageCreditsUsed = imageCost;
+
+      console.log(`[Image Generation] Starting for entity: ${firstEntity.name}`);
+
+      // Get universe tags for style context
+      const universeTags = availableTags.filter(t => t._isUniverseTag);
+
+      // Generate the image
+      const imageResult = await generateEntityImage({
+        entity: {
+          id: firstEntity.id,
+          name: firstEntity.name,
+          description: firstEntity.description,
+          _nodeType: targetType,
+        },
+        tags: appliedTags,
+        universeTags,
+        options: {
+          size: imageSize,
+          style: imageStyle,
+        },
+      });
+
+      // Create Image node in Neo4j and link to entity
+      await runQuery(`
+        MATCH (e {id: $entityId})
+        CREATE (i:Image {
+          id: $imageId,
+          filename: $filename,
+          key: $key,
+          mimeType: $mimeType,
+          size: $size,
+          prompt: $prompt,
+          provider: $provider,
+          generated: true,
+          uploadedAt: datetime()
+        })
+        CREATE (e)-[:HAS_IMAGE {rank: 1}]->(i)
+      `, {
+        entityId: firstEntity.id,
+        imageId: imageResult.imageId,
+        filename: `${firstEntity.name.replace(/[^a-zA-Z0-9]/g, '-')}-generated.png`,
+        key: imageResult.key,
+        mimeType: imageResult.mimeType,
+        size: imageResult.size || 0,
+        prompt: imageResult.prompt,
+        provider: imageResult.metadata?.provider || 'openai-dalle',
+      });
+
+      generatedImageResult = {
+        id: imageResult.imageId,
+        url: imageResult.url,
+        prompt: imageResult.prompt,
+        provider: imageResult.metadata?.provider || 'openai-dalle',
+      };
+
+      console.log(`[Image Generation] Complete: ${imageResult.url}`);
+
+    } catch (imageError) {
+      console.error('[Image Generation] Failed:', imageError);
+      // Refund image credits if generation failed
+      if (imageCreditsUsed > 0 && userId) {
+        await updateUserCredits(userId, imageCreditsUsed, 'Image generation failed - refund', 'refund');
+        imageCreditsUsed = 0;
+      }
+      // Don't fail the whole operation - entity was created successfully
+    }
+  }
+
   return {
     entities: generatedEntities,
-    creditsUsed: creditsDeducted ? creditCost : 0
+    creditsUsed: creditsDeducted ? creditCost : 0,
+    generatedImage: generatedImageResult,
+    imageCreditsUsed,
   };
 }
 
@@ -2515,7 +2605,9 @@ export default {
       return {
         entities: result.entities,
         creditsUsed: result.creditsUsed,
-        message: `Successfully generated ${result.entities.length} ${input.targetType}(s)`
+        message: `Successfully generated ${result.entities.length} ${input.targetType}(s)`,
+        generatedImage: result.generatedImage,
+        imageCreditsUsed: result.imageCreditsUsed,
       };
     },
 
@@ -2582,7 +2674,6 @@ export default {
     relationships: async (entity) => {
       if (!entity.id) return [];
 
-      // Query for both outgoing and incoming relationships
       // Exclude structural/metadata relationships:
       // - CONTAINS: deprecated, replaced by semantic relationships
       // - TAGGED: tag assignments
@@ -2599,6 +2690,15 @@ export default {
         'CONTAINS', 'TAGGED', 'HAS_IMAGE', 'HAS_ADAPTATION', 'HAS_SECTION',
         'OWNS', 'ADAPTS', 'FOR_PRODUCT', 'USES_IP', 'INVOLVES', 'OCCURS_AT'
       ];
+
+      // For universes, include all nested entities (places, characters, items, etc.)
+      // via semantic relationships (LOCATED_IN, LIVES_IN, HELD_BY, PART_OF)
+      const isUniverse = entity._nodeType === 'universe';
+
+      // Use different path depth for universes (all descendants) vs others (direct only)
+      const pathPattern = isUniverse
+        ? '(inSource)-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF*1..]->(source)'
+        : '(inSource)-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF]->(source)';
 
       const result = await runQuery(`
         MATCH (source {id: $entityId})
@@ -2618,13 +2718,15 @@ export default {
           },
           targetType: toLower(labels(outTarget)[0])
         }) as outgoing
-        OPTIONAL MATCH (inSource)-[inRel]->(source)
-        WHERE NOT type(inRel) IN $excludedTypes
-          AND inSource.name IS NOT NULL
-        WITH outgoing, collect({
+
+        // Get semantic relationships (nested for universes, direct for others)
+        OPTIONAL MATCH path = ${pathPattern}
+        WHERE inSource.name IS NOT NULL
+          AND NOT inSource:Tag
+        WITH outgoing, collect(DISTINCT {
           id: inSource.id,
-          relationshipType: type(inRel),
-          customLabel: inRel.label,
+          relationshipType: head([r IN relationships(path) | type(r)]),
+          customLabel: null,
           direction: 'incoming',
           targetEntity: {
             id: inSource.id,
@@ -2633,8 +2735,28 @@ export default {
             type: inSource.type
           },
           targetType: toLower(labels(inSource)[0])
-        }) as incoming
-        RETURN outgoing + incoming as relationships
+        }) as nestedIncoming
+
+        // Also get other incoming relationships (non-semantic)
+        OPTIONAL MATCH (otherIn)-[inRel]->(source)
+        WHERE NOT type(inRel) IN $excludedTypes
+          AND NOT type(inRel) IN ['LOCATED_IN', 'LIVES_IN', 'HELD_BY', 'PART_OF']
+          AND otherIn.name IS NOT NULL
+        WITH outgoing, nestedIncoming, collect({
+          id: otherIn.id,
+          relationshipType: type(inRel),
+          customLabel: inRel.label,
+          direction: 'incoming',
+          targetEntity: {
+            id: otherIn.id,
+            name: otherIn.name,
+            description: otherIn.description,
+            type: otherIn.type
+          },
+          targetType: toLower(labels(otherIn)[0])
+        }) as otherIncoming
+
+        RETURN outgoing + nestedIncoming + otherIncoming as relationships
       `, { entityId: entity.id, excludedTypes });
 
       const relationships = result.records[0]?.get('relationships') || [];

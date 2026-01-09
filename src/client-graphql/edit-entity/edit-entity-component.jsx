@@ -251,13 +251,13 @@ export function EditEntityComponent({id, type, isEdit}) {
     };
 
     // Get the best background image - use placeholder if no images exist
+    // For generated images, use the actual URL from the image data
+    // For legacy images, fall back to the static path format
     const hasImages = entity.images && entity.images.length > 0;
-    const backgroundImageUrl = hasImages
-        ? getEntityImage(id, "hero")
-        : getPlaceholderImage("hero");
-    const avatarImageUrl = hasImages
-        ? getEntityImage(id, "avatar")
-        : getPlaceholderImage("avatar");
+    const primaryImage = hasImages ? entity.images[0] : null;
+    const backgroundImageUrl = primaryImage?.url || (hasImages ? getEntityImage(id, "hero") : getPlaceholderImage("hero"));
+    // Use the same image for avatar - it will be displayed at smaller size via CSS
+    const avatarImageUrl = primaryImage?.url || (hasImages ? getEntityImage(id, "avatar") : getPlaceholderImage("avatar"));
 
     return (
         <>

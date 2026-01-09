@@ -220,6 +220,11 @@ export function RichTextEditor({
           border: 1px solid rgba(242, 140, 40, 0.3);
           color: var(--ck-ember);
         }
+        .mention-chip[data-type="universe"] {
+          background-color: rgba(168, 85, 247, 0.2);
+          border: 1px solid rgba(168, 85, 247, 0.3);
+          color: rgb(192, 132, 252);
+        }
       `}</style>
     </div>
   );

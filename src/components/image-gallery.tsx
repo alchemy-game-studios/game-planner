@@ -93,6 +93,19 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     }
   };
 
+  // Entity label for descendant images - defined early to avoid hoisting issues
+  const EntityLabel = ({ image }: { image: Image }) => {
+    // Only show label if image is from a different entity
+    if (!image.entityId || image.entityId === entityId) return null;
+
+    return (
+      <div className="absolute top-2 left-2 bg-background/80 rounded px-2 py-1 text-xs text-foreground border border-border z-10">
+        <span className="text-muted-foreground capitalize">{image.entityType}: </span>
+        <span className="font-medium">{image.entityName}</span>
+      </div>
+    );
+  };
+
   if (displayImages.length === 0) {
     const placeholderSrc = getPlaceholderImage('hero');
     return (
@@ -183,19 +196,6 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
       {(rotationOffset % sortedImages.length) + 1} / {sortedImages.length}
     </div>
   );
-
-  // Entity label for descendant images
-  const EntityLabel = ({ image }: { image: Image }) => {
-    // Only show label if image is from a different entity
-    if (!image.entityId || image.entityId === entityId) return null;
-
-    return (
-      <div className="absolute top-2 left-2 bg-background/80 rounded px-2 py-1 text-xs text-foreground border border-border z-10">
-        <span className="text-muted-foreground capitalize">{image.entityType}: </span>
-        <span className="font-medium">{image.entityName}</span>
-      </div>
-    );
-  };
 
   // Two images layout
   if (displayImages.length === 2) {

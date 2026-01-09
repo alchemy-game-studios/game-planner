@@ -16,6 +16,22 @@ export const BASE_COSTS = {
   outline: 1,      // Per 3 entities in subgraph mode
 };
 
+// Image generation costs by provider and size (in credits)
+export const IMAGE_COSTS = {
+  'openai-dalle': {
+    '1024x1024': 8,     // Square
+    '1792x1024': 12,    // Landscape
+    '1024x1792': 12,    // Portrait
+  },
+  // Future providers (placeholder costs)
+  'midjourney': {
+    'default': 10,
+  },
+  'nanobanana': {
+    'default': 5,
+  },
+};
+
 // Cost modifiers
 export const MODIFIERS = {
   highCreativity: 1.2,      // creativity > 0.8 (more tokens/retries)
@@ -284,5 +300,64 @@ export function getCostInfo(targetType) {
       regeneration: `-${Math.round((1 - MODIFIERS.fieldRegeneration) * 100)}%`,
       variation: `-${Math.round((1 - MODIFIERS.variation) * 100)}%`
     }
+  };
+}
+
+/**
+ * Estimate cost for image generation
+ * @param {Object} params - Image generation parameters
+ * @param {string} params.provider - Image provider name (default: openai-dalle)
+ * @param {string} params.size - Image size (default: 1024x1024)
+ * @returns {number} Cost in credits
+ */
+export function estimateImageCost({ provider = 'openai-dalle', size = '1024x1024' } = {}) {
+  const providerCosts = IMAGE_COSTS[provider] || IMAGE_COSTS['openai-dalle'];
+  return providerCosts[size] || providerCosts['default'] || 8;
+}
+
+/**
+ * Get combined cost estimate for entity + image generation
+ * @param {Object} params - Generation parameters (same as estimateCost + generateImage)
+ * @returns {Object} Combined cost breakdown
+ */
+export function estimateCombinedCost(params) {
+  const {
+    generateImage = false,
+    imageProvider = 'openai-dalle',
+    imageSize = '1024x1024',
+    ...entityParams
+  } = params;
+
+  const entityCost = estimateCost(entityParams);
+  const imageCost = generateImage ? estimateImageCost({ provider: imageProvider, size: imageSize }) : 0;
+
+  return {
+    entityCost,
+    imageCost,
+    totalCost: entityCost + imageCost,
+    breakdown: [
+      { label: 'Entity generation', credits: entityCost },
+      ...(generateImage ? [{ label: 'Image generation', credits: imageCost }] : []),
+    ],
+    summary: `${entityCost + imageCost} credits${generateImage ? ` (${entityCost} entity + ${imageCost} image)` : ''}`
+  };
+}
+
+/**
+ * Get image cost info for UI display
+ * @param {string} provider - Provider name
+ * @returns {Object} Image cost info
+ */
+export function getImageCostInfo(provider = 'openai-dalle') {
+  const providerCosts = IMAGE_COSTS[provider] || IMAGE_COSTS['openai-dalle'];
+
+  return {
+    provider,
+    sizes: Object.entries(providerCosts).map(([size, cost]) => ({
+      size,
+      cost,
+      label: size === '1024x1024' ? 'Square' : size === '1792x1024' ? 'Wide' : size === '1024x1792' ? 'Tall' : size
+    })),
+    defaultCost: providerCosts['1024x1024'] || providerCosts['default'] || 8
   };
 }

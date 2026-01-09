@@ -51,6 +51,7 @@ import {
   Search,
   X,
   Link2,
+  ImageIcon,
 } from 'lucide-react';
 
 // Tag type configuration - matches tag-pills.tsx colors
@@ -245,6 +246,13 @@ const GENERATE_ENTITY = gql`
       }
       creditsUsed
       message
+      generatedImage {
+        id
+        url
+        prompt
+        provider
+      }
+      imageCreditsUsed
     }
   }
 `;
@@ -295,6 +303,10 @@ export function GenerationDrawer({
   const [showRelationshipSearch, setShowRelationshipSearch] = useState(false);
   const [relationshipSearchTerm, setRelationshipSearchTerm] = useState('');
   const relationshipSearchRef = useRef<HTMLDivElement>(null);
+
+  // Image generation options
+  const [generateImage, setGenerateImage] = useState(true); // ON by default
+  const [imageSize, setImageSize] = useState<'1024x1024' | '1792x1024' | '1024x1792'>('1792x1024');
 
   // Get valid target types for the source entity
   const sourceType = sourceEntity?._nodeType || sourceEntity?.type || 'universe';
@@ -434,6 +446,9 @@ export function GenerationDrawer({
       setRelationships([]);
       setShowRelationshipSearch(false);
       setRelationshipSearchTerm('');
+      // Reset image generation to defaults
+      setGenerateImage(true);
+      setImageSize('1792x1024');
     }
   }, [open]);
 
@@ -461,11 +476,13 @@ export function GenerationDrawer({
     });
     setShowPreview(true);
   };
-  const cost = costData?.estimateGenerationCost?.credits ?? 0;
+  const entityCost = costData?.estimateGenerationCost?.credits ?? 0;
+  const imageCost = generateImage ? (imageSize === '1024x1024' ? 8 : 12) : 0;
+  const totalCost = entityCost + imageCost;
   const userCredits = userData?.me?.credits ?? 0;
   // Allow generation without auth (fake generation) or with sufficient credits
   const isAuthenticated = !!userData?.me;
-  const hasEnoughCredits = !isAuthenticated || userCredits >= cost;
+  const hasEnoughCredits = !isAuthenticated || userCredits >= totalCost;
 
   const handleGenerate = () => {
     // Show loading toast
@@ -490,6 +507,8 @@ export function GenerationDrawer({
           tagIds: selectedTagIds,
           contextEntityIds: selectedContextIds,
           relationships: relationshipInputs.length > 0 ? relationshipInputs : undefined,
+          generateImage,
+          imageSize: generateImage ? imageSize : undefined,
         },
       },
     }).finally(() => {
@@ -609,6 +628,12 @@ export function GenerationDrawer({
               <span className="font-medium text-foreground">{quantity}</span>
               {targetType}{quantity > 1 ? 's' : ''} to generate
             </div>
+            {generateImage && (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <ImageIcon className="h-3.5 w-3.5" />
+                <span className="font-medium text-foreground">+image</span>
+              </div>
+            )}
             {selectedTagIds.length > 0 && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <Tag className="h-3.5 w-3.5" />
@@ -661,6 +686,47 @@ export function GenerationDrawer({
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Image Generation */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4 text-purple-400" />
+                    <label className="text-sm font-medium">Generate Image</label>
+                  </div>
+                  <Checkbox
+                    checked={generateImage}
+                    onCheckedChange={(checked) => setGenerateImage(checked === true)}
+                  />
+                </div>
+                {generateImage && (
+                  <div className="pl-6 space-y-2">
+                    <div className="flex gap-2">
+                      {[
+                        { value: '1024x1024' as const, label: 'Square', cost: 8 },
+                        { value: '1792x1024' as const, label: 'Wide ★', cost: 12 },
+                        { value: '1024x1792' as const, label: 'Tall', cost: 12 },
+                      ].map((size) => (
+                        <button
+                          key={size.value}
+                          onClick={() => setImageSize(size.value)}
+                          className={`flex-1 py-1.5 text-xs rounded border transition-colors ${
+                            imageSize === size.value
+                              ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
+                              : 'bg-card border-border text-muted-foreground hover:border-muted-foreground'
+                          }`}
+                        >
+                          {size.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Coins className="h-3 w-3" />
+                      +{imageSize === '1024x1024' ? 8 : 12} credits for image
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Tags - Grouped by Type */}
@@ -1023,7 +1089,7 @@ export function GenerationDrawer({
               {generating ? 'Generating...' : 'Generate'}
               <span className="ml-1.5 flex items-center gap-1 text-white/80">
                 <Coins className="h-3.5 w-3.5" />
-                {cost}
+                {totalCost}
               </span>
             </Button>
           </div>

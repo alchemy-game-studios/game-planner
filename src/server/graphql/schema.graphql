@@ -263,7 +263,7 @@ type Image {
   filename: String!
   url: String!
   mimeType: String!
-  size: Int!
+  size: Int
   rank: Int!
   uploadedAt: String
 }
@@ -274,7 +274,7 @@ type EntityImage {
   filename: String!
   url: String!
   mimeType: String!
-  size: Int!
+  size: Int
   rank: Int!
   uploadedAt: String
   entityId: String!
@@ -761,6 +761,10 @@ input GenerateEntityInput {
   contextEntityIds: [String!]
   # Relationships to existing entities that the LLM should incorporate
   relationships: [RelationshipInput!]
+  # Image generation options
+  generateImage: Boolean        # Whether to generate an image (default: true)
+  imageSize: String             # 1024x1024, 1792x1024, 1024x1792
+  imageStyle: String            # vivid, natural
 }
 
 # Result of entity generation
@@ -779,4 +783,15 @@ type GenerateEntityResponse {
   entities: [GeneratedEntity!]!
   creditsUsed: Int!
   message: String!
+  # Generated image info (if generateImage was true)
+  generatedImage: GeneratedImage
+  imageCreditsUsed: Int
+}
+
+# Generated image result
+type GeneratedImage {
+  id: String!
+  url: String!
+  prompt: String!
+  provider: String!
 }
