@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ImageEditorDrawer } from './image-editor-drawer';
@@ -36,6 +37,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   onUpdate,
   fallbackImage
 }) => {
+  const navigate = useNavigate();
   const [editorOpen, setEditorOpen] = useState(false);
   const [rotationOffset, setRotationOffset] = useState(0);
 
@@ -67,9 +69,17 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     setRotationOffset((prev) => (prev - 1 + sortedImages.length) % sortedImages.length);
   };
 
-  // Click on any image to make it primary
-  const rotateToImage = (index: number) => {
-    // index is relative to rotatedImages, convert to absolute offset
+  // Click on any image - navigate to entity if from different entity, otherwise rotate
+  const handleImageClick = (index: number) => {
+    const image = rotatedImages[index];
+
+    // If image is from a different entity, navigate to that entity's page
+    if (image?.entityId && image.entityId !== entityId && image.entityType) {
+      navigate(`/edit/${image.entityType}/${image.entityId}`);
+      return;
+    }
+
+    // Otherwise, rotate to make this image primary
     const newOffset = (rotationOffset + index) % sortedImages.length;
     setRotationOffset(newOffset);
   };
@@ -204,7 +214,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
         <div className="flex gap-1 aspect-[2/1]">
           <div
             className="w-[61.8%] cursor-pointer relative"
-            onClick={() => rotateToImage(0)}
+            onClick={() => handleImageClick(0)}
           >
             <img
               src={primaryImage.url}
@@ -215,7 +225,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           </div>
           <div
             className="w-[38.2%] cursor-pointer"
-            onClick={() => rotateToImage(1)}
+            onClick={() => handleImageClick(1)}
           >
             <img
               src={secondaryImages[0]?.url}
@@ -254,7 +264,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
         <div className="flex gap-1 aspect-[2/1]">
           <div
             className="w-[61.8%] cursor-pointer relative"
-            onClick={() => rotateToImage(0)}
+            onClick={() => handleImageClick(0)}
           >
             <img
               src={primaryImage.url}
@@ -266,7 +276,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           <div className="w-[38.2%] flex flex-col gap-1">
             <div
               className="flex-1 cursor-pointer"
-              onClick={() => rotateToImage(1)}
+              onClick={() => handleImageClick(1)}
             >
               <img
                 src={secondaryImages[0]?.url}
@@ -276,7 +286,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
             </div>
             <div
               className="flex-1 cursor-pointer"
-              onClick={() => rotateToImage(2)}
+              onClick={() => handleImageClick(2)}
             >
               <img
                 src={secondaryImages[1]?.url}
@@ -316,7 +326,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
         {/* Primary image - 61.8% (golden ratio) */}
         <div
           className="w-[61.8%] cursor-pointer relative"
-          onClick={() => rotateToImage(0)}
+          onClick={() => handleImageClick(0)}
         >
           <img
             src={primaryImage.url}
@@ -331,7 +341,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           {/* First secondary */}
           <div
             className="flex-1 cursor-pointer"
-            onClick={() => rotateToImage(1)}
+            onClick={() => handleImageClick(1)}
           >
             <img
               src={secondaryImages[0]?.url}
@@ -344,7 +354,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
           <div className="flex-1 flex gap-1">
             <div
               className="flex-1 cursor-pointer"
-              onClick={() => rotateToImage(2)}
+              onClick={() => handleImageClick(2)}
             >
               <img
                 src={secondaryImages[1]?.url}
@@ -356,7 +366,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
             {tertiaryImage && (
               <div
                 className="flex-1 cursor-pointer relative"
-                onClick={() => rotateToImage(3)}
+                onClick={() => handleImageClick(3)}
               >
                 <img
                   src={tertiaryImage.url}
