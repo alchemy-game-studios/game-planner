@@ -1067,11 +1067,31 @@ async function generateEntitiesWithRelationships(input, userId) {
       if (targetType === 'character') {
         relationship = 'LIVES_IN';
         reverseDirection = true;
+      } else if (targetType === 'narrative') {
+        // Narrative generated from a place - link to universe, place is focal location
+        relationship = 'NARRATIVE_FROM_ENTITY';
+        reverseDirection = false; // Special case handled below
       }
     } else if (parentType === 'character') {
       if (targetType === 'item') {
         relationship = 'HELD_BY';
         reverseDirection = true;
+      } else if (targetType === 'narrative') {
+        // Narrative generated from a character - link to universe, character is focal
+        relationship = 'NARRATIVE_FROM_ENTITY';
+        reverseDirection = false; // Special case handled below
+      }
+    } else if (parentType === 'item') {
+      if (targetType === 'narrative') {
+        // Narrative generated from an item - link to universe, item is focal
+        relationship = 'NARRATIVE_FROM_ENTITY';
+        reverseDirection = false; // Special case handled below
+      }
+    } else if (parentType === 'event') {
+      if (targetType === 'narrative') {
+        // Narrative generated from an event - link to universe, event provides context
+        relationship = 'NARRATIVE_FROM_ENTITY';
+        reverseDirection = false; // Special case handled below
       }
     } else if (parentType === 'narrative') {
       if (targetType === 'event') {
@@ -1080,7 +1100,31 @@ async function generateEntitiesWithRelationships(input, userId) {
       }
     }
 
-    if (relationship) {
+    if (relationship === 'NARRATIVE_FROM_ENTITY') {
+      // Special case: Narrative generated from a non-universe entity
+      // 1. Link narrative to the entity's universe via PART_OF
+      // 2. Create FEATURES relationship between narrative and source entity
+      const entityUniverse = await getUniverseForEntity(parentEntityId);
+      if (entityUniverse) {
+        await runQuery(`
+          MATCH (u:Universe {id: $universeId})
+          MATCH (n:Narrative {id: $narrativeId})
+          CREATE (n)-[:PART_OF]->(u)
+        `, {
+          universeId: entityUniverse.id,
+          narrativeId: entityId
+        });
+      }
+      // Create FEATURES relationship to indicate this narrative features/is about this entity
+      await runQuery(`
+        MATCH (source {id: $sourceId})
+        MATCH (n:Narrative {id: $narrativeId})
+        CREATE (n)-[:FEATURES]->(source)
+      `, {
+        sourceId: parentEntityId,
+        narrativeId: entityId
+      });
+    } else if (relationship) {
       if (reverseDirection) {
         // Child points to parent (semantic relationships)
         await runQuery(`

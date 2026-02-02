@@ -272,13 +272,14 @@ interface GenerationDrawerProps {
 }
 
 // Define which entity types can be generated from each source type
+// Narratives can be generated from any entity - the entity becomes a focal point
 const VALID_TARGET_TYPES: Record<string, string[]> = {
   universe: ['place', 'character', 'narrative', 'item'],
-  place: ['character', 'item'],
-  character: ['item'],
+  place: ['character', 'item', 'narrative'],
+  character: ['item', 'narrative'],
+  item: ['narrative'],
   narrative: ['event'],
-  event: [],
-  item: [],
+  event: ['narrative'],  // Generate a related/sequel narrative from an event
 };
 
 export function GenerationDrawer({
