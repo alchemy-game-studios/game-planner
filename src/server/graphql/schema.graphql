@@ -97,6 +97,9 @@ type Mutation {
   editNarrative(narrative: NarrativeInput!): Response
   removeNarrative(narrative: NarrativeInput!): Response
 
+  # Entity duplication
+  duplicateEntity(input: DuplicateEntityInput!): DuplicateEntityResponse!
+
   # Relationship mutations (replace existing relationships)
   relateContains(relation: RelatableInput!): Response
   relateTagged(relation: TagRelationInput!): Response
@@ -808,4 +811,28 @@ type GeneratedImage {
   url: String!
   prompt: String!
   provider: String!
+}
+
+# ============================================
+# Entity Duplication Types
+# ============================================
+
+# Input for duplicating an entity
+input DuplicateEntityInput {
+  # ID of the entity to duplicate
+  sourceEntityId: String!
+  # Optional new name (defaults to "Copy of [original name]")
+  newName: String
+  # Whether to copy tags (default: true)
+  copyTags: Boolean
+  # Whether to copy relationships (default: false - only CONTAINS is preserved)
+  copyRelationships: Boolean
+  # Optional new parent ID (defaults to same parent as source)
+  newParentId: String
+}
+
+# Response from duplicateEntity mutation
+type DuplicateEntityResponse {
+  entity: Entity!
+  message: String!
 }

@@ -21,6 +21,7 @@ import { useMentionRelationship } from "@/hooks/use-mention-relationship";
 import { ProductsSection } from "@/components/products-section";
 import { EntityAdaptationsSection } from "@/components/entity-adaptations-section";
 import { RelationshipsList } from "@/components/relationships-list";
+import { DuplicateEntityDialog } from "@/components/duplicate-entity-dialog";
 
 
 
@@ -281,7 +282,14 @@ export function EditEntityComponent({id, type, isEdit}) {
                             />
                             
                     </div>
-                    <Badge className="bg-ck-forge text-foreground font-heading text-2xl size-14 pl-20 pr-20 pt-3 pb-3 justify-center text-center m-auto mb-7.5 mr-8">{capitalizeFirst(type)}</Badge>
+                    <div className="flex items-center gap-2 m-auto mb-7.5 mr-8">
+                        <DuplicateEntityDialog
+                            entityId={id}
+                            entityName={entity.properties.name || 'Entity'}
+                            entityType={type}
+                        />
+                        <Badge className="bg-ck-forge text-foreground font-heading text-2xl size-14 pl-20 pr-20 pt-3 pb-3 justify-center text-center">{capitalizeFirst(type)}</Badge>
+                    </div>
                 </div>
                 <Separator />
             </div>

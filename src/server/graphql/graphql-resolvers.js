@@ -1721,6 +1721,95 @@ async function deleteEntity(type, id) {
   return { message: `${type} deleted successfully` };
 }
 
+// Helper to duplicate an entity
+async function duplicateEntity(input) {
+  const { sourceEntityId, newName, copyTags = true, copyRelationships = false, newParentId } = input;
+  
+  // First, get the source entity and its type
+  const sourceResult = await runQuery(`
+    MATCH (e {id: $sourceEntityId})
+    OPTIONAL MATCH (parent)-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF]->(e)
+    OPTIONAL MATCH (universe:Universe)-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF*1..10]->(e)
+    RETURN e, labels(e)[0] AS type, parent.id AS parentId, universe.id AS universeId
+  `, { sourceEntityId });
+  
+  if (sourceResult.records.length === 0) {
+    throw new Error('Source entity not found');
+  }
+  
+  const sourceEntity = sourceResult.records[0].get('e').properties;
+  const entityType = sourceResult.records[0].get('type');
+  const originalParentId = sourceResult.records[0].get('parentId');
+  
+  // Generate new ID and name
+  const newId = uuidv4();
+  const duplicateName = newName || `Copy of ${sourceEntity.name}`;
+  
+  // Create the duplicate entity with copied properties
+  const props = {
+    id: newId,
+    name: duplicateName,
+    description: sourceEntity.description || '',
+    type: sourceEntity.type || ''
+  };
+  
+  // Copy Event-specific properties
+  if (entityType === 'Event') {
+    props.day = sourceEntity.day || 0;
+    props.startDate = sourceEntity.startDate || '';
+    props.endDate = sourceEntity.endDate || '';
+  }
+  
+  const propEntries = Object.entries(props);
+  const propString = propEntries.map(([key]) => `${key}: $${key}`).join(', ');
+  
+  await runQuery(`
+    CREATE (e:${entityType} {${propString}})
+  `, props);
+  
+  // Determine the parent for the new entity
+  const targetParentId = newParentId || originalParentId;
+  
+  // Create the parent-child relationship using semantic relationships
+  if (targetParentId) {
+    // Determine relationship type based on entity type
+    const relType = entityType === 'Character' ? 'LIVES_IN' :
+                    entityType === 'Item' ? 'HELD_BY' :
+                    'LOCATED_IN';
+    
+    await runQuery(`
+      MATCH (parent {id: $parentId}), (child {id: $childId})
+      CREATE (child)-[:${relType}]->(parent)
+    `, { parentId: targetParentId, childId: newId });
+  }
+  
+  // Copy tags if requested
+  if (copyTags) {
+    await runQuery(`
+      MATCH (source {id: $sourceEntityId})-[:TAGGED]->(tag:Tag)
+      MATCH (duplicate {id: $newId})
+      CREATE (duplicate)-[:TAGGED]->(tag)
+    `, { sourceEntityId, newId });
+  }
+  
+  // Copy relationships if requested (except CONTAINS and TAGGED which are handled separately)
+  if (copyRelationships) {
+    await runQuery(`
+      MATCH (source {id: $sourceEntityId})-[r]->(target)
+      WHERE NOT type(r) IN ['TAGGED', 'LOCATED_IN', 'LIVES_IN', 'HELD_BY', 'PART_OF']
+      MATCH (duplicate {id: $newId})
+      WITH duplicate, target, type(r) AS relType, r.customLabel AS customLabel
+      CALL apoc.create.relationship(duplicate, relType, 
+        CASE WHEN customLabel IS NOT NULL THEN {customLabel: customLabel} ELSE {} END, 
+        target) YIELD rel
+      RETURN count(rel)
+    `, { sourceEntityId, newId });
+  }
+  
+  // Return the new entity
+  return await getEntity(entityType, newId);
+}
+
 // ============================================
 // User & Account Helpers
 // ============================================
@@ -2239,6 +2328,20 @@ export default {
     addNarrative: async (_, { narrative }) => createEntity('Narrative', narrative),
     editNarrative: async (_, { narrative }) => updateEntity('Narrative', narrative),
     removeNarrative: async (_, { narrative }) => deleteEntity('Narrative', narrative.id),
+
+    // Entity duplication
+    duplicateEntity: async (_, { input }) => {
+      try {
+        const entity = await duplicateEntity(input);
+        return {
+          entity,
+          message: `Entity duplicated successfully as "${entity.properties.name}"`
+        };
+      } catch (error) {
+        console.error('Error duplicating entity:', error);
+        throw new Error(`Failed to duplicate entity: ${error.message}`);
+      }
+    },
 
     // Relationship: CONTAINS
     relateContains: async (_, { relation }) => {
