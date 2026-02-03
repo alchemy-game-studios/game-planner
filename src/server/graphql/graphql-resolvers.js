@@ -840,7 +840,8 @@ async function generateEntitiesWithRelationships(input, userId) {
     relationships = [],
     generateImage = true,  // Default to true (on by default)
     imageSize = '1024x1024',
-    imageStyle = 'vivid'
+    imageStyle = 'vivid',
+    supportingEntityCount = 0  // For narrative generation
   } = input;
 
   // Get the entity label (capitalized)
@@ -904,7 +905,8 @@ async function generateEntitiesWithRelationships(input, userId) {
     targetType,
     entityCount: quantity,
     contextCount: contextEntityIds.length,
-    tagCount: tagIds.length
+    tagCount: tagIds.length,
+    supportingEntityCount: targetType === 'narrative' ? supportingEntityCount : 0
   });
 
   // Deduct credits only if user is authenticated
@@ -965,6 +967,24 @@ async function generateEntitiesWithRelationships(input, userId) {
     }] : [])
   ];
 
+  // For narrative generation with supporting entities, fetch existing entities for matching
+  let existingEntitiesForMatching = [];
+  if (targetType === 'narrative' && supportingEntityCount > 0 && universeId) {
+    const existingResult = await runQuery(`
+      MATCH (u:Universe {id: $universeId})<-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF*1..3]-(e)
+      WHERE e:Character OR e:Place OR e:Item
+      RETURN {
+        id: e.id,
+        name: e.name,
+        description: e.description,
+        _nodeType: toLower(labels(e)[0])
+      } AS entity
+      LIMIT 50
+    `, { universeId });
+    existingEntitiesForMatching = existingResult.records.map(r => r.get('entity'));
+    console.log(`Found ${existingEntitiesForMatching.length} existing entities for matching`);
+  }
+
   // Generate entities using LLM or fallback
   let llmGeneratedEntities;
   try {
@@ -973,8 +993,26 @@ async function generateEntitiesWithRelationships(input, userId) {
       llmGeneratedEntities = Array.from({ length: quantity }, () => ({
         ...generateFallbackEntity(targetType),
         existingTagIds: [],
-        newTags: []
+        newTags: [],
+        supportingEntities: []
       }));
+    } else if (targetType === 'narrative' && supportingEntityCount > 0) {
+      // Use specialized narrative generator with supporting entities
+      console.log(`Generating narrative with ${supportingEntityCount} supporting entities...`);
+      console.log(`Available tags for selection: ${availableTags.length}`);
+      const generator = getEntityGenerator();
+      const narrativeResult = await generator.generateNarrativeWithSupporting({
+        context: context.combinedContent,
+        tags: appliedTags,
+        availableTags,
+        existingEntities: existingEntitiesForMatching,
+        supportingEntityCount,
+        relationships: enrichedRelationships,
+        prompt,
+      });
+      llmGeneratedEntities = [narrativeResult];
+      console.log('Narrative generation complete:', narrativeResult.name);
+      console.log('Supporting entities:', narrativeResult.supportingEntities?.map(e => `${e.name} (${e.type}, ${e.existingMatch ? 'existing' : 'new'})`));
     } else {
       console.log(`Generating ${quantity} ${targetType}(s) with LLM...`);
       console.log(`Available tags for selection: ${availableTags.length}`);
@@ -1254,6 +1292,132 @@ async function generateEntitiesWithRelationships(input, userId) {
     });
   }
 
+  // Process supporting entities for narrative generation
+  const supportingEntitiesResult = [];
+  if (targetType === 'narrative' && llmGeneratedEntities[0]?.supportingEntities?.length > 0) {
+    const narrativeId = generatedEntities[0]?.id;
+    const supportingSpecs = llmGeneratedEntities[0].supportingEntities;
+
+    console.log(`Processing ${supportingSpecs.length} supporting entities for narrative...`);
+
+    for (const spec of supportingSpecs) {
+      let supportingEntity = null;
+      let isExisting = false;
+
+      // Try to find existing entity by name match
+      if (spec.existingMatch) {
+        const matchResult = await runQuery(`
+          MATCH (e)
+          WHERE (e:Character OR e:Place OR e:Item)
+            AND toLower(e.name) = toLower($name)
+          RETURN {
+            id: e.id,
+            name: e.name,
+            description: e.description,
+            type: toLower(labels(e)[0])
+          } AS entity
+          LIMIT 1
+        `, { name: spec.existingMatch });
+
+        if (matchResult.records.length > 0) {
+          supportingEntity = matchResult.records[0].get('entity');
+          isExisting = true;
+          console.log(`Matched existing entity: ${supportingEntity.name} (${supportingEntity.type})`);
+        }
+      }
+
+      // If no match found, create new entity
+      if (!supportingEntity) {
+        const newEntityId = uuidv4();
+        const entityLabel = spec.type.charAt(0).toUpperCase() + spec.type.slice(1);
+
+        await runQuery(`
+          CREATE (e:${entityLabel} {
+            id: $id,
+            name: $name,
+            description: $description,
+            type: $type
+          })
+        `, {
+          id: newEntityId,
+          name: spec.name,
+          description: spec.description || '',
+          type: spec.type
+        });
+
+        // Link to universe
+        if (universeId) {
+          const relType = spec.type === 'place' ? 'LOCATED_IN' :
+                          spec.type === 'character' ? 'LOCATED_IN' : 'PART_OF';
+          await runQuery(`
+            MATCH (u:Universe {id: $universeId})
+            MATCH (e {id: $entityId})
+            CREATE (e)-[:${relType}]->(u)
+          `, { universeId, entityId: newEntityId });
+        }
+
+        supportingEntity = {
+          id: newEntityId,
+          name: spec.name,
+          description: spec.description || '',
+          type: spec.type
+        };
+        isExisting = false;
+        console.log(`Created new supporting entity: ${spec.name} (${spec.type})`);
+      }
+
+      // Create FEATURES relationship from narrative to supporting entity
+      await runQuery(`
+        MATCH (n:Narrative {id: $narrativeId})
+        MATCH (e {id: $entityId})
+        MERGE (n)-[:FEATURES {role: $role}]->(e)
+      `, {
+        narrativeId,
+        entityId: supportingEntity.id,
+        role: spec.role || 'supporting'
+      });
+      console.log(`Linked narrative to ${supportingEntity.name} as ${spec.role}`);
+
+      supportingEntitiesResult.push({
+        id: supportingEntity.id,
+        name: supportingEntity.name,
+        description: supportingEntity.description,
+        type: supportingEntity.type,
+        role: spec.role || 'supporting',
+        isExisting
+      });
+    }
+
+    // Update narrative description with mention chips for supporting entities
+    if (supportingEntitiesResult.length > 0 && generatedEntities[0]) {
+      const supportingMentions = supportingEntitiesResult.map(se => ({
+        entityId: se.id,
+        entityName: se.name,
+        entityType: se.type
+      }));
+
+      // Combine with original mention entities
+      const allMentions = [...mentionEntities, ...supportingMentions];
+      const updatedDescription = formatMentionsInDescription(
+        generatedEntities[0].description,
+        allMentions
+      );
+
+      // Update the narrative in the database
+      await runQuery(`
+        MATCH (n:Narrative {id: $narrativeId})
+        SET n.description = $description
+      `, {
+        narrativeId: generatedEntities[0].id,
+        description: updatedDescription
+      });
+
+      // Update the response object
+      generatedEntities[0].description = updatedDescription;
+      console.log(`Updated narrative description with ${supportingEntitiesResult.length} supporting entity mentions`);
+    }
+  }
+
   // Generate image for the first entity if requested
   let generatedImageResult = null;
   let imageCreditsUsed = 0;
@@ -1342,6 +1506,7 @@ async function generateEntitiesWithRelationships(input, userId) {
     creditsUsed: creditsDeducted ? creditCost : 0,
     generatedImage: generatedImageResult,
     imageCreditsUsed,
+    supportingEntities: supportingEntitiesResult.length > 0 ? supportingEntitiesResult : null,
   };
 }
 
@@ -2634,7 +2799,8 @@ export default {
           targetType: input.targetType,
           entityCount: input.quantity || 1,
           contextCount: (input.contextEntityIds || []).length,
-          tagCount: (input.tagIds || []).length
+          tagCount: (input.tagIds || []).length,
+          supportingEntityCount: input.targetType === 'narrative' ? (input.supportingEntityCount || 0) : 0
         });
 
         if (userWithLimits.credits < estimatedCost) {
@@ -2646,12 +2812,24 @@ export default {
       // Generate entities with relationships
       const result = await generateEntitiesWithRelationships(input, userId);
 
+      // Build message including supporting entities
+      let message = `Successfully generated ${result.entities.length} ${input.targetType}(s)`;
+      if (result.supportingEntities?.length > 0) {
+        const newCount = result.supportingEntities.filter(e => !e.isExisting).length;
+        const existingCount = result.supportingEntities.filter(e => e.isExisting).length;
+        const parts = [];
+        if (newCount > 0) parts.push(`${newCount} new`);
+        if (existingCount > 0) parts.push(`${existingCount} existing`);
+        message += ` with ${parts.join(' and ')} supporting entities`;
+      }
+
       return {
         entities: result.entities,
         creditsUsed: result.creditsUsed,
-        message: `Successfully generated ${result.entities.length} ${input.targetType}(s)`,
+        message,
         generatedImage: result.generatedImage,
         imageCreditsUsed: result.imageCreditsUsed,
+        supportingEntities: result.supportingEntities,
       };
     },
 

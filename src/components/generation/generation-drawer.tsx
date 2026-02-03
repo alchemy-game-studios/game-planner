@@ -52,6 +52,7 @@ import {
   X,
   Link2,
   ImageIcon,
+  Users,
 } from 'lucide-react';
 
 // Tag type configuration - matches tag-pills.tsx colors
@@ -309,6 +310,9 @@ export function GenerationDrawer({
   const [generateImage, setGenerateImage] = useState(true); // ON by default
   const [imageSize, setImageSize] = useState<'1024x1024' | '1792x1024' | '1024x1792'>('1792x1024');
 
+  // Supporting entities for narrative generation
+  const [supportingEntityCount, setSupportingEntityCount] = useState(2);
+
   // Get valid target types for the source entity
   const sourceType = sourceEntity?._nodeType || sourceEntity?.type || 'universe';
   const validTargetTypes = VALID_TARGET_TYPES[sourceType] || ['character'];
@@ -450,6 +454,8 @@ export function GenerationDrawer({
       // Reset image generation to defaults
       setGenerateImage(true);
       setImageSize('1792x1024');
+      // Reset supporting entity count
+      setSupportingEntityCount(2);
     }
   }, [open]);
 
@@ -479,7 +485,8 @@ export function GenerationDrawer({
   };
   const entityCost = costData?.estimateGenerationCost?.credits ?? 0;
   const imageCost = generateImage ? (imageSize === '1024x1024' ? 8 : 12) : 0;
-  const totalCost = entityCost + imageCost;
+  const supportingCost = targetType === 'narrative' ? supportingEntityCount * 3 : 0;
+  const totalCost = entityCost + imageCost + supportingCost;
   const userCredits = userData?.me?.credits ?? 0;
   // Allow generation without auth (fake generation) or with sufficient credits
   const isAuthenticated = !!userData?.me;
@@ -510,6 +517,7 @@ export function GenerationDrawer({
           relationships: relationshipInputs.length > 0 ? relationshipInputs : undefined,
           generateImage,
           imageSize: generateImage ? imageSize : undefined,
+          supportingEntityCount: targetType === 'narrative' ? supportingEntityCount : undefined,
         },
       },
     }).finally(() => {
@@ -635,6 +643,13 @@ export function GenerationDrawer({
                 <span className="font-medium text-foreground">+image</span>
               </div>
             )}
+            {targetType === 'narrative' && supportingEntityCount > 0 && (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Users className="h-3.5 w-3.5" />
+                <span className="font-medium text-foreground">{supportingEntityCount}</span>
+                supporting
+              </div>
+            )}
             {selectedTagIds.length > 0 && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <Tag className="h-3.5 w-3.5" />
@@ -729,6 +744,40 @@ export function GenerationDrawer({
                   </div>
                 )}
               </div>
+
+              {/* Supporting Entities - Only for narrative generation */}
+              {targetType === 'narrative' && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-purple-400" />
+                      <label className="text-sm font-medium">Supporting Entities</label>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      +{supportingEntityCount * 3} credits
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    {[0, 1, 2, 3, 4, 5].map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setSupportingEntityCount(n)}
+                        className={`flex-1 py-1.5 text-sm rounded border transition-colors ${
+                          supportingEntityCount === n
+                            ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
+                            : 'bg-card border-border text-muted-foreground hover:border-muted-foreground'
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    New characters, places, or items generated for this narrative.
+                    The AI will connect to existing entities when appropriate.
+                  </p>
+                </div>
+              )}
 
               {/* Tags - Grouped by Type */}
               {context?.availableTags?.length > 0 && (

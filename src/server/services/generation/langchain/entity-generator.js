@@ -5,7 +5,12 @@
  */
 
 import { ChatOpenAI } from '@langchain/openai';
-import { entityGenerationPrompt, formatTagsForPrompt } from './prompts.js';
+import {
+  entityGenerationPrompt,
+  narrativeWithSupportingEntitiesPrompt,
+  formatTagsForPrompt,
+  formatExistingEntitiesForMatching,
+} from './prompts.js';
 
 /**
  * Parse JSON from LLM response, handling markdown code blocks
@@ -33,14 +38,15 @@ function parseJsonResponse(content) {
  * Validate that the generated entity has required fields
  * @param {Object} entity - Parsed entity
  * @param {string} targetType - Expected entity type
+ * @param {boolean} hasSupportingEntities - Whether to validate supporting entities
  * @returns {Object} Validated entity with defaults
  */
-function validateEntity(entity, targetType) {
+function validateEntity(entity, targetType, hasSupportingEntities = false) {
   if (!entity.name || typeof entity.name !== 'string') {
     throw new Error('Generated entity missing required "name" field');
   }
 
-  return {
+  const result = {
     name: entity.name.trim(),
     description: entity.description?.trim() || '',
     type: entity.type?.trim() || targetType,
@@ -51,6 +57,19 @@ function validateEntity(entity, targetType) {
       type: t.type === 'feeling' ? 'feeling' : 'descriptor',
     })).filter(t => t.name) : [],
   };
+
+  // Validate supporting entities if expected
+  if (hasSupportingEntities && Array.isArray(entity.supportingEntities)) {
+    result.supportingEntities = entity.supportingEntities.map(se => ({
+      name: se.name?.trim() || '',
+      type: ['character', 'place', 'item'].includes(se.type) ? se.type : 'character',
+      description: se.description?.trim() || null,
+      role: se.role?.trim() || 'supporting',
+      existingMatch: se.existingMatch?.trim() || null,
+    })).filter(se => se.name);
+  }
+
+  return result;
 }
 
 /**
@@ -173,6 +192,84 @@ export class EntityGenerator {
     }
 
     return entities;
+  }
+
+  /**
+   * Generate a narrative with supporting entities
+   * @param {Object} params
+   * @param {string} params.context - Assembled markdown context
+   * @param {Array} params.tags - Style tags to apply (user-selected)
+   * @param {Array} params.availableTags - All available universe tags for selection
+   * @param {Array} params.existingEntities - Existing entities in universe for matching
+   * @param {number} params.supportingEntityCount - Number of supporting entities to generate
+   * @param {Array} params.relationships - Required relationships to existing entities
+   * @param {string} params.prompt - Optional user prompt/requirements
+   * @returns {Promise<Object>} Generated narrative with supportingEntities array
+   */
+  async generateNarrativeWithSupporting(params) {
+    const {
+      context,
+      tags = [],
+      availableTags = [],
+      existingEntities = [],
+      supportingEntityCount = 2,
+      relationships = [],
+      prompt = '',
+    } = params;
+
+    // Build requirements string
+    const requirements = this.buildRequirements({ tags, prompt, targetType: 'narrative', relationships });
+
+    // Format available tags for the prompt
+    const availableTagsFormatted = formatAvailableTagsForPrompt(availableTags);
+
+    // Format existing entities for matching
+    const existingEntitiesFormatted = formatExistingEntitiesForMatching(existingEntities);
+
+    // Format the prompt
+    const formattedPrompt = await narrativeWithSupportingEntitiesPrompt.formatMessages({
+      context: context || 'No specific context provided.',
+      existingEntities: existingEntitiesFormatted,
+      availableTags: availableTagsFormatted,
+      requirements,
+      supportingEntityCount: supportingEntityCount.toString(),
+    });
+
+    console.log('=== OpenAI API Call (Narrative with Supporting) ===');
+    console.log('Model:', this.model.modelName);
+    console.log('Supporting entity count:', supportingEntityCount);
+    console.log('Existing entities for matching:', existingEntities.length);
+
+    // Call the LLM with retries for parse failures
+    let lastError;
+    for (let attempt = 0; attempt <= this.maxParseRetries; attempt++) {
+      try {
+        console.log('Invoking OpenAI API...');
+        const startTime = Date.now();
+        const response = await this.model.invoke(formattedPrompt);
+        console.log('OpenAI response received in', Date.now() - startTime, 'ms');
+        const content = response.content;
+
+        // Parse and validate (with supporting entities)
+        const parsed = parseJsonResponse(content);
+        const validated = validateEntity(parsed, 'narrative', true);
+
+        console.log('Narrative generated:', validated.name);
+        console.log('Supporting entities:', validated.supportingEntities?.length || 0);
+
+        return validated;
+      } catch (error) {
+        lastError = error;
+        console.warn(`Narrative generation attempt ${attempt + 1} failed:`, error.message);
+
+        // Don't retry on API errors, only parse errors
+        if (error.message?.includes('API') || error.message?.includes('rate limit')) {
+          throw error;
+        }
+      }
+    }
+
+    throw lastError;
   }
 
   /**

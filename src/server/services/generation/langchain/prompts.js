@@ -249,3 +249,78 @@ export function formatEntitiesForPrompt(entities, options = {}) {
 
   return sections.join('\n\n');
 }
+
+/**
+ * Narrative generation prompt with supporting entities
+ */
+export const narrativeWithSupportingEntitiesPrompt = ChatPromptTemplate.fromMessages([
+  SystemMessagePromptTemplate.fromTemplate(WORLDBUILDING_SYSTEM_PROMPT + `
+
+ADDITIONAL CONSTRAINTS FOR SUPPORTING ENTITIES:
+- When generating supporting entities, prefer linking to existing entities from the context when a match makes sense
+- Only create new entities when no suitable existing entity fits the narrative role
+- Each supporting entity should have a clear role in the narrative (antagonist, ally, location, macguffin, etc.)
+- Supporting entity descriptions should be brief (1-2 sentences) as they will be expanded later`),
+  HumanMessagePromptTemplate.fromTemplate(`# Context
+{context}
+
+# Existing Entities in Universe (for matching)
+{existingEntities}
+
+# Available Tags
+{availableTags}
+
+# Task
+Generate a narrative for this world with the following requirements:
+{requirements}
+
+Also generate {supportingEntityCount} supporting entities that appear in this narrative.
+- For each supporting entity, check if any existing entity from the universe would fit the role
+- If an existing entity fits, reference it by name in "existingMatch"
+- If no existing entity fits, leave "existingMatch" as null and provide full details
+
+# Output Format
+Provide your response as a JSON object with these fields:
+- name: A fitting name for the narrative
+- description: A detailed description of the narrative (2-4 paragraphs)
+- type: A subtype classification (e.g., "quest", "origin story", "conflict", "mystery")
+- existingTagIds: Array of tag IDs from Available Tags that fit this narrative (pick 0-3 most relevant)
+- newTags: Array of new tag suggestions (0-2) as objects with "name", "description", and "type" (either "descriptor" or "feeling")
+- supportingEntities: Array of {supportingEntityCount} supporting entity objects, each with:
+  - name: Name of the entity
+  - type: "character", "place", or "item"
+  - description: Brief description (1-2 sentences, or null if existingMatch)
+  - role: How they relate to the narrative (e.g., "antagonist", "ally", "setting", "macguffin")
+  - existingMatch: Name of existing entity if this should link to one, or null if new
+
+Generate the narrative with supporting entities:`)
+]);
+
+/**
+ * Format existing entities for matching in narrative generation
+ * @param {Array} entities - Entities in the universe
+ * @returns {string}
+ */
+export function formatExistingEntitiesForMatching(entities) {
+  if (!entities || entities.length === 0) {
+    return 'No existing entities available for matching.';
+  }
+
+  const byType = {};
+  for (const entity of entities) {
+    const type = entity._nodeType || entity.nodeType || 'other';
+    if (!byType[type]) byType[type] = [];
+    byType[type].push(entity);
+  }
+
+  const sections = [];
+  for (const [type, typeEntities] of Object.entries(byType)) {
+    const header = `## ${type.charAt(0).toUpperCase() + type.slice(1)}s`;
+    const items = typeEntities.slice(0, 10).map(e =>
+      `- ${e.name}${e.description ? `: ${e.description.slice(0, 100)}...` : ''}`
+    ).join('\n');
+    sections.push(`${header}\n${items}`);
+  }
+
+  return sections.join('\n\n');
+}

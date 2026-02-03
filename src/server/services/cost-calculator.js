@@ -16,6 +16,9 @@ export const BASE_COSTS = {
   outline: 1,      // Per 3 entities in subgraph mode
 };
 
+// Average cost for supporting entities (mix of characters, places, items)
+export const SUPPORTING_ENTITY_AVG_COST = 3;
+
 // Image generation costs by provider and size (in credits)
 export const IMAGE_COSTS = {
   'openai-dalle': {
@@ -59,6 +62,7 @@ export const LIMITS = {
  * @param {number} params.tagCount - Number of tag constraints (default: 0)
  * @param {boolean} params.isRegeneration - Whether this is a field regeneration
  * @param {boolean} params.isVariation - Whether this is generating a variation
+ * @param {number} params.supportingEntityCount - Number of supporting entities for narratives (default: 0)
  * @returns {number} Estimated cost in credits
  */
 export function estimateCost({
@@ -68,12 +72,18 @@ export function estimateCost({
   contextCount = 0,
   tagCount = 0,
   isRegeneration = false,
-  isVariation = false
+  isVariation = false,
+  supportingEntityCount = 0
 }) {
   // Get base cost for entity type
   const baseCost = BASE_COSTS[targetType?.toLowerCase()] || BASE_COSTS.character;
 
   let cost = baseCost * entityCount;
+
+  // Add supporting entity costs (for narrative generation)
+  if (supportingEntityCount > 0) {
+    cost += supportingEntityCount * SUPPORTING_ENTITY_AVG_COST;
+  }
 
   // Apply modifiers
   if (isRegeneration) {
@@ -117,7 +127,8 @@ export function getBreakdown(params) {
     contextCount = 0,
     tagCount = 0,
     isRegeneration = false,
-    isVariation = false
+    isVariation = false,
+    supportingEntityCount = 0
   } = params;
 
   const breakdown = [];
@@ -133,6 +144,15 @@ export function getBreakdown(params) {
     credits: baseCost * entityCount,
     isBase: true
   });
+
+  // Supporting entities (for narratives)
+  if (supportingEntityCount > 0) {
+    breakdown.push({
+      label: `${supportingEntityCount} supporting entit${supportingEntityCount === 1 ? 'y' : 'ies'}`,
+      credits: supportingEntityCount * SUPPORTING_ENTITY_AVG_COST,
+      isBase: true
+    });
+  }
 
   // Mode modifier
   if (isRegeneration) {

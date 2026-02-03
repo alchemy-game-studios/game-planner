@@ -765,6 +765,8 @@ input GenerateEntityInput {
   generateImage: Boolean        # Whether to generate an image (default: true)
   imageSize: String             # 1024x1024, 1792x1024, 1024x1792
   imageStyle: String            # vivid, natural
+  # Supporting entities for narrative generation (characters, places, items)
+  supportingEntityCount: Int    # Number of supporting entities to generate (default 0)
 }
 
 # Result of entity generation
@@ -786,6 +788,18 @@ type GenerateEntityResponse {
   # Generated image info (if generateImage was true)
   generatedImage: GeneratedImage
   imageCreditsUsed: Int
+  # Supporting entities created/linked for narrative generation
+  supportingEntities: [SupportingEntity!]
+}
+
+# Supporting entity created or linked during narrative generation
+type SupportingEntity {
+  id: String!
+  name: String!
+  description: String
+  type: String!
+  role: String              # How they relate to the narrative (antagonist, ally, etc.)
+  isExisting: Boolean!      # Whether this was an existing entity (true) or newly created (false)
 }
 
 # Generated image result
