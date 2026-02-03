@@ -1,14 +1,168 @@
 # Query type for fetching data
 type Query {
   hello: Hello
-  places: [Place!]!
+
+  # Entity queries - single and all
+  universe(obj: IdInput!): Entity
+  universes: [Entity!]!
+  place(obj: IdInput!): Entity
+  places: [Entity!]!
+  character(obj: IdInput!): Entity
+  characters: [Entity!]!
+  item(obj: IdInput!): Entity
+  items: [Entity!]!
+  tag(obj: IdInput!): Entity
+  tags: [Entity!]!
+  event(obj: IdInput!): Entity
+  events: [Entity!]!
+  narrative(obj: IdInput!): Entity
+  narratives: [Entity!]!
+
+  # Search entities by name (optionally filter by universe)
+  searchEntities(query: String!, type: String, universeId: String): [Entity!]!
+
+  # Get all entities in a universe (for @ mentions)
+  entitiesInUniverse(universeId: String!, excludeId: String): [Entity!]!
+
+  # Get entities with a specific tag (paginated)
+  taggedEntities(tagId: String!, limit: Int, offset: Int): TaggedEntitiesResponse!
+
+  # Product queries
+  product(obj: IdInput!): Product
+  products: [Product!]!
+
+  # User/Account queries
+  me: User
+  creditHistory(limit: Int): [CreditTransaction!]!
+  creditPackages: [CreditPackage!]!
+  subscriptionTiers: [TierInfo!]!
+  billingHistory(limit: Int, cursor: String): BillingHistory!
+
+  # Generation queries (context assembly, no LLM calls)
+  generationContext(input: GenerationContextInput!): GenerationContext!
+  generationContextPreview(input: GenerationContextPreviewInput!): GenerationContextPreview!
+  estimateGenerationCost(
+    targetType: String!
+    entityCount: Int
+    creativity: Float
+    contextCount: Int
+    tagCount: Int
+    isRegeneration: Boolean
+    isVariation: Boolean
+  ): CostEstimate!
+  estimateSubgraphCost(
+    scope: [SubgraphScopeItem!]!
+    creativity: Float
+    contextCount: Int
+    tagCount: Int
+  ): SubgraphCostEstimate!
 }
 
 # Mutation type for modifying data
 type Mutation {
-  submitText(input: SubmitText!) : Response
+  submitText(input: SubmitText!): Response
+
+  # Universe mutations
+  addUniverse(universe: UniverseInput!): Response
+  editUniverse(universe: UniverseInput!): Response
+  removeUniverse(universe: UniverseInput!): Response
+
+  # Place mutations
+  addPlace(place: PlaceInput!): Response
+  editPlace(place: PlaceInput!): Response
+  removePlace(place: PlaceInput!): Response
+
+  # Character mutations
+  addCharacter(character: CharacterInput!): Response
+  editCharacter(character: CharacterInput!): Response
+  removeCharacter(character: CharacterInput!): Response
+
+  # Item mutations
+  addItem(item: ItemInput!): Response
+  editItem(item: ItemInput!): Response
+  removeItem(item: ItemInput!): Response
+
+  # Tag mutations
+  addTag(tag: TagInput!): Response
+  editTag(tag: TagInput!): Response
+  removeTag(tag: TagInput!): Response
+
+  # Event mutations
+  addEvent(event: EventInput!): Response
+  editEvent(event: EventInput!): Response
+  removeEvent(event: EventInput!): Response
+
+  # Narrative mutations
+  addNarrative(narrative: NarrativeInput!): Response
+  editNarrative(narrative: NarrativeInput!): Response
+  removeNarrative(narrative: NarrativeInput!): Response
+
+  # Entity duplication
+  duplicateEntity(input: DuplicateEntityInput!): DuplicateEntityResponse!
+
+  # Relationship mutations (replace existing relationships)
+  relateContains(relation: RelatableInput!): Response
+  relateTagged(relation: TagRelationInput!): Response
+
+  # Additive relationship mutations (add to existing relationships)
+  addContains(relation: RelatableInput!): Response
+  addInvolves(relation: EventParticipantsInput!): Response
+  addOccursAt(relation: EventLocationInput!): Response
+
+  # Semantic relationship mutation (creates typed relationship edges)
+  createRelationship(input: CreateRelationshipInput!): Response
+
+  # Event relationship mutations
+  relateOccursAt(relation: EventLocationInput!): Response
+  relateInvolves(relation: EventParticipantsInput!): Response
+
+  # Image mutations
+  reorderImages(entityId: String!, imageIds: [String!]!): [Image!]!
+  removeImage(imageId: String!): Response
+
+  # Product mutations
+  addProduct(product: ProductInput!): Response
+  editProduct(product: ProductInput!): Response
+  removeProduct(product: ProductInput!): Response
+
+  # AttributeDefinition mutations
+  addAttributeDefinition(attr: AttributeDefinitionInput!): Response
+  editAttributeDefinition(attr: AttributeDefinitionInput!): Response
+  removeAttributeDefinition(attr: AttributeDefinitionInput!): Response
+
+  # MechanicDefinition mutations
+  addMechanicDefinition(mechanic: MechanicDefinitionInput!): Response
+  editMechanicDefinition(mechanic: MechanicDefinitionInput!): Response
+  removeMechanicDefinition(mechanic: MechanicDefinitionInput!): Response
+
+  # EntityAdaptation mutations
+  addEntityAdaptation(adaptation: EntityAdaptationInput!): Response
+  editEntityAdaptation(adaptation: EntityAdaptationInput!): Response
+  removeEntityAdaptation(adaptation: EntityAdaptationInput!): Response
+
+  # Section mutations (for passive media products)
+  addSection(section: SectionInput!): Response
+  editSection(section: SectionInput!): Response
+  removeSection(section: SectionInput!): Response
+  relateSectionEntities(relation: SectionEntitiesInput!): Response
+
+  # User/Account mutations
+  updateProfile(displayName: String!): User!
+  createSubscriptionCheckout(tier: String!): CheckoutSession!
+  cancelSubscription: User!
+  purchaseCredits(packageId: String!): CheckoutSession!
+  useCredits(amount: Int!, description: String!): User!
+
+  # Stripe Elements mutations (embedded checkout)
+  createSubscription(tier: String!): SubscriptionSetupResponse!
+  createCreditPaymentIntent(packageId: String!): PaymentIntentResponse!
+  confirmSubscription(paymentIntentId: String!, tier: String!): User!
+
+  # Generation mutation (calls LLM, creates entity with relationships)
+  generateEntity(input: GenerateEntityInput!): GenerateEntityResponse!
 }
 
+# Common types
 type Hello {
   message: String!
 }
@@ -16,14 +170,669 @@ type Hello {
 type Response {
   message: String!
 }
+
+# Entity type returned from queries
+type Entity {
+  id: String!
+  # The Neo4j node label (e.g., "character", "place", "item")
+  _nodeType: String
+  properties: EntityProperties!
+  contents: [ContentItem!]!
+  allContents: [DescendantContent!]!
+  tags: [EntityProperties!]!
+  images: [Image!]!
+  allImages: [EntityImage!]!
+  # Event-specific fields (populated for Event entities)
+  locations: [EntityProperties!]
+  participants: [Participant!]
+  # Reverse lookup: events this entity is involved in
+  events: [EntityProperties!]
+  # For Events: their parent narrative
+  parentNarrative: EntityProperties
+  # The universe this entity belongs to (via CONTAINS chain)
+  universeId: String
+  # Products based on this universe (for Universe entities)
+  products: [Product!]
+  # Adaptations of this entity in products (cards, etc.)
+  adaptations: [ProductAdaptation!]
+  # Relationships to other entities (born_in, lives_in, knows, etc.)
+  relationships: [EntityRelationship!]
+}
+
+# Relationship to another entity
+type EntityRelationship {
+  id: String!
+  relationshipType: String!
+  customLabel: String
+  direction: String!  # "outgoing" or "incoming"
+  targetEntity: EntityProperties!
+  targetType: String!
+}
+
+# Adaptation with product info (for entity view)
+type ProductAdaptation {
+  id: String!
+  product: ProductInfo!
+  displayName: String
+  flavorText: String
+  role: String
+  appearance: String
+}
+
+type ProductInfo {
+  id: String!
+  name: String!
+  type: String!
+  gameType: String
+}
+
+type EntityProperties {
+  id: String!
+  name: String!
+  description: String
+  type: String
+  # Event-specific properties
+  day: Int
+  startDate: String
+  endDate: String
+}
+
+# Participant type for event participants (characters and items)
+type Participant {
+  id: String!
+  name: String!
+  description: String
+  type: String
+  _nodeType: String!
+}
+
+type ContentItem {
+  _nodeType: String!
+  properties: EntityProperties!
+}
+
+# Content item with depth info (for descendant content)
+type DescendantContent {
+  _nodeType: String!
+  properties: EntityProperties!
+  parentId: String!
+  parentName: String!
+  depth: Int!
+}
+
+# Image type for entity images
+type Image {
+  id: String!
+  filename: String!
+  url: String!
+  mimeType: String!
+  size: Int
+  rank: Int!
+  uploadedAt: String
+}
+
+# Image with source entity info (for descendant images)
+type EntityImage {
+  id: String!
+  filename: String!
+  url: String!
+  mimeType: String!
+  size: Int
+  rank: Int!
+  uploadedAt: String
+  entityId: String!
+  entityName: String!
+  entityType: String!
+}
+
+# Input types
+input IdInput {
+  id: String!
+}
+
 input SubmitText {
   text: String!
 }
 
-##############################################################
-## Place
-type Place {
+input UniverseInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input PlaceInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input CharacterInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input ItemInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input TagInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input EventInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+  day: Int
+  startDate: String
+  endDate: String
+}
+
+input NarrativeInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+}
+
+input RelatableInput {
+  id: String!
+  childIds: [String!]!
+}
+
+input CreateRelationshipInput {
+  sourceId: String!
+  targetId: String!
+  relationshipType: String!
+  customLabel: String
+}
+
+input TagRelationInput {
+  id: String!
+  tagIds: [String!]!
+}
+
+input EventLocationInput {
+  eventId: String!
+  placeIds: [String!]!
+}
+
+input EventParticipantsInput {
+  eventId: String!
+  characterIds: [String!]
+  itemIds: [String!]
+}
+
+# ============================================
+# Product System Types
+# ============================================
+
+# Product - a game, book, movie, or other media based on universe IP
+type Product {
   id: String!
   name: String!
+  description: String
+  type: String!                           # game, book, movie, comic
+  gameType: String                        # card, board, ttrpg, video (if type=game)
+  universe: EntityProperties              # Linked universe
+  attributes: [AttributeDefinition!]!     # User-defined stats
+  mechanics: [MechanicDefinition!]!       # User-defined abilities
+  sections: [Section!]!                   # For passive media (chapters, scenes)
+  adaptations: [EntityAdaptation!]!       # IP entity mappings
+  images: [Image!]!
+}
+
+# AttributeDefinition - user-defined stat type for a product
+type AttributeDefinition {
+  id: String!
+  name: String!
+  description: String
+  valueType: String!                      # number, text, boolean, enum
+  defaultValue: String
+  options: String                         # JSON array for enum options
+  min: Int
+  max: Int
+}
+
+# MechanicDefinition - user-defined ability/mechanic for a product
+type MechanicDefinition {
+  id: String!
+  name: String!
+  description: String
+  category: String                        # keyword, ability, action, passive
+  hasValue: Boolean
+  valueType: String                       # number, text (if hasValue)
+}
+
+# EntityAdaptation - maps an IP entity to a product with product-specific details
+type EntityAdaptation {
+  id: String!
+  sourceEntity: EntityProperties!         # The IP entity being adapted
+  sourceType: String!                     # character, item, place, event
+  product: Product!                       # The product this adaptation belongs to
+
+  # Common fields
+  displayName: String                     # Override name for this product
+  flavorText: String                      # Product-specific flavor text
+  artDirection: String                    # Notes for AI/artist
+
+  # Game-specific fields
+  attributeValues: String                 # JSON { attrId: value }
+  mechanicValues: String                  # JSON { mechId: value/true }
+
+  # Passive media fields
+  role: String                            # protagonist, antagonist, supporting, mentioned, cameo
+  appearance: String                      # How they appear in this product
+}
+
+# Section - for passive media (chapters, scenes, issues)
+type Section {
+  id: String!
+  name: String!
+  description: String
+  order: Int!                             # Sequence order
+  sectionType: String                     # chapter, scene, issue, page
+  locations: [EntityProperties!]          # Places referenced
+  participants: [Participant!]            # Characters/items referenced
+}
+
+# Product input types
+input ProductInput {
+  id: String!
+  name: String
+  description: String
+  type: String
+  gameType: String
+  universeId: String
+}
+
+input AttributeDefinitionInput {
+  id: String!
+  productId: String!
+  name: String
+  description: String
+  valueType: String
+  defaultValue: String
+  options: String
+  min: Int
+  max: Int
+}
+
+input MechanicDefinitionInput {
+  id: String!
+  productId: String!
+  name: String
+  description: String
+  category: String
+  hasValue: Boolean
+  valueType: String
+}
+
+input EntityAdaptationInput {
+  id: String!
+  productId: String!
+  entityId: String!
+  entityType: String!
+
+  # Common fields
+  displayName: String
+  flavorText: String
+  artDirection: String
+
+  # Game-specific fields
+  attributeValues: String
+  mechanicValues: String
+
+  # Passive media fields
+  role: String
+  appearance: String
+}
+
+input SectionInput {
+  id: String!
+  productId: String!
+  name: String
+  description: String
+  order: Int
+  sectionType: String
+}
+
+input SectionEntitiesInput {
+  sectionId: String!
+  placeIds: [String!]
+  characterIds: [String!]
+  itemIds: [String!]
+}
+
+# ============================================
+# User & Account System Types
+# ============================================
+
+# User account
+type User {
+  id: String!
+  email: String!
+  displayName: String!
+  avatarUrl: String
+  subscriptionTier: String!
+  subscriptionStatus: String!
+  credits: Int!
+  creditsResetAt: String
+  entityCount: Int!
+  limits: TierLimits!
+  createdAt: String!
+  lastLoginAt: String
+}
+
+# Subscription tier limits
+type TierLimits {
+  maxEntities: Int!
+  maxUniverses: Int!
+  maxProducts: Int!
+  monthlyCredits: Int!
+}
+
+# Credit transaction history
+type CreditTransaction {
+  id: String!
+  type: String!
+  amount: Int!
   description: String!
+  createdAt: String!
+}
+
+# Stripe checkout session (legacy - redirect flow)
+type CheckoutSession {
+  url: String!
+}
+
+# Stripe Elements - PaymentIntent response for one-time payments
+type PaymentIntentResponse {
+  clientSecret: String!
+  paymentIntentId: String!
+}
+
+# Stripe Elements - Subscription setup response
+type SubscriptionSetupResponse {
+  clientSecret: String
+  subscriptionId: String
+  status: String!
+}
+
+# Credit package for purchase
+type CreditPackage {
+  id: String!
+  amount: Int!
+  price: Int!
+  displayPrice: String!
+}
+
+# Subscription tier info
+type TierInfo {
+  id: String!
+  name: String!
+  price: Int!
+  displayPrice: String!
+  limits: TierLimits!
+}
+
+# Billing history item (from Stripe)
+type BillingHistoryItem {
+  id: String!
+  date: String!
+  description: String!
+  amount: Int!
+  status: String!
+  invoiceUrl: String
+}
+
+# Paginated billing history response
+type BillingHistory {
+  items: [BillingHistoryItem!]!
+  hasMore: Boolean!
+  nextCursor: String
+}
+
+# Paginated tagged entities response
+type TaggedEntitiesResponse {
+  entities: [Entity!]!
+  total: Int!
+  hasMore: Boolean!
+}
+
+# ============================================
+# Generation System Types
+# ============================================
+
+# Context for generation UI (no LLM call, just data assembly)
+type GenerationContext {
+  sourceEntity: GenerationEntity!
+  parentChain: [GenerationEntity!]!
+  universe: GenerationEntity
+  siblingEntities: [GenerationEntity!]!
+  childEntities: [GenerationEntity!]!
+  availableTags: [TagInfo!]!
+  sourceTagIds: [String!]!
+  suggestedContext: [GenerationEntity!]!
+  summary: ContextSummary!
+}
+
+# Context preview for debugging - shows the assembled markdown
+type GenerationContextPreview {
+  markdown: String!
+  entityCount: Int!
+  providerSummaries: [ProviderSummary!]!
+}
+
+type ProviderSummary {
+  provider: String!
+  count: Int!
+  summary: String!
+}
+
+# Simplified entity for generation context
+type GenerationEntity {
+  id: String!
+  name: String!
+  description: String
+  type: String
+  _nodeType: String!
+  tags: [TagInfo!]
+}
+
+# Tag with entity count for generation UI
+type TagInfo {
+  id: String!
+  name: String!
+  description: String
+  type: String
+  entityCount: Int
+}
+
+# Summary of context for UI display
+type ContextSummary {
+  entityCount: Int!
+  tagCount: Int!
+  hasInvolvements: Boolean!
+}
+
+# Cost estimation (no LLM call, just calculation)
+type CostEstimate {
+  credits: Int!
+  breakdown: [CostBreakdownItem!]!
+  summary: String!
+}
+
+type CostBreakdownItem {
+  label: String!
+  credits: Int!
+  isBase: Boolean
+  isModifier: Boolean
+  phase: String
+}
+
+# Subgraph cost estimation (multiple entities)
+type SubgraphCostEstimate {
+  outlineCost: Int!
+  detailCost: Int!
+  totalCost: Int!
+  breakdown: [CostBreakdownItem!]!
+  summary: String!
+}
+
+# Tone settings for generation
+type ToneSettings {
+  formality: Float!  # 0-1 (casual to formal)
+  mood: Float!       # 0-1 (light to dark)
+}
+
+# Generation constraints
+type GenerationConstraints {
+  tagIds: [String!]!
+  tone: ToneSettings
+  creativity: Float!
+  additionalPrompt: String
+}
+
+# Input types for generation
+
+input GenerationContextInput {
+  sourceEntityId: String!
+  targetType: String!
+  includeEntityIds: [String!]
+}
+
+input GenerationContextPreviewInput {
+  sourceEntityId: String!
+  targetType: String!
+  tagIds: [String!]
+  contextEntityIds: [String!]
+}
+
+input ToneSettingsInput {
+  formality: Float  # 0-1 (casual to formal)
+  mood: Float       # 0-1 (light to dark)
+}
+
+input GenerationConstraintsInput {
+  tagIds: [String!]
+  formality: Float
+  mood: Float
+  creativity: Float
+  additionalPrompt: String
+}
+
+input SubgraphScopeItem {
+  entityType: String!
+  count: Int!
+}
+
+# Input for defining relationships during entity generation
+input RelationshipInput {
+  # ID of the target entity to relate to
+  entityId: String!
+  # Type of relationship (born_in, lives_in, knows, custom, etc.)
+  relationshipType: String!
+  # Custom label when relationshipType is 'custom'
+  customLabel: String
+}
+
+# Input for entity generation
+input GenerateEntityInput {
+  # The parent entity that will CONTAINS the new entity
+  parentEntityId: String!
+  # Type of entity to generate (character, place, item, event)
+  targetType: String!
+  # Optional prompt describing what to generate
+  prompt: String
+  # Number of entities to generate (default 1)
+  quantity: Int
+  # Tag IDs to apply TAGGED relationships
+  tagIds: [String!]
+  # Additional context entity IDs to include in LLM context
+  contextEntityIds: [String!]
+  # Relationships to existing entities that the LLM should incorporate
+  relationships: [RelationshipInput!]
+  # Image generation options
+  generateImage: Boolean        # Whether to generate an image (default: true)
+  imageSize: String             # 1024x1024, 1792x1024, 1024x1792
+  imageStyle: String            # vivid, natural
+  # Supporting entities for narrative generation (characters, places, items)
+  supportingEntityCount: Int    # Number of supporting entities to generate (default 0)
+}
+
+# Result of entity generation
+type GeneratedEntity {
+  id: String!
+  name: String!
+  description: String
+  type: String
+  _nodeType: String!
+  # Tags that were applied
+  tags: [TagInfo!]!
+}
+
+# Response from generateEntity mutation
+type GenerateEntityResponse {
+  entities: [GeneratedEntity!]!
+  creditsUsed: Int!
+  message: String!
+  # Generated image info (if generateImage was true)
+  generatedImage: GeneratedImage
+  imageCreditsUsed: Int
+  # Supporting entities created/linked for narrative generation
+  supportingEntities: [SupportingEntity!]
+}
+
+# Supporting entity created or linked during narrative generation
+type SupportingEntity {
+  id: String!
+  name: String!
+  description: String
+  type: String!
+  role: String              # How they relate to the narrative (antagonist, ally, etc.)
+  isExisting: Boolean!      # Whether this was an existing entity (true) or newly created (false)
+}
+
+# Generated image result
+type GeneratedImage {
+  id: String!
+  url: String!
+  prompt: String!
+  provider: String!
+}
+
+# ============================================
+# Entity Duplication Types
+# ============================================
+
+# Input for duplicating an entity
+input DuplicateEntityInput {
+  # ID of the entity to duplicate
+  sourceEntityId: String!
+  # Optional new name (defaults to "Copy of [original name]")
+  newName: String
+  # Whether to copy tags (default: true)
+  copyTags: Boolean
+  # Whether to copy relationships (default: false - only CONTAINS is preserved)
+  copyRelationships: Boolean
+  # Optional new parent ID (defaults to same parent as source)
+  newParentId: String
+}
+
+# Response from duplicateEntity mutation
+type DuplicateEntityResponse {
+  entity: Entity!
+  message: String!
 }

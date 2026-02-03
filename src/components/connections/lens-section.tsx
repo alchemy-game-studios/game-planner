@@ -1,0 +1,388 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useMutation, gql } from '@apollo/client';
+import { LensDefinition, getLensData, LensIcon } from '@/lib/lens-config';
+import { ConnectionSignal } from './connection-signal';
+import { ConnectionPreviewModal } from './connection-preview-modal';
+import { EntitySearch } from '@/components/entity-search';
+import { AddEntityDialog } from '@/components/add-entity-dialog';
+import { AddProductDialog } from '@/components/add-product-dialog';
+import { getEntityImage, getPlaceholderImage } from '@/media/util';
+import { GenerationDrawer } from '@/components/generation/generation-drawer';
+import {
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Maximize2,
+  Sparkles,
+  BookOpen,
+  MapPin,
+  Users,
+  Package,
+  Calendar,
+  Swords,
+  Home,
+  User,
+  Backpack,
+  Scroll,
+  Box,
+  LucideIcon
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+// Map icon names to Lucide components
+const ICON_MAP: Record<LensIcon, LucideIcon> = {
+  'book-open': BookOpen,
+  'map-pin': MapPin,
+  'users': Users,
+  'package': Package,
+  'calendar': Calendar,
+  'swords': Swords,
+  'home': Home,
+  'user': User,
+  'backpack': Backpack,
+  'scroll': Scroll,
+  'box': Box,
+};
+
+const RELATE_CONTAINS = gql`
+  mutation RelateContains($relation: RelatableInput!) {
+    relateContains(relation: $relation) {
+      message
+    }
+  }
+`;
+
+interface Entity {
+  id: string;
+  properties?: {
+    id: string;
+    name: string;
+    description?: string;
+    type?: string;
+  };
+  name?: string;
+  description?: string;
+  _nodeType?: string;
+}
+
+interface LensSectionProps {
+  lens: LensDefinition;
+  entity: any;
+  parentId: string;
+  parentType: string;
+  universeId?: string;
+  maxPreview?: number;
+  onRefetch: () => void;
+}
+
+function normalizeEntity(entity: Entity): { id: string; name: string; description: string } {
+  return {
+    id: entity.id || entity.properties?.id || '',
+    name: entity.properties?.name || entity.name || 'Unnamed',
+    description: entity.properties?.description || entity.description || ''
+  };
+}
+
+export function LensSection({
+  lens,
+  entity,
+  parentId,
+  parentType,
+  universeId,
+  maxPreview = 5,
+  onRefetch
+}: LensSectionProps) {
+  const navigate = useNavigate();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showAddSearch, setShowAddSearch] = useState(false);
+  const [showGenerationDrawer, setShowGenerationDrawer] = useState(false);
+
+  const [relateContains] = useMutation(RELATE_CONTAINS);
+
+  // Check if this lens type supports generation (entity types, not products)
+  const supportsGeneration = universeId && !['product'].includes(lens.singularLabel);
+
+  const entities = getLensData(entity, lens);
+  const count = entities.length;
+  const previewEntities = entities.slice(0, maxPreview);
+  const hasMore = count > maxPreview;
+
+  const handleAddEntity = async (newEntity: any) => {
+    const entityId = newEntity.id || newEntity.properties?.id;
+
+    try {
+      await relateContains({
+        variables: {
+          relation: {
+            id: parentId,
+            childIds: [entityId]
+          }
+        }
+      });
+      onRefetch();
+      setShowAddSearch(false);
+    } catch (error) {
+      console.error('Failed to add entity:', error);
+    }
+  };
+
+  const handleEntityClick = (e: Entity) => {
+    const { id } = normalizeEntity(e);
+    const entityType = e._nodeType || lens.singularLabel;
+    navigate(`/edit/${entityType}/${id}`);
+  };
+
+  // If no entities, show add button only
+  const IconComponent = ICON_MAP[lens.icon];
+
+  if (count === 0) {
+    return (
+      <div className="py-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {IconComponent && <IconComponent className={`h-4 w-4 ${lens.color.text} opacity-60`} />}
+            <span className="text-base text-muted-foreground">{lens.label}</span>
+          </div>
+          <div className="flex gap-1">
+            {supportsGeneration && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+                onClick={() => setShowGenerationDrawer(true)}
+                title={`Generate ${lens.singularLabel} with AI`}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2"
+              onClick={() => setShowModal(true)}
+              title={`View all ${lens.label.toLowerCase()}`}
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2"
+              onClick={() => setShowAddSearch(!showAddSearch)}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+        {showAddSearch && (
+          <div className="mt-2 flex gap-2">
+            <div className="flex-1">
+              <EntitySearch
+                entityType={lens.singularLabel as any}
+                onSelect={handleAddEntity}
+                excludeIds={[parentId]}
+                universeId={universeId}
+                placeholder={`Add ${lens.singularLabel}...`}
+              />
+            </div>
+            {lens.singularLabel === 'product' ? (
+              <AddProductDialog
+                universeId={parentId}
+                onProductCreated={handleAddEntity}
+              />
+            ) : (
+              <AddEntityDialog
+                entityType={lens.singularLabel}
+                onEntityCreated={handleAddEntity}
+              />
+            )}
+          </div>
+        )}
+        {/* Full modal */}
+        <ConnectionPreviewModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          lens={lens}
+          entities={entities}
+          parentId={parentId}
+          parentType={parentType}
+          universeId={universeId}
+          onAddEntity={handleAddEntity}
+        />
+        {/* Generation drawer */}
+        {supportsGeneration && universeId && (
+          <GenerationDrawer
+            open={showGenerationDrawer}
+            onOpenChange={setShowGenerationDrawer}
+            sourceEntity={{
+              id: parentId,
+              name: entity.properties?.name || entity.name || 'Entity',
+              type: parentType,
+              _nodeType: parentType.toLowerCase(),
+            }}
+            universeId={universeId}
+            defaultTargetType={lens.singularLabel}
+            onGenerated={() => {
+              // Entity and relationships already created by mutation, just refetch
+              onRefetch();
+              setShowGenerationDrawer(false);
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="py-2">
+      {/* Signal row */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+        >
+          <ConnectionSignal lens={lens} count={count} onClick={() => {}} />
+          {isExpanded ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+        <div className="flex gap-1">
+          {supportsGeneration && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+              onClick={() => setShowGenerationDrawer(true)}
+              title={`Generate ${lens.singularLabel} with AI`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2"
+            onClick={() => setShowModal(true)}
+            title={`View all ${lens.label.toLowerCase()}`}
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2"
+            onClick={() => setShowAddSearch(!showAddSearch)}
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Add search */}
+      {showAddSearch && (
+        <div className="mt-2 flex gap-2">
+          <div className="flex-1">
+            <EntitySearch
+              entityType={lens.singularLabel as any}
+              onSelect={handleAddEntity}
+              excludeIds={entities.map((e: Entity) => normalizeEntity(e).id).concat(parentId)}
+              universeId={universeId}
+              placeholder={`Add ${lens.singularLabel}...`}
+            />
+          </div>
+          {lens.singularLabel === 'product' ? (
+            <AddProductDialog
+              universeId={parentId}
+              onProductCreated={handleAddEntity}
+            />
+          ) : (
+            <AddEntityDialog
+              entityType={lens.singularLabel}
+              onEntityCreated={handleAddEntity}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Expanded preview list */}
+      {isExpanded && (
+        <div className="mt-2 space-y-1">
+          {previewEntities.map((e: Entity) => {
+            const { id, name } = normalizeEntity(e);
+            const placeholderUrl = getPlaceholderImage('hero');
+
+            return (
+              <div
+                key={id}
+                className={`
+                  flex items-center gap-3 px-2 py-2 rounded cursor-pointer
+                  transition-colors hover:bg-card/50
+                `}
+                onClick={() => handleEntityClick(e)}
+              >
+                <div className={`p-1.5 rounded ${lens.color.bg}`}>
+                  <IconComponent className={`h-4 w-4 ${lens.color.text}`} />
+                </div>
+                <img
+                  src={getEntityImage(id, 'hero')}
+                  alt={name}
+                  className={`w-8 h-8 rounded-full object-cover ring-2 ring-offset-1 ring-offset-ck-charcoal ${lens.color.ring}`}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = placeholderUrl;
+                  }}
+                />
+                <span className={`text-base truncate capitalize ${lens.color.text}`}>
+                  {name}
+                </span>
+              </div>
+            );
+          })}
+          {hasMore && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="w-full text-center text-sm text-muted-foreground hover:text-foreground py-1"
+            >
+              View all {count} {lens.label.toLowerCase()}...
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Full modal */}
+      <ConnectionPreviewModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        lens={lens}
+        entities={entities}
+        parentId={parentId}
+        parentType={parentType}
+        universeId={universeId}
+        onAddEntity={handleAddEntity}
+      />
+      {/* Generation drawer */}
+      {supportsGeneration && universeId && (
+        <GenerationDrawer
+          open={showGenerationDrawer}
+          onOpenChange={setShowGenerationDrawer}
+          sourceEntity={{
+            id: parentId,
+            name: entity.properties?.name || entity.name || 'Entity',
+            type: parentType,
+            _nodeType: parentType.toLowerCase(),
+          }}
+          universeId={universeId}
+          defaultTargetType={lens.singularLabel}
+          onGenerated={() => {
+            // Entity and relationships already created by mutation, just refetch
+            onRefetch();
+            setShowGenerationDrawer(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
