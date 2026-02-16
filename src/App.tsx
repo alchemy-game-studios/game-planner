@@ -1,38 +1,43 @@
-import { useState, useEffect } from "react";
-import fetch from 'isomorphic-fetch';
-import { Message, Places } from './client-graphql/graphql-components'
+import { useState } from "react";
+import CanonGraph from './components/CanonGraph';
+import EntityPanel from './components/EntityPanel';
+import EntityDetail from './components/EntityDetail';
 import './App.css';
 
 const App = () => {
-    const [apiResponse, setApiResponse] = useState('Loading Data...')
+  const [selectedEntity, setSelectedEntity] = useState(null);
 
-    // const callApi = () => {
-    //     fetch("http://localhost:3000/testApi")
-    //         .then(res => res.text())
-    //         .then (res => setApiResponse(res))
-    //         .catch(err => err);
-    // }
+  return (
+    <div className="app">
+      <header className="app-header">
+        <h1>🔥 CanonKiln</h1>
+        <span className="app-subtitle">Graph-First Creative IP Management</span>
+      </header>
 
-    // const postApi = () => {
-    //     fetch("http://localhost:3000/testApi", {
-    //         method: "POST",
-    //         headers: {
-    //           "Content-Type": "application/json"
-    //         },
-    //         body: JSON.stringify({})
-    //     }).then(res => res.text())
-    //     .then (res => setApiResponse(res))
-    //     .catch(err => err);
-    // }
+      <div className="app-layout">
+        <aside className="sidebar">
+          <EntityPanel
+            onEntitySelect={(entity) => setSelectedEntity(entity)}
+            selectedEntityId={selectedEntity?.id}
+          />
+        </aside>
 
-  
+        <main className="main-content">
+          <CanonGraph
+            onNodeClick={(node) => setSelectedEntity(node)}
+            selectedNodeId={selectedEntity?.id}
+          />
 
-    return (
-        <div className="app">
-          <Places />
-        </div>
-    );
-    
-}
+          {selectedEntity && (
+            <EntityDetail
+              entity={selectedEntity}
+              onClose={() => setSelectedEntity(null)}
+            />
+          )}
+        </main>
+      </div>
+    </div>
+  );
+};
 
 export default App;
