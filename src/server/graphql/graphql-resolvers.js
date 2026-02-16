@@ -1,9 +1,9 @@
 import neo4j from "neo4j-driver";
 
-// Configure the Neo4j driver
+// Configure the Neo4j driver using environment variables
 const driver = neo4j.driver(
-  "bolt://localhost:7687", // Change if using a remote database
-  neo4j.auth.basic("neo4j", "password") // Use your credentials
+  process.env.NEO4J_URI || "bolt://localhost:7687",
+  neo4j.auth.basic(process.env.NEO4J_USER || "neo4j", process.env.NEO4J_PASSWORD || "password")
 );
 
 const neo4JSession = () => {return driver.session()};
