@@ -14,14 +14,14 @@ import { ApolloServer } from "apollo-server-express"; // Import Apollo Server
 
 
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 const app = express();
 const __dirname = import.meta.dirname;
 
 // Networking & Session
 app.use(session({
-  secret: 'ceda78df-e787-49f5-8e0d-a0f6bba8e0f2',
+  secret: process.env.SESSION_SECRET || 'ceda78df-e787-49f5-8e0d-a0f6bba8e0f2',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: true }
