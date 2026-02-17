@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { useQuery, useMutation } from '@apollo/client';
 import ReactFlow, {
   Background,
   Controls,
@@ -8,265 +9,264 @@ import ReactFlow, {
   MarkerType,
   addEdge,
   Panel,
-  useReactFlow,
   ReactFlowProvider,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import EntityNode, { TYPE_CONFIG } from './EntityNode';
+import { GET_CANON_GRAPH, CREATE_RELATIONSHIP } from '../client-graphql/canon-operations';
 
-// ---------- Sample data ----------
-const sampleEntities = [
-  { id: '1', name: 'Ironforge', entityType: 'PLACE', description: 'Mountain stronghold city', x: 120, y: 80 },
-  { id: '2', name: 'Elara Brightshield', entityType: 'CHARACTER', description: 'Brave knight from Ironforge', x: 400, y: 60 },
-  { id: '3', name: 'Sword of Light', entityType: 'ITEM', description: 'Legendary blade forged in starfire', x: 660, y: 120 },
-  { id: '4', name: 'Battle of the Pass', entityType: 'EVENT', description: 'Epic confrontation at Dragonspine', x: 360, y: 300 },
-  { id: '5', name: 'Silver Legion', entityType: 'FACTION', description: 'Order of elite knights', x: 100, y: 300 },
-  { id: '6', name: 'Shadowfen Marsh', entityType: 'PLACE', description: 'Treacherous wetlands in the south', x: 650, y: 320 },
-  { id: '7', name: 'Gareth the Wise', entityType: 'CHARACTER', description: 'Ancient elven mage and royal advisor', x: 160, y: 500 },
-  { id: '8', name: 'Crown of Stars', entityType: 'ITEM', description: 'Mystical crown imbued with celestial power', x: 500, y: 500 },
-  { id: '9', name: 'Order of Dusk', entityType: 'FACTION', description: 'Shadow cult bent on eternal night', x: 680, y: 500 },
-];
+const nodeTypes = { entity: EntityNode };
 
-const sampleConnections = [
-  { id: 'e1', from: '2', to: '1', label: 'Lives in' },
-  { id: 'e2', from: '2', to: '3', label: 'Wields' },
-  { id: 'e3', from: '2', to: '5', label: 'Member of' },
-  { id: 'e4', from: '4', to: '1', label: 'Took place at' },
-  { id: 'e5', from: '2', to: '4', label: 'Participated in' },
-  { id: 'e6', from: '7', to: '5', label: 'Advisor to' },
-  { id: 'e7', from: '8', to: '9', label: 'Sought by' },
-  { id: 'e8', from: '9', to: '6', label: 'Based in' },
-  { id: 'e9', from: '4', to: '9', label: 'Triggered by' },
-];
+// Auto-layout: arrange nodes by type in columns if no x/y stored
+const autoLayout = (nodes) => {
+  const typed = {};
+  nodes.forEach((n) => {
+    if (!typed[n.entityType]) typed[n.entityType] = [];
+    typed[n.entityType].push(n);
+  });
 
-// ---------- Node types ----------
-const nodeTypes = { entityNode: EntityNode };
+  const types = Object.keys(typed);
+  return nodes.map((node) => {
+    if (node.x != null && node.y != null) return node;
+    const typeIdx = types.indexOf(node.entityType);
+    const typeNodes = typed[node.entityType];
+    const nodeIdx = typeNodes.indexOf(node);
+    const radius = Math.max(80, typeNodes.length * 30);
+    const angle = (nodeIdx / Math.max(typeNodes.length, 1)) * Math.PI;
+    return {
+      ...node,
+      x: 150 + typeIdx * 280 + radius * Math.cos(angle) * 0.5,
+      y: 250 + radius * Math.sin(angle),
+    };
+  });
+};
 
-// ---------- Edge style helper ----------
-const makeEdge = (conn) => ({
-  id: conn.id || `e-${conn.from}-${conn.to}`,
-  source: conn.from,
-  target: conn.to,
-  label: conn.label,
-  type: 'smoothstep',
-  animated: false,
-  style: { stroke: '#4a4a7a', strokeWidth: 1.5 },
-  labelStyle: { fill: '#9090b0', fontSize: 10, fontWeight: 400 },
-  labelBgStyle: { fill: '#12122a', fillOpacity: 0.92 },
-  labelBgPadding: [4, 6],
-  labelBgBorderRadius: 4,
-  markerEnd: {
-    type: MarkerType.ArrowClosed,
-    color: '#4a4a7a',
-    width: 16,
-    height: 16,
-  },
-});
-
-// ---------- Main graph inner component ----------
-const CanonGraphInner = ({ onNodeClick, selectedNodeId }) => {
-  const [visibleTypes, setVisibleTypes] = useState(
-    Object.fromEntries(Object.keys(TYPE_CONFIG).map((t) => [t, true]))
-  );
-  const [connectMode, setConnectMode] = useState(false);
-  const [showMiniMap, setShowMiniMap] = useState(true);
+const CanonGraphInner = ({ projectId = 'default', onNodeClick, selectedNodeId }) => {
+  const [activeTypes, setActiveTypes] = useState(new Set(['PLACE', 'CHARACTER', 'ITEM', 'EVENT', 'FACTION']));
   const [showLabels, setShowLabels] = useState(true);
-  const [entities, setEntities] = useState(sampleEntities);
-  const [connections, setConnections] = useState(sampleConnections);
-  const { fitView } = useReactFlow();
-  const idCounter = useRef(100);
+  const [showMiniMap, setShowMiniMap] = useState(true);
+  const [connectMode, setConnectMode] = useState(false);
 
-  // Build nodes from entities, filtered by visibility
-  const initialNodes = useMemo(() =>
-    entities
-      .filter((e) => visibleTypes[e.entityType])
-      .map((entity) => ({
-        id: entity.id,
-        type: 'entityNode',
+  const { loading, error, data, refetch } = useQuery(GET_CANON_GRAPH, {
+    variables: { projectId },
+    pollInterval: 30000,
+  });
+
+  const [createRelationship] = useMutation(CREATE_RELATIONSHIP, {
+    onCompleted: () => refetch(),
+  });
+
+  const graphData = data?.canonGraph;
+
+  // Convert API nodes to React Flow nodes
+  const initialNodes = useMemo(() => {
+    if (!graphData?.nodes) return [];
+    const layouted = autoLayout(graphData.nodes);
+    return layouted
+      .filter((n) => activeTypes.has(n.entityType))
+      .map((node) => ({
+        id: node.id,
+        type: 'entity',
         data: {
-          label: entity.name,
-          description: showLabels ? entity.description : '',
-          entityType: entity.entityType,
-          entity,
+          label: node.name,
+          entity: node,
+          entityType: node.entityType,
+          description: showLabels ? node.description : undefined,
         },
-        position: { x: entity.x, y: entity.y },
-        selected: selectedNodeId === entity.id,
-      })),
-    [entities, visibleTypes, selectedNodeId, showLabels]
-  );
+        position: { x: node.x, y: node.y },
+        selected: selectedNodeId === node.id,
+      }));
+  }, [graphData, selectedNodeId, activeTypes, showLabels]);
 
-  // Build edges
+  // Convert API edges
   const initialEdges = useMemo(() => {
-    const visibleIds = new Set(
-      entities.filter((e) => visibleTypes[e.entityType]).map((e) => e.id)
-    );
-    return connections
-      .filter((c) => visibleIds.has(c.from) && visibleIds.has(c.to))
-      .map(makeEdge);
-  }, [connections, entities, visibleTypes]);
+    if (!graphData?.edges) return [];
+    // Only show edges where both endpoints are visible
+    const visibleIds = new Set(initialNodes.map((n) => n.id));
+    return graphData.edges
+      .filter((e) => visibleIds.has(e.source) && visibleIds.has(e.target))
+      .map((edge) => ({
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        label: edge.label,
+        type: 'smoothstep',
+        animated: false,
+        style: { stroke: '#444466', strokeWidth: 1.5 },
+        labelStyle: { fill: '#8888aa', fontSize: 10 },
+        labelBgStyle: { fill: '#0f0f1a', fillOpacity: 0.85 },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: '#444466',
+          width: 16,
+          height: 16,
+        },
+      }));
+  }, [graphData, initialNodes]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Keep nodes/edges in sync with filter changes
-  useEffect(() => {
-    setNodes(initialNodes);
-  }, [initialNodes]);
+  React.useEffect(() => { setNodes(initialNodes); }, [initialNodes]);
+  React.useEffect(() => { setEdges(initialEdges); }, [initialEdges]);
 
-  useEffect(() => {
-    setEdges(initialEdges);
-  }, [initialEdges]);
+  const onConnect = useCallback(async (params) => {
+    if (!connectMode) return;
+    const label = prompt('Relationship label (e.g. "Lives in", "Wields"):');
+    if (!label) return;
 
-  const onConnect = useCallback(
-    (params) => {
-      if (!connectMode) return;
-      const newConn = {
-        id: `e-${idCounter.current++}`,
-        from: params.source,
-        to: params.target,
-        label: 'Related to',
-      };
-      setConnections((prev) => [...prev, newConn]);
-    },
-    [connectMode]
-  );
+    const fromNode = graphData.nodes.find((n) => n.id === params.source);
+    const toNode = graphData.nodes.find((n) => n.id === params.target);
+    if (!fromNode || !toNode) return;
 
-  const onNodeClickHandler = useCallback(
-    (event, node) => {
-      if (onNodeClick && node.data.entity) {
-        onNodeClick(node.data.entity);
-      }
-    },
-    [onNodeClick]
-  );
+    setEdges((eds) => addEdge({ ...params, label, type: 'smoothstep' }, eds));
+    await createRelationship({
+      variables: {
+        input: {
+          projectId,
+          fromId: params.source,
+          toId: params.target,
+          fromType: fromNode.entityType,
+          toType: toNode.entityType,
+          label,
+        },
+      },
+    });
+  }, [connectMode, graphData, projectId, createRelationship]);
+
+  const onNodeClickHandler = useCallback((event, node) => {
+    if (onNodeClick && node.data.entity) {
+      onNodeClick(node.data.entity);
+    }
+  }, [onNodeClick]);
 
   const toggleType = (type) => {
-    setVisibleTypes((prev) => ({ ...prev, [type]: !prev[type] }));
+    setActiveTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) { next.delete(type); } else { next.add(type); }
+      return next;
+    });
   };
 
-  const visibleCount = Object.values(visibleTypes).filter(Boolean).length;
+  if (loading && !data) {
+    return (
+      <div className="canon-graph" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#6a6a8a', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8, animation: 'spin 1s linear infinite' }}>⟳</div>
+          <div>Loading canon graph…</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="canon-graph" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#e94560', textAlign: 'center' }}>
+          <div style={{ fontSize: 20, marginBottom: 8 }}>⚠ Graph unavailable</div>
+          <div style={{ fontSize: 12, color: '#6a6a8a' }}>
+            {error.message.includes('ECONNREFUSED') || error.message.includes('refused')
+              ? 'Neo4j offline — start the database and refresh'
+              : error.message}
+          </div>
+          <button onClick={() => refetch()} style={{ marginTop: 12, padding: '6px 16px', background: '#1a1a2e', border: '1px solid #2a2a4a', color: '#a0a0b0', borderRadius: 4, cursor: 'pointer' }}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const entityCount = graphData?.entityCount || 0;
+  const relCount = graphData?.relationshipCount || 0;
 
   return (
     <div className="canon-graph">
-      {/* ---- Filter Toolbar ---- */}
-      <div className="graph-toolbar">
-        <div className="graph-filter-label">Filter:</div>
-        {Object.entries(TYPE_CONFIG).map(([type, cfg]) => {
-          const entityCount = entities.filter((e) => e.entityType === type).length;
-          return (
-            <button
-              key={type}
-              className={`filter-chip ${visibleTypes[type] ? 'active' : 'muted'}`}
-              style={{ '--chip-color': cfg.color }}
-              onClick={() => toggleType(type)}
-              title={`${visibleTypes[type] ? 'Hide' : 'Show'} ${cfg.label}s`}
-            >
-              <span>{cfg.icon}</span>
-              <span>{cfg.label}s</span>
-              <span className="chip-count">{entityCount}</span>
-            </button>
-          );
-        })}
-
-        <div className="graph-toolbar-divider" />
-
-        <button
-          className={`toolbar-btn ${connectMode ? 'active' : ''}`}
-          onClick={() => setConnectMode((v) => !v)}
-          title="Connection mode: drag between nodes to create relationships"
-        >
-          {connectMode ? '🔗 Connecting…' : '🔗 Connect'}
-        </button>
-
-        <button
-          className={`toolbar-btn ${showLabels ? 'active' : ''}`}
-          onClick={() => setShowLabels((v) => !v)}
-          title="Toggle entity descriptions"
-        >
-          💬 Labels
-        </button>
-
-        <button
-          className={`toolbar-btn ${showMiniMap ? 'active' : ''}`}
-          onClick={() => setShowMiniMap((v) => !v)}
-          title="Toggle minimap"
-        >
-          🗺 Map
-        </button>
-
-        <button
-          className="toolbar-btn"
-          onClick={() => fitView({ padding: 0.1, duration: 400 })}
-          title="Fit all visible nodes"
-        >
-          ⊡ Fit
-        </button>
-      </div>
-
-      {/* ---- Connect mode banner ---- */}
-      {connectMode && (
-        <div className="connect-mode-banner">
-          ✦ Connection mode active — drag from a node handle to another node to link them
-          <button className="connect-exit-btn" onClick={() => setConnectMode(false)}>Exit</button>
+      {entityCount === 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#4a4a6a', gap: 8 }}>
+          <div style={{ fontSize: 48 }}>🔥</div>
+          <div style={{ fontSize: 18, fontWeight: 600, color: '#6a6a8a' }}>Your canon is empty</div>
+          <div style={{ fontSize: 14, color: '#4a4a6a' }}>Create your first entity in the panel →</div>
         </div>
-      )}
-
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeClick={onNodeClickHandler}
-        nodeTypes={nodeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.12 }}
-        snapToGrid={false}
-        attributionPosition="bottom-left"
-        connectionMode={connectMode ? 'loose' : 'strict'}
-        deleteKeyCode="Delete"
-        style={{ background: 'transparent' }}
-      >
-        <Background color="#1a1a3a" gap={24} size={1} style={{ background: '#0c0c1e' }} />
-        <Controls
-          style={{ bottom: 80, right: 12 }}
-          showInteractive={false}
-        />
-        {showMiniMap && (
-          <MiniMap
-            nodeColor={(node) => {
-              const cfg = TYPE_CONFIG[node.data?.entityType];
-              return cfg ? cfg.color : '#888';
-            }}
-            maskColor="rgba(12,12,30,0.75)"
-            style={{
-              background: '#12122a',
-              border: '1px solid #2a2a4a',
-              borderRadius: '8px',
-            }}
-          />
-        )}
-
-        {/* Stats panel */}
-        <Panel position="bottom-left" className="graph-stats-panel">
-          <span>{nodes.length} nodes</span>
-          <span>·</span>
-          <span>{edges.length} edges</span>
-          {visibleCount < Object.keys(TYPE_CONFIG).length && (
-            <>
-              <span>·</span>
-              <span className="stats-filtered">
-                {Object.keys(TYPE_CONFIG).length - visibleCount} types hidden
-              </span>
-            </>
+      ) : (
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeClick={onNodeClickHandler}
+          nodeTypes={nodeTypes}
+          fitView
+          attributionPosition="bottom-left"
+          style={{ background: '#0a0a18' }}
+          connectionMode={connectMode ? 'loose' : 'strict'}
+        >
+          <Background color="#1a1a30" gap={20} size={1} />
+          <Controls style={{ button: { background: '#1a1a2e', border: '1px solid #2a2a4a', color: '#a0a0b0' } }} />
+          {showMiniMap && (
+            <MiniMap
+              nodeColor={(node) => TYPE_CONFIG[node.data?.entityType]?.color || '#999'}
+              maskColor="rgba(10, 10, 24, 0.7)"
+              style={{ background: '#12122a', border: '1px solid #2a2a4a' }}
+            />
           )}
-        </Panel>
-      </ReactFlow>
+
+          {/* Top toolbar */}
+          <Panel position="top-center">
+            <div style={{ display: 'flex', gap: 6, background: '#12122a', border: '1px solid #2a2a4a', borderRadius: 8, padding: '6px 10px', alignItems: 'center' }}>
+              {Object.entries(TYPE_CONFIG).map(([type, cfg]) => (
+                <button
+                  key={type}
+                  onClick={() => toggleType(type)}
+                  style={{
+                    padding: '3px 10px', fontSize: 11, borderRadius: 12, cursor: 'pointer',
+                    background: activeTypes.has(type) ? `${cfg.color}22` : 'transparent',
+                    color: activeTypes.has(type) ? cfg.color : '#4a4a6a',
+                    border: `1px solid ${activeTypes.has(type) ? cfg.color : '#2a2a4a'}`,
+                  }}
+                  title={`Toggle ${type}`}
+                >
+                  {cfg.icon} {type}
+                </button>
+              ))}
+            </div>
+          </Panel>
+
+          {/* Bottom toolbar */}
+          <Panel position="bottom-center">
+            <div style={{ display: 'flex', gap: 6, background: '#12122a', border: '1px solid #2a2a4a', borderRadius: 8, padding: '6px 12px', alignItems: 'center', fontSize: 12 }}>
+              <span style={{ color: '#6a6a8a' }}>{entityCount} entities · {relCount} relationships</span>
+              <div style={{ width: 1, height: 14, background: '#2a2a4a' }} />
+              <button onClick={() => setShowLabels(v => !v)} style={toolbarBtnStyle(showLabels)}>
+                {showLabels ? '📝 Labels' : '📝 Labels off'}
+              </button>
+              <button onClick={() => setShowMiniMap(v => !v)} style={toolbarBtnStyle(showMiniMap)}>
+                🗺 Map
+              </button>
+              <button
+                onClick={() => setConnectMode(v => !v)}
+                style={toolbarBtnStyle(connectMode, connectMode ? '#e94560' : undefined)}
+                title={connectMode ? 'Click: drag between nodes to create relationships' : 'Enable connect mode'}
+              >
+                {connectMode ? '🔗 Connecting…' : '🔗 Connect'}
+              </button>
+            </div>
+          </Panel>
+        </ReactFlow>
+      )}
     </div>
   );
 };
 
-// Wrap in ReactFlowProvider (required for useReactFlow hook)
+const toolbarBtnStyle = (active, activeColor = '#6a3aff') => ({
+  padding: '3px 10px', fontSize: 11, borderRadius: 6, cursor: 'pointer',
+  background: active ? `${activeColor}22` : 'transparent',
+  color: active ? activeColor : '#6a6a8a',
+  border: `1px solid ${active ? activeColor : '#2a2a4a'}`,
+});
+
+// Wrap in ReactFlowProvider for useReactFlow hook access
 const CanonGraph = (props) => (
   <ReactFlowProvider>
     <CanonGraphInner {...props} />

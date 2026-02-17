@@ -5,14 +5,20 @@ import EntityDetail from './components/EntityDetail';
 import AIGenerationPanel from './components/AIGenerationPanel';
 import './App.css';
 
-const App = () => {
-  const [selectedEntity, setSelectedEntity] = useState(null);
-  const [showAIPanel, setShowAIPanel] = useState(false);
+// Default project ID — will be driven by project selector / auth in future sprint
+const DEFAULT_PROJECT_ID = 'default';
 
-  const handleAddToCanon = (generatedEntity) => {
-    // TODO: wire to GraphQL mutation — for now just close and show confirmation
-    console.log('Adding to canon:', generatedEntity);
-    // Could setSelectedEntity(generatedEntity) to show the new entity in detail
+const App = () => {
+  const [selectedEntity, setSelectedEntity] = useState<any>(null);
+  const [showAIPanel, setShowAIPanel] = useState(false);
+  const [projectId] = useState(DEFAULT_PROJECT_ID);
+
+  const handleAddToCanon = (generatedEntity: any) => {
+    // Entity is already persisted by acceptGeneratedEntity mutation
+    // Select it to show in detail panel
+    if (generatedEntity) {
+      setSelectedEntity(generatedEntity);
+    }
   };
 
   return (
@@ -33,20 +39,23 @@ const App = () => {
       <div className="app-layout">
         <aside className="sidebar">
           <EntityPanel
-            onEntitySelect={(entity) => setSelectedEntity(entity)}
+            projectId={projectId}
+            onEntitySelect={(entity: any) => setSelectedEntity(entity)}
             selectedEntityId={selectedEntity?.id}
           />
         </aside>
 
         <main className="main-content">
           <CanonGraph
-            onNodeClick={(node) => setSelectedEntity(node)}
+            projectId={projectId}
+            onNodeClick={(node: any) => setSelectedEntity(node)}
             selectedNodeId={selectedEntity?.id}
           />
 
           {selectedEntity && (
             <EntityDetail
               entity={selectedEntity}
+              projectId={projectId}
               onClose={() => setSelectedEntity(null)}
             />
           )}
@@ -55,8 +64,9 @@ const App = () => {
 
       {showAIPanel && (
         <AIGenerationPanel
+          projectId={projectId}
           onClose={() => setShowAIPanel(false)}
-          onAddToCanon={(entity) => {
+          onAddToCanon={(entity: any) => {
             handleAddToCanon(entity);
             setShowAIPanel(false);
           }}
