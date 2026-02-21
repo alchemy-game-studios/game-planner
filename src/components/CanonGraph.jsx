@@ -41,11 +41,80 @@ const autoLayout = (nodes) => {
   });
 };
 
+// Force-directed layout: simple physics-based positioning
+const forceLayout = (nodes) => {
+  const positioned = nodes.map((node) => ({
+    ...node,
+    x: node.x ?? Math.random() * 800,
+    y: node.y ?? Math.random() * 600,
+  }));
+
+  // Simple force simulation (3 iterations for initial positioning)
+  for (let iter = 0; iter < 3; iter++) {
+    positioned.forEach((node, i) => {
+      let fx = 0, fy = 0;
+      
+      // Repulsion from other nodes
+      positioned.forEach((other, j) => {
+        if (i === j) return;
+        const dx = node.x - other.x;
+        const dy = node.y - other.y;
+        const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+        const force = 5000 / (dist * dist);
+        fx += (dx / dist) * force;
+        fy += (dy / dist) * force;
+      });
+
+      // Center gravity
+      fx += (400 - node.x) * 0.01;
+      fy += (300 - node.y) * 0.01;
+
+      node.x += fx * 0.1;
+      node.y += fy * 0.1;
+    });
+  }
+
+  return positioned;
+};
+
+// Radial layout: arrange by type in circular sectors
+const radialLayout = (nodes) => {
+  const typed = {};
+  nodes.forEach((n) => {
+    if (!typed[n.entityType]) typed[n.entityType] = [];
+    typed[n.entityType].push(n);
+  });
+
+  const types = Object.keys(typed);
+  const centerX = 400, centerY = 300;
+
+  return nodes.map((node) => {
+    const typeIdx = types.indexOf(node.entityType);
+    const typeNodes = typed[node.entityType];
+    const nodeIdx = typeNodes.indexOf(node);
+    
+    const sectorAngle = (2 * Math.PI) / types.length;
+    const sectorStart = typeIdx * sectorAngle;
+    const nodeAngle = sectorStart + (nodeIdx / Math.max(typeNodes.length, 1)) * sectorAngle * 0.8;
+    
+    const radius = 150 + typeIdx * 40;
+    
+    return {
+      ...node,
+      x: centerX + radius * Math.cos(nodeAngle),
+      y: centerY + radius * Math.sin(nodeAngle),
+    };
+  });
+};
+
 const CanonGraphInner = ({ projectId = 'default', onNodeClick, selectedNodeId }) => {
   const [activeTypes, setActiveTypes] = useState(new Set(['PLACE', 'CHARACTER', 'ITEM', 'EVENT', 'FACTION']));
   const [showLabels, setShowLabels] = useState(true);
   const [showMiniMap, setShowMiniMap] = useState(true);
   const [connectMode, setConnectMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [layoutMode, setLayoutMode] = useState('auto'); // 'auto', 'force', 'radial'
+  const [showStats, setShowStats] = useState(false);
 
   const { loading, error, data, refetch } = useQuery(GET_CANON_GRAPH, {
     variables: { projectId },
@@ -61,22 +130,42 @@ const CanonGraphInner = ({ projectId = 'default', onNodeClick, selectedNodeId })
   // Convert API nodes to React Flow nodes
   const initialNodes = useMemo(() => {
     if (!graphData?.nodes) return [];
-    const layouted = autoLayout(graphData.nodes);
-    return layouted
-      .filter((n) => activeTypes.has(n.entityType))
-      .map((node) => ({
-        id: node.id,
-        type: 'entity',
-        data: {
-          label: node.name,
-          entity: node,
-          entityType: node.entityType,
-          description: showLabels ? node.description : undefined,
-        },
-        position: { x: node.x, y: node.y },
-        selected: selectedNodeId === node.id,
-      }));
-  }, [graphData, selectedNodeId, activeTypes, showLabels]);
+    
+    // Apply layout algorithm
+    let layouted;
+    if (layoutMode === 'force') {
+      layouted = forceLayout(graphData.nodes);
+    } else if (layoutMode === 'radial') {
+      layouted = radialLayout(graphData.nodes);
+    } else {
+      layouted = autoLayout(graphData.nodes);
+    }
+    
+    // Filter by active types
+    let filtered = layouted.filter((n) => activeTypes.has(n.entityType));
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((n) => 
+        n.name.toLowerCase().includes(query) ||
+        (n.description && n.description.toLowerCase().includes(query))
+      );
+    }
+    
+    return filtered.map((node) => ({
+      id: node.id,
+      type: 'entity',
+      data: {
+        label: node.name,
+        entity: node,
+        entityType: node.entityType,
+        description: showLabels ? node.description : undefined,
+      },
+      position: { x: node.x, y: node.y },
+      selected: selectedNodeId === node.id,
+    }));
+  }, [graphData, selectedNodeId, activeTypes, showLabels, searchQuery, layoutMode]);
 
   // Convert API edges
   const initialEdges = useMemo(() => {

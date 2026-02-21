@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CanonGraph from './components/CanonGraph';
 import EntityPanel from './components/EntityPanel';
 import EntityDetail from './components/EntityDetail';

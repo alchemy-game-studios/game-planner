@@ -47,6 +47,7 @@ const EntityPanel = ({ projectId = DEFAULT_PROJECT_ID, onEntitySelect, selectedE
   const [isCreating, setIsCreating] = useState(false);
   const [newEntity, setNewEntity] = useState({ name: '', description: '' });
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch entities for current tab
   const { loading, data, refetch } = useQuery(GET_ENTITIES, {
@@ -115,7 +116,16 @@ const EntityPanel = ({ projectId = DEFAULT_PROJECT_ID, onEntitySelect, selectedE
 
   // Flatten the union type response
   const entities = data?.entities || [];
-  const filteredEntities = entities.filter((e) => e.entityType === activeTab);
+  const filteredEntities = entities
+    .filter((e) => e.entityType === activeTab)
+    .filter((e) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        e.name?.toLowerCase().includes(q) ||
+        e.description?.toLowerCase().includes(q)
+      );
+    });
 
   return (
     <div className="entity-panel">
@@ -136,6 +146,27 @@ const EntityPanel = ({ projectId = DEFAULT_PROJECT_ID, onEntitySelect, selectedE
       {/* Tab label */}
       <div style={{ fontSize: 11, color: '#a0a0b0', textAlign: 'center', padding: '2px 0 8px' }}>
         {activeTab}s
+      </div>
+
+      {/* Search Input */}
+      <div style={{ padding: '0 12px 8px' }}>
+        <input
+          type="text"
+          placeholder={`Search ${activeTab.toLowerCase()}s...`}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '6px 10px',
+            fontSize: 12,
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: 6,
+            color: 'var(--text-primary)',
+            outline: 'none',
+            boxSizing: 'border-box',
+          }}
+        />
       </div>
 
       {/* Create Button / Form */}
