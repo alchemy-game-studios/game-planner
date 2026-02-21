@@ -303,29 +303,83 @@ const CanonGraphInner = ({ projectId = 'default', onNodeClick, selectedNodeId })
 
           {/* Top toolbar */}
           <Panel position="top-center">
-            <div style={{ display: 'flex', gap: 6, background: '#12122a', border: '1px solid #2a2a4a', borderRadius: 8, padding: '6px 10px', alignItems: 'center' }}>
-              {Object.entries(TYPE_CONFIG).map(([type, cfg]) => (
-                <button
-                  key={type}
-                  onClick={() => toggleType(type)}
+            <div style={{ display: 'flex', gap: 8, flexDirection: 'column', alignItems: 'center' }}>
+              {/* Search bar */}
+              <div style={{ display: 'flex', gap: 6, background: '#12122a', border: '1px solid #2a2a4a', borderRadius: 8, padding: '4px 8px', alignItems: 'center' }}>
+                <span style={{ color: '#6a6a8a', fontSize: 12 }}>🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search entities..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   style={{
-                    padding: '3px 10px', fontSize: 11, borderRadius: 12, cursor: 'pointer',
-                    background: activeTypes.has(type) ? `${cfg.color}22` : 'transparent',
-                    color: activeTypes.has(type) ? cfg.color : '#4a4a6a',
-                    border: `1px solid ${activeTypes.has(type) ? cfg.color : '#2a2a4a'}`,
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#a0a0b0',
+                    fontSize: 12,
+                    outline: 'none',
+                    width: 180,
                   }}
-                  title={`Toggle ${type}`}
-                >
-                  {cfg.icon} {type}
-                </button>
-              ))}
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#6a6a8a',
+                      cursor: 'pointer',
+                      padding: '0 4px',
+                      fontSize: 10,
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              
+              {/* Type filters */}
+              <div style={{ display: 'flex', gap: 6, background: '#12122a', border: '1px solid #2a2a4a', borderRadius: 8, padding: '6px 10px', alignItems: 'center' }}>
+                {Object.entries(TYPE_CONFIG).map(([type, cfg]) => (
+                  <button
+                    key={type}
+                    onClick={() => toggleType(type)}
+                    style={{
+                      padding: '3px 10px', fontSize: 11, borderRadius: 12, cursor: 'pointer',
+                      background: activeTypes.has(type) ? `${cfg.color}22` : 'transparent',
+                      color: activeTypes.has(type) ? cfg.color : '#4a4a6a',
+                      border: `1px solid ${activeTypes.has(type) ? cfg.color : '#2a2a4a'}`,
+                    }}
+                    title={`Toggle ${type}`}
+                  >
+                    {cfg.icon} {type}
+                  </button>
+                ))}
+              </div>
             </div>
           </Panel>
 
           {/* Bottom toolbar */}
           <Panel position="bottom-center">
-            <div style={{ display: 'flex', gap: 6, background: '#12122a', border: '1px solid #2a2a4a', borderRadius: 8, padding: '6px 12px', alignItems: 'center', fontSize: 12 }}>
-              <span style={{ color: '#6a6a8a' }}>{entityCount} entities · {relCount} relationships</span>
+            <div style={{ display: 'flex', gap: 6, background: '#12122a', border: '1px solid #2a2a4a', borderRadius: 8, padding: '6px 12px', alignItems: 'center', fontSize: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button onClick={() => setShowStats(v => !v)} style={toolbarBtnStyle(showStats)} title="Show graph statistics">
+                📊 Stats
+              </button>
+              <div style={{ width: 1, height: 14, background: '#2a2a4a' }} />
+              
+              {/* Layout selector */}
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button onClick={() => setLayoutMode('auto')} style={toolbarBtnStyle(layoutMode === 'auto')} title="Type-clustered layout">
+                  🎯 Auto
+                </button>
+                <button onClick={() => setLayoutMode('force')} style={toolbarBtnStyle(layoutMode === 'force')} title="Force-directed layout">
+                  ⚡ Force
+                </button>
+                <button onClick={() => setLayoutMode('radial')} style={toolbarBtnStyle(layoutMode === 'radial')} title="Radial layout">
+                  ☀️ Radial
+                </button>
+              </div>
+              
               <div style={{ width: 1, height: 14, background: '#2a2a4a' }} />
               <button onClick={() => setShowLabels(v => !v)} style={toolbarBtnStyle(showLabels)}>
                 {showLabels ? '📝 Labels' : '📝 Labels off'}
@@ -342,6 +396,47 @@ const CanonGraphInner = ({ projectId = 'default', onNodeClick, selectedNodeId })
               </button>
             </div>
           </Panel>
+          
+          {/* Stats Panel */}
+          {showStats && (
+            <Panel position="top-right">
+              <div style={{ background: '#12122a', border: '1px solid #2a2a4a', borderRadius: 8, padding: '12px 16px', minWidth: 200, fontSize: 12 }}>
+                <div style={{ color: '#a0a0b0', fontWeight: 600, marginBottom: 8, borderBottom: '1px solid #2a2a4a', paddingBottom: 6 }}>
+                  📊 Graph Statistics
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, color: '#6a6a8a' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Total Entities:</span>
+                    <span style={{ color: '#a0a0b0', fontWeight: 600 }}>{entityCount}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Relationships:</span>
+                    <span style={{ color: '#a0a0b0', fontWeight: 600 }}>{relCount}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Visible:</span>
+                    <span style={{ color: '#a0a0b0', fontWeight: 600 }}>{nodes.length}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Connections:</span>
+                    <span style={{ color: '#a0a0b0', fontWeight: 600 }}>{edges.length}</span>
+                  </div>
+                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #2a2a4a' }}>
+                    {Object.entries(TYPE_CONFIG).map(([type, cfg]) => {
+                      const count = graphData?.nodes?.filter(n => n.entityType === type).length || 0;
+                      if (count === 0) return null;
+                      return (
+                        <div key={type} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <span>{cfg.icon} {cfg.label}:</span>
+                          <span style={{ color: cfg.color, fontWeight: 600 }}>{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </Panel>
+          )}
         </ReactFlow>
       )}
     </div>

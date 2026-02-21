@@ -1,9 +1,10 @@
 /**
  * graphql-resolvers.js
  * Main resolver combiner for CanonKiln.
- * Merges: base, entity, generation, project, stripe resolvers.
+ * Merges: base, auth, entity, generation, project, stripe resolvers.
  */
 
+import authResolvers from './resolvers/authResolvers.js';
 import entityResolvers from './resolvers/entityResolvers.js';
 import generationResolvers from './resolvers/generationResolvers.js';
 import projectResolvers from './resolvers/projectResolvers.js';
@@ -37,6 +38,7 @@ const baseResolvers = {
 
 export default mergeResolvers(
   baseResolvers,
+  authResolvers,
   entityResolvers,
   generationResolvers,
   projectResolvers,

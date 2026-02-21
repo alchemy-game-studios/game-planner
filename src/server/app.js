@@ -10,6 +10,7 @@ import { GraphQLLocalStrategy } from "graphql-passport";
 import BasicGraphQLPassportCb from "./auth/basic-graphql-passport.js";
 import graphqlSchemaBuilder from "./graphql/graphql-schema-builder.js";
 import graphqlResolvers from "./graphql/graphql-resolvers.js";
+import { createAuthContext } from "./graphql/resolvers/authResolvers.js";
 import { ApolloServer } from "apollo-server-express"; // Import Apollo Server
 
 
@@ -63,9 +64,13 @@ const startApolloServer = async () => {
   const server = new ApolloServer({
     typeDefs: graphqlSchema, // Use schema
     resolvers: graphqlResolvers, // Your resolvers
-    context: ({ req }) => ({
-      user: req.user, // Add user info or other context data if needed
-    }),
+    context: ({ req }) => {
+      const authContext = createAuthContext({ req });
+      return {
+        ...authContext,
+        user: req.user, // Keep for backward compatibility
+      };
+    },
   });
 
   await server.start(); // Start the Apollo server
