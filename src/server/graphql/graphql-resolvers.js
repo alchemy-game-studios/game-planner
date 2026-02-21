@@ -1,45 +1,44 @@
-import neo4j from "neo4j-driver";
+/**
+ * graphql-resolvers.js
+ * Main resolver combiner for CanonKiln.
+ * Merges: base, entity, generation, project, stripe resolvers.
+ */
 
-// Configure the Neo4j driver
-const driver = neo4j.driver(
-  "bolt://localhost:7687", // Change if using a remote database
-  neo4j.auth.basic("neo4j", "password") // Use your credentials
-);
+import entityResolvers from './resolvers/entityResolvers.js';
+import generationResolvers from './resolvers/generationResolvers.js';
+import projectResolvers from './resolvers/projectResolvers.js';
+import stripeResolvers from './resolvers/stripeResolvers.js';
 
-const neo4JSession = () => {return driver.session()};
-export default {
-  Query: {
-      hello: () => {
-        return {
-          message: "Hello, world!"
-        };
-      },
-      places: async () => {
-        console.log("STARTING PLACES QUERY")
-        const session = neo4JSession();
-       
-        try {
-          const result = await session.run("MATCH (p:Place) RETURN p");
-          console.log(result.records[0].get("p"))
-          return result.records.map(record => record.get("p").properties);
-        } catch (error) {
-          console.error("Error fetching entities:", error);
-          throw new Error("Failed to fetch entities");
-        } finally {
-          session.close();
-        }
+// Deep merge helper for resolver maps
+const mergeResolvers = (...resolverSets) => {
+  const merged = {};
+  for (const resolvers of resolverSets) {
+    for (const [key, value] of Object.entries(resolvers)) {
+      if (merged[key] && typeof merged[key] === 'object' && typeof value === 'object') {
+        merged[key] = { ...merged[key], ...value };
+      } else {
+        merged[key] = value;
       }
+    }
+  }
+  return merged;
+};
+
+const baseResolvers = {
+  Query: {
+    hello: () => ({ message: 'CanonKiln API — v2.0' }),
   },
   Mutation: {
-    submitText: (parent, { input }) => {
-      // `input` contains the data sent from the client
-      console.log('Received input:', input);
+    submitText: (_, { input }) => ({
+      message: `Received: ${input.text}`,
+    }),
+  },
+};
 
-      // Process the data (e.g., save to database, perform business logic)
-      // Example: return a response with a message
-      return {
-        message: `Received text: ${input.text}`,
-      };
-    },
-  }
-}
+export default mergeResolvers(
+  baseResolvers,
+  entityResolvers,
+  generationResolvers,
+  projectResolvers,
+  stripeResolvers
+);

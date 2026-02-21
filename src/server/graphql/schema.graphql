@@ -1,29 +1,529 @@
-# Query type for fetching data
+# CanonKiln GraphQL Schema
+# Entity types: Place, Character, Item, Event, Faction
+# Relationships between entities
+# AI-constrained generation
+# Stripe subscription gating
+
+# ─── Core Queries ────────────────────────────────────────────────────────────
 type Query {
   hello: Hello
-  places: [Place!]!
+
+  # ── Entity queries ──
+  entities(projectId: ID!, entityType: EntityType): [CanonEntity!]!
+  entity(id: ID!): CanonEntity
+  places(projectId: ID!): [Place!]!
+  characters(projectId: ID!): [Character!]!
+  items(projectId: ID!): [Item!]!
+  events(projectId: ID!): [Event!]!
+  factions(projectId: ID!): [Faction!]!
+
+  # ── Relationship queries ──
+  relationships(projectId: ID!): [Relationship!]!
+  relationshipsForEntity(entityId: ID!): [Relationship!]!
+
+  # ── Graph queries (optimized for visualization) ──
+  canonGraph(projectId: ID!): CanonGraph!
+
+  # ── AI Generation queries ──
+  generationContext(projectId: ID!, entityType: EntityType!, focusEntityId: ID): GenerationContext!
+
+  # ── Project queries ──
+  projects: [Project!]!
+  project(id: ID!): Project
+
+  # ── Subscription / billing ──
+  subscriptionStatus: SubscriptionStatus!
 }
 
-# Mutation type for modifying data
+# ─── Core Mutations ───────────────────────────────────────────────────────────
 type Mutation {
   submitText(input: SubmitText!) : Response
+
+  # ── Entity mutations ──
+  createPlace(input: CreatePlaceInput!): Place!
+  updatePlace(id: ID!, input: UpdatePlaceInput!): Place!
+  createCharacter(input: CreateCharacterInput!): Character!
+  updateCharacter(id: ID!, input: UpdateCharacterInput!): Character!
+  createItem(input: CreateItemInput!): Item!
+  updateItem(id: ID!, input: UpdateItemInput!): Item!
+  createEvent(input: CreateEventInput!): Event!
+  updateEvent(id: ID!, input: UpdateEventInput!): Event!
+  createFaction(input: CreateFactionInput!): Faction!
+  updateFaction(id: ID!, input: UpdateFactionInput!): Faction!
+  deleteEntity(id: ID!): Response!
+
+  # ── Relationship mutations ──
+  createRelationship(input: CreateRelationshipInput!): Relationship!
+  updateRelationship(id: ID!, label: String!): Relationship!
+  deleteRelationship(id: ID!): Response!
+
+  # ── AI Generation mutations ──
+  generateEntity(input: GenerateEntityInput!): GeneratedEntity!
+  refineGeneration(input: RefineGenerationInput!): GeneratedEntity!
+  acceptGeneratedEntity(input: AcceptGeneratedEntityInput!): CanonEntity!
+
+  # ── Project mutations ──
+  createProject(input: CreateProjectInput!): Project!
+  updateProject(id: ID!, input: UpdateProjectInput!): Project!
+  deleteProject(id: ID!): Response!
+
+  # ── Stripe ──
+  createCheckoutSession(plan: SubscriptionPlan!): CheckoutSession!
+  createPortalSession: PortalSession!
 }
 
-type Hello {
-  message: String!
+# ─── Shared / Base Types ─────────────────────────────────────────────────────
+type Hello { message: String! }
+
+type Response { message: String! }
+
+input SubmitText { text: String! }
+
+enum EntityType {
+  PLACE
+  CHARACTER
+  ITEM
+  EVENT
+  FACTION
 }
 
-type Response {
-  message: String!
-}
-input SubmitText {
-  text: String!
+# Union so we can return any entity from the generic `entity` query
+union CanonEntity = Place | Character | Item | Event | Faction
+
+# ─── Project ──────────────────────────────────────────────────────────────────
+type Project {
+  id: ID!
+  name: String!
+  description: String
+  genre: String
+  entityCount: Int!
+  relationshipCount: Int!
+  createdAt: String!
+  updatedAt: String!
 }
 
-##############################################################
-## Place
+input CreateProjectInput {
+  name: String!
+  description: String
+  genre: String
+}
+
+input UpdateProjectInput {
+  name: String
+  description: String
+  genre: String
+}
+
+# ─── Entity Types ─────────────────────────────────────────────────────────────
+
 type Place {
-  id: String!
+  id: ID!
   name: String!
   description: String!
+  entityType: EntityType!
+  projectId: ID!
+  placeType: PlaceType
+  climate: String
+  population: String
+  notableFeatures: [String!]!
+  x: Float
+  y: Float
+  relationships: [Relationship!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Character {
+  id: ID!
+  name: String!
+  description: String!
+  entityType: EntityType!
+  projectId: ID!
+  role: String
+  species: String
+  age: String
+  allegiances: [String!]!
+  traits: [String!]!
+  x: Float
+  y: Float
+  relationships: [Relationship!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Item {
+  id: ID!
+  name: String!
+  description: String!
+  entityType: EntityType!
+  projectId: ID!
+  itemType: ItemType
+  rarity: ItemRarity
+  origin: String
+  powers: [String!]!
+  x: Float
+  y: Float
+  relationships: [Relationship!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Event {
+  id: ID!
+  name: String!
+  description: String!
+  entityType: EntityType!
+  projectId: ID!
+  eventType: EventType
+  timelineOrder: Int
+  era: String
+  consequences: [String!]!
+  x: Float
+  y: Float
+  relationships: [Relationship!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Faction {
+  id: ID!
+  name: String!
+  description: String!
+  entityType: EntityType!
+  projectId: ID!
+  factionType: FactionType
+  alignment: String
+  goals: [String!]!
+  x: Float
+  y: Float
+  relationships: [Relationship!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+# ─── Relationship ─────────────────────────────────────────────────────────────
+type Relationship {
+  id: ID!
+  fromId: ID!
+  toId: ID!
+  fromName: String!
+  toName: String!
+  fromType: EntityType!
+  toType: EntityType!
+  label: String!
+  projectId: ID!
+  createdAt: String!
+}
+
+input CreateRelationshipInput {
+  projectId: ID!
+  fromId: ID!
+  toId: ID!
+  fromType: EntityType!
+  toType: EntityType!
+  label: String!
+}
+
+# ─── Graph (combined for visualization) ──────────────────────────────────────
+type CanonGraph {
+  projectId: ID!
+  nodes: [GraphNode!]!
+  edges: [GraphEdge!]!
+  entityCount: Int!
+  relationshipCount: Int!
+}
+
+type GraphNode {
+  id: ID!
+  name: String!
+  entityType: EntityType!
+  description: String!
+  x: Float
+  y: Float
+}
+
+type GraphEdge {
+  id: ID!
+  source: ID!
+  target: ID!
+  label: String!
+}
+
+# ─── AI Generation ────────────────────────────────────────────────────────────
+# GenerationContext captures graph constraints for the AI prompt
+type GenerationContext {
+  projectId: ID!
+  entityType: EntityType!
+  existingEntities: [EntitySummary!]!
+  existingRelationships: [RelationshipSummary!]!
+  suggestions: [ConstraintSuggestion!]!
+  focusEntity: EntitySummary
+}
+
+type EntitySummary {
+  id: ID!
+  name: String!
+  entityType: EntityType!
+  description: String!
+}
+
+type RelationshipSummary {
+  fromName: String!
+  toName: String!
+  label: String!
+}
+
+type ConstraintSuggestion {
+  type: String!
+  message: String!
+}
+
+type GeneratedEntity {
+  generationId: ID!
+  entityType: EntityType!
+  name: String!
+  description: String!
+  attributes: [GeneratedAttribute!]!
+  suggestedRelationships: [SuggestedRelationship!]!
+  consistencyScore: Float!
+  warnings: [String!]!
+  raw: String!
+}
+
+type GeneratedAttribute {
+  key: String!
+  value: String!
+}
+
+type SuggestedRelationship {
+  targetId: ID!
+  targetName: String!
+  label: String!
+  rationale: String!
+}
+
+input GenerateEntityInput {
+  projectId: ID!
+  entityType: EntityType!
+  prompt: String!
+  constrainedByEntityIds: [ID!]
+  style: String
+}
+
+input RefineGenerationInput {
+  generationId: ID!
+  feedback: String!
+  projectId: ID!
+}
+
+input AcceptGeneratedEntityInput {
+  generationId: ID!
+  projectId: ID!
+  overrides: EntityOverridesInput
+  createRelationships: [CreateRelationshipInput!]
+}
+
+input EntityOverridesInput {
+  name: String
+  description: String
+}
+
+# ─── Stripe / Subscription ────────────────────────────────────────────────────
+type SubscriptionStatus {
+  isActive: Boolean!
+  plan: SubscriptionPlan
+  projectLimit: Int!
+  entityLimit: Int!
+  generationCredits: Int!
+  periodEnd: String
+  cancelAtPeriodEnd: Boolean!
+}
+
+enum SubscriptionPlan {
+  FREE
+  CREATOR
+  STUDIO
+}
+
+type CheckoutSession {
+  url: String!
+  sessionId: String!
+}
+
+type PortalSession {
+  url: String!
+}
+
+# ─── Entity Enums ─────────────────────────────────────────────────────────────
+enum PlaceType {
+  CITY
+  TOWN
+  VILLAGE
+  WILDERNESS
+  DUNGEON
+  LANDMARK
+  REGION
+  PLANE
+  OTHER
+}
+
+enum ItemType {
+  WEAPON
+  ARMOR
+  ARTIFACT
+  POTION
+  TOOL
+  RELIC
+  CURRENCY
+  DOCUMENT
+  OTHER
+}
+
+enum ItemRarity {
+  COMMON
+  UNCOMMON
+  RARE
+  EPIC
+  LEGENDARY
+  UNIQUE
+}
+
+enum EventType {
+  BATTLE
+  TREATY
+  DISCOVERY
+  CATASTROPHE
+  FOUNDING
+  CORONATION
+  BETRAYAL
+  PROPHECY
+  OTHER
+}
+
+enum FactionType {
+  MILITARY_ORDER
+  GUILD
+  GOVERNMENT
+  CULT
+  CRIMINAL_ORGANIZATION
+  RELIGIOUS_ORDER
+  MERCHANT_COMPANY
+  REBEL_GROUP
+  OTHER
+}
+
+# ─── Entity Input Types ───────────────────────────────────────────────────────
+input CreatePlaceInput {
+  projectId: ID!
+  name: String!
+  description: String!
+  placeType: PlaceType
+  climate: String
+  population: String
+  notableFeatures: [String!]
+  x: Float
+  y: Float
+}
+
+input UpdatePlaceInput {
+  name: String
+  description: String
+  placeType: PlaceType
+  climate: String
+  population: String
+  notableFeatures: [String!]
+  x: Float
+  y: Float
+}
+
+input CreateCharacterInput {
+  projectId: ID!
+  name: String!
+  description: String!
+  role: String
+  species: String
+  age: String
+  allegiances: [String!]
+  traits: [String!]
+  x: Float
+  y: Float
+}
+
+input UpdateCharacterInput {
+  name: String
+  description: String
+  role: String
+  species: String
+  age: String
+  allegiances: [String!]
+  traits: [String!]
+  x: Float
+  y: Float
+}
+
+input CreateItemInput {
+  projectId: ID!
+  name: String!
+  description: String!
+  itemType: ItemType
+  rarity: ItemRarity
+  origin: String
+  powers: [String!]
+  x: Float
+  y: Float
+}
+
+input UpdateItemInput {
+  name: String
+  description: String
+  itemType: ItemType
+  rarity: ItemRarity
+  origin: String
+  powers: [String!]
+  x: Float
+  y: Float
+}
+
+input CreateEventInput {
+  projectId: ID!
+  name: String!
+  description: String!
+  eventType: EventType
+  timelineOrder: Int
+  era: String
+  consequences: [String!]
+  x: Float
+  y: Float
+}
+
+input UpdateEventInput {
+  name: String
+  description: String
+  eventType: EventType
+  timelineOrder: Int
+  era: String
+  consequences: [String!]
+  x: Float
+  y: Float
+}
+
+input CreateFactionInput {
+  projectId: ID!
+  name: String!
+  description: String!
+  factionType: FactionType
+  alignment: String
+  goals: [String!]
+  x: Float
+  y: Float
+}
+
+input UpdateFactionInput {
+  name: String
+  description: String
+  factionType: FactionType
+  alignment: String
+  goals: [String!]
+  x: Float
+  y: Float
 }
