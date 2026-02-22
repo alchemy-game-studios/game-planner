@@ -23,14 +23,18 @@ async function setupConstraints() {
 
   const constraints = [
     // Unique IDs for all entity types
+    `CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE`,
+    `CREATE CONSTRAINT user_email IF NOT EXISTS FOR (u:User) REQUIRE u.email IS UNIQUE`,
     `CREATE CONSTRAINT canon_entity_id IF NOT EXISTS FOR (e:CanonEntity) REQUIRE e.id IS UNIQUE`,
     `CREATE CONSTRAINT project_id IF NOT EXISTS FOR (p:Project) REQUIRE p.id IS UNIQUE`,
 
     // Indexes for common lookups
+    `CREATE INDEX user_email_lookup IF NOT EXISTS FOR (u:User) ON (u.email)`,
     `CREATE INDEX canon_entity_project IF NOT EXISTS FOR (e:CanonEntity) ON (e.projectId)`,
     `CREATE INDEX canon_entity_type IF NOT EXISTS FOR (e:CanonEntity) ON (e.entityType)`,
     `CREATE INDEX canon_entity_name IF NOT EXISTS FOR (e:CanonEntity) ON (e.name)`,
     `CREATE INDEX relationship_project IF NOT EXISTS FOR ()-[r:RELATES_TO]-() ON (r.projectId)`,
+    `CREATE INDEX project_owner IF NOT EXISTS FOR (p:Project) ON (p.userId)`,
   ];
 
   for (const constraint of constraints) {

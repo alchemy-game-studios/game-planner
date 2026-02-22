@@ -19,6 +19,7 @@ const App = () => {
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [projectId, setProjectId] = useState(DEFAULT_PROJECT_ID);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const handleAddToCanon = (generatedEntity: any) => {
     // Entity is already persisted by acceptGeneratedEntity mutation
@@ -42,9 +43,11 @@ const App = () => {
         setShowAIPanel(prev => !prev);
       }
 
-      // Escape: Close panels
+      // Escape: Close panels/dropdowns
       if (e.key === 'Escape') {
-        if (showAIPanel) {
+        if (showProjectSelector) {
+          setShowProjectSelector(false);
+        } else if (showAIPanel) {
           setShowAIPanel(false);
         } else if (selectedEntity) {
           setSelectedEntity(null);
@@ -54,7 +57,24 @@ const App = () => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [showAIPanel, selectedEntity]);
+  }, [showAIPanel, selectedEntity, showProjectSelector]);
+
+  // Click outside to close project selector
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showProjectSelector) {
+        const target = e.target as HTMLElement;
+        if (!target.closest('.project-selector-container')) {
+          setShowProjectSelector(false);
+        }
+      }
+    };
+
+    if (showProjectSelector) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showProjectSelector]);
 
   return (
     <div className="app">
@@ -64,7 +84,7 @@ const App = () => {
           <span className="app-subtitle">Graph-First Creative IP Management</span>
           
           {/* Project Selector */}
-          <div style={{ position: 'relative' }}>
+          <div className="project-selector-container" style={{ position: 'relative' }}>
             <button
               onClick={() => setShowProjectSelector(!showProjectSelector)}
               style={{
@@ -151,6 +171,25 @@ const App = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Mobile menu toggle */}
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+            style={{
+              display: 'none',
+              padding: '6px 12px',
+              fontSize: 14,
+              background: '#1a1a2e',
+              border: '1px solid #2a2a4a',
+              borderRadius: 6,
+              color: '#a0a0b0',
+              cursor: 'pointer',
+            }}
+            title="Toggle entity panel"
+          >
+            ☰
+          </button>
+
           <button
             className="header-ai-btn"
             onClick={() => setShowAIPanel(true)}
@@ -159,6 +198,7 @@ const App = () => {
             ✦ Generate with AI
           </button>
           <div 
+            className="keyboard-hint"
             style={{ 
               fontSize: 11, 
               color: '#6a6a8a', 
@@ -175,10 +215,31 @@ const App = () => {
       </header>
 
       <div className="app-layout">
-        <aside className="sidebar">
+        {/* Mobile sidebar backdrop */}
+        {mobileSidebarOpen && (
+          <div
+            className="mobile-backdrop"
+            onClick={() => setMobileSidebarOpen(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.6)',
+              zIndex: 999,
+              display: 'none',
+            }}
+          />
+        )}
+
+        <aside className={`sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
           <EntityPanel
             projectId={projectId}
-            onEntitySelect={(entity: any) => setSelectedEntity(entity)}
+            onEntitySelect={(entity: any) => {
+              setSelectedEntity(entity);
+              setMobileSidebarOpen(false); // Close sidebar on mobile when entity selected
+            }}
             selectedEntityId={selectedEntity?.id}
           />
         </aside>

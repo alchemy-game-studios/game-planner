@@ -31,17 +31,24 @@ const nodeToProject = async (node) => {
 
 const projectResolvers = {
   Query: {
-    projects: async () => {
+    projects: async (_, __, context) => {
+      if (!context.userId) {
+        throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
       const records = await runQuery(
-        `MATCH (p:Project) RETURN p ORDER BY p.createdAt DESC`
+        `MATCH (p:Project {userId: $userId}) RETURN p ORDER BY p.createdAt DESC`,
+        { userId: context.userId }
       );
       return Promise.all(records.map((r) => nodeToProject(r.get('p'))));
     },
 
-    project: async (_, { id }) => {
+    project: async (_, { id }, context) => {
+      if (!context.userId) {
+        throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
       const records = await runQuery(
-        `MATCH (p:Project {id: $id}) RETURN p`,
-        { id }
+        `MATCH (p:Project {id: $id, userId: $userId}) RETURN p`,
+        { id, userId: context.userId }
       );
       if (!records.length) {
         throw new GraphQLError('Project not found', { extensions: { code: 'NOT_FOUND' } });
@@ -51,11 +58,15 @@ const projectResolvers = {
   },
 
   Mutation: {
-    createProject: async (_, { input }) => {
+    createProject: async (_, { input }, context) => {
+      if (!context.userId) {
+        throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
       const id = uuidv4();
       const now = new Date().toISOString();
       const props = {
         id,
+        userId: context.userId,
         name: input.name,
         description: input.description || null,
         genre: input.genre || null,
@@ -71,7 +82,10 @@ const projectResolvers = {
       return nodeToProject(records[0].get('p'));
     },
 
-    updateProject: async (_, { id, input }) => {
+    updateProject: async (_, { id, input }, context) => {
+      if (!context.userId) {
+        throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
       const updates = { updatedAt: new Date().toISOString() };
       if (input.name !== undefined) updates.name = input.name;
       if (input.description !== undefined) updates.description = input.description;
@@ -80,8 +94,8 @@ const projectResolvers = {
       const setClause = Object.keys(updates).map((k) => `p.${k} = $${k}`).join(', ');
 
       const records = await runQuery(
-        `MATCH (p:Project {id: $id}) SET ${setClause} RETURN p`,
-        { id, ...updates }
+        `MATCH (p:Project {id: $id, userId: $userId}) SET ${setClause} RETURN p`,
+        { id, userId: context.userId, ...updates }
       );
 
       if (!records.length) {
@@ -91,7 +105,10 @@ const projectResolvers = {
       return nodeToProject(records[0].get('p'));
     },
 
-    deleteProject: async (_, { id }) => {
+    deleteProject: async (_, { id }, context) => {
+      if (!context.userId) {
+        throw new GraphQLError('Not authenticated', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
       // Cascade: delete all entities and relationships in the project
       await runQuery(
         `MATCH (e:CanonEntity {projectId: $id})
@@ -100,8 +117,8 @@ const projectResolvers = {
         { id }
       );
       await runQuery(
-        `MATCH (p:Project {id: $id}) DELETE p`,
-        { id }
+        `MATCH (p:Project {id: $id, userId: $userId}) DELETE p`,
+        { id, userId: context.userId }
       );
       return { message: `Project ${id} and all its entities deleted` };
     },

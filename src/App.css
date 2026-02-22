@@ -995,3 +995,127 @@ body {
   to { transform: rotate(360deg); }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Mobile Responsiveness
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Header adjustments */
+  .app-header {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .app-header h1 {
+    font-size: 1.2rem;
+  }
+
+  .app-subtitle {
+    font-size: 0.75rem;
+    flex-basis: 100%;
+  }
+
+  /* Show mobile menu button */
+  .mobile-menu-btn {
+    display: block !important;
+  }
+
+  /* Hide keyboard hint on small screens */
+  .keyboard-hint {
+    display: none !important;
+  }
+
+  /* Mobile backdrop */
+  .mobile-backdrop {
+    display: block !important;
+  }
+
+  /* Sidebar: convert to overlay on mobile */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 85%;
+    max-width: 320px;
+    height: 100%;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.4);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Main content takes full width on mobile */
+  .main-content {
+    width: 100%;
+  }
+
+  /* Entity detail overlay on mobile */
+  .entity-detail {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 90%;
+    max-width: 400px;
+    z-index: 900;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.4);
+  }
+
+  /* AI panel - full screen on mobile */
+  .ai-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    border-radius: 0;
+  }
+
+  /* Smaller buttons and text */
+  .header-ai-btn {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+
+  /* Adjust entity panel tabs for touch */
+  .entity-type-tabs .tab {
+    font-size: 1.2rem;
+    padding: 10px;
+  }
+
+  /* Entity items - more touch-friendly */
+  .entity-item {
+    padding: 12px;
+  }
+
+  .entity-desc {
+    font-size: 0.85rem;
+  }
+
+  /* Graph controls - position for mobile */
+  .react-flow__controls {
+    bottom: 60px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .sidebar {
+    width: 90%;
+  }
+
+  .entity-detail {
+    width: 95%;
+  }
+}
+
