@@ -113,8 +113,16 @@ const CanonGraphInner = ({ projectId = 'default', onNodeClick, selectedNodeId })
   const [showMiniMap, setShowMiniMap] = useState(true);
   const [connectMode, setConnectMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [layoutMode, setLayoutMode] = useState('auto'); // 'auto', 'force', 'radial'
+  const [layoutMode, setLayoutMode] = useState(() => {
+    // Load layout preference from localStorage
+    return localStorage.getItem('canonkiln_layout_mode') || 'auto';
+  });
   const [showStats, setShowStats] = useState(false);
+
+  // Persist layout preference
+  React.useEffect(() => {
+    localStorage.setItem('canonkiln_layout_mode', layoutMode);
+  }, [layoutMode]);
 
   const { loading, error, data, refetch } = useQuery(GET_CANON_GRAPH, {
     variables: { projectId },

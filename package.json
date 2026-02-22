@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/alchemy-game-studios/game-planner#readme",
   "dependencies": {
+    "@apollo/client": "^3.14.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
