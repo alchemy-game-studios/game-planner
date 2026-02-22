@@ -7,6 +7,7 @@ import AIGenerationPanel from './components/AIGenerationPanel';
 import StatsPanel from './components/StatsPanel';
 import OnboardingModal from './components/OnboardingModal';
 import HelpPanel from './components/HelpPanel';
+import UserMenu from './components/UserMenu';
 import { GET_CANON_GRAPH } from './client-graphql/canon-operations';
 import { exportCanonAsJSON, exportAsMarkdown } from './utils/export';
 import './App.css';
@@ -224,6 +225,9 @@ const App = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* User Menu */}
+          <UserMenu />
+          
           {/* Mobile menu toggle */}
           <button
             className="mobile-menu-btn"

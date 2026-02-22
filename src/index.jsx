@@ -3,14 +3,31 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import ApolloAppProvider from "./apollo/apollo-provider";
+import { AuthProvider } from './contexts/AuthContext';
 
-import { ApolloProvider, InMemoryCache, ApolloClient } from '@apollo/client';
+import { ApolloProvider, InMemoryCache, ApolloClient, createHttpLink } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
 
-// Create an Apollo Client instance
+// HTTP link for GraphQL endpoint
+const httpLink = createHttpLink({
+  uri: 'http://localhost:3000/graphql',
+});
+
+// Auth link to add JWT token to headers
+const authLink = setContext((_, { headers }) => {
+  const token = localStorage.getItem('canonkiln_token');
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : '',
+    }
+  };
+});
+
+// Create an Apollo Client instance with auth
 const client = new ApolloClient({
-  uri: 'http://localhost:3000/graphql', // Replace with your GraphQL API endpoint
-  cache: new InMemoryCache(), // Enables caching for performance
+  link: authLink.concat(httpLink),
+  cache: new InMemoryCache(),
 });
 
 const root = ReactDOM.createRoot(
@@ -19,7 +36,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <ApolloProvider client={client}>
-    <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </ApolloProvider>
   </React.StrictMode>
 );
