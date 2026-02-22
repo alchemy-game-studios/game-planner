@@ -9,6 +9,8 @@ const driver = neo4j.driver(
   neo4j.auth.basic(NEO4J_USER, NEO4J_PASSWORD)
 );
 
+export const getDriver = () => driver;
+
 export const getSession = () => driver.session();
 
 export const runQuery = async (cypher, params = {}) => {

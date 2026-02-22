@@ -5,6 +5,8 @@ import EntityPanel from './components/EntityPanel';
 import EntityDetail from './components/EntityDetail';
 import AIGenerationPanel from './components/AIGenerationPanel';
 import StatsPanel from './components/StatsPanel';
+import OnboardingModal from './components/OnboardingModal';
+import HelpPanel from './components/HelpPanel';
 import { GET_CANON_GRAPH } from './client-graphql/canon-operations';
 import { exportCanonAsJSON, exportAsMarkdown } from './utils/export';
 import './App.css';
@@ -26,12 +28,26 @@ const App = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showStatsPanel, setShowStatsPanel] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
-  // Fetch graph data for export/stats
+  // Fetch graph data for export/stats/onboarding check
   const { data: graphData } = useQuery(GET_CANON_GRAPH, {
     variables: { projectId },
     skip: !showExportMenu && !showStatsPanel, // Only fetch when needed
   });
+
+  // Check if user should see onboarding (first time + no entities)
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('canonkiln_onboarding_seen');
+    if (!hasSeenOnboarding) {
+      // Wait a bit then check if they have entities
+      const timer = setTimeout(() => {
+        setShowOnboarding(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const handleAddToCanon = (generatedEntity: any) => {
     // Entity is already persisted by acceptGeneratedEntity mutation
@@ -39,6 +55,16 @@ const App = () => {
     if (generatedEntity) {
       setSelectedEntity(generatedEntity);
     }
+  };
+
+  const handleCloseOnboarding = () => {
+    localStorage.setItem('canonkiln_onboarding_seen', 'true');
+    setShowOnboarding(false);
+  };
+
+  const handleSkipOnboarding = () => {
+    localStorage.setItem('canonkiln_onboarding_seen', 'true');
+    setShowOnboarding(false);
   };
 
   // Keyboard shortcuts
@@ -57,7 +83,9 @@ const App = () => {
 
       // Escape: Close panels/dropdowns
       if (e.key === 'Escape') {
-        if (showStatsPanel) {
+        if (showHelp) {
+          setShowHelp(false);
+        } else if (showStatsPanel) {
           setShowStatsPanel(false);
         } else if (showExportMenu) {
           setShowExportMenu(false);
@@ -69,11 +97,17 @@ const App = () => {
           setSelectedEntity(null);
         }
       }
+      
+      // ? key: Open help
+      if (e.key === '?' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        e.preventDefault();
+        setShowHelp(true);
+      }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [showAIPanel, selectedEntity, showProjectSelector, showExportMenu, showStatsPanel]);
+  }, [showAIPanel, selectedEntity, showProjectSelector, showExportMenu, showStatsPanel, showHelp]);
 
   // Click outside to close dropdowns
   useEffect(() => {
@@ -310,6 +344,23 @@ const App = () => {
             )}
           </div>
 
+          {/* Help Button */}
+          <button
+            onClick={() => setShowHelp(true)}
+            style={{
+              padding: '6px 12px',
+              fontSize: 12,
+              background: '#1a1a2e',
+              border: '1px solid #2a2a4a',
+              borderRadius: 6,
+              color: '#a0a0b0',
+              cursor: 'pointer',
+            }}
+            title="Help & Shortcuts (Press ?)"
+          >
+            ❓
+          </button>
+
           <div 
             className="keyboard-hint"
             style={{ 
@@ -320,7 +371,7 @@ const App = () => {
               borderRadius: 4,
               border: '1px solid #2a2a4a'
             }}
-            title="Keyboard shortcuts: Cmd/Ctrl+G = AI Generation, Esc = Close panels"
+            title="Keyboard shortcuts: Cmd/Ctrl+G = AI Generation, ? = Help, Esc = Close"
           >
             ⌘G
           </div>
@@ -404,6 +455,17 @@ const App = () => {
             onClose={() => setShowStatsPanel(false)}
           />
         </>
+      )}
+
+      {showOnboarding && (
+        <OnboardingModal
+          onClose={handleCloseOnboarding}
+          onSkip={handleSkipOnboarding}
+        />
+      )}
+
+      {showHelp && (
+        <HelpPanel onClose={() => setShowHelp(false)} />
       )}
     </div>
   );
