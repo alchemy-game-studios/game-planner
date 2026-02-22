@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
+import { useQuery } from '@apollo/client';
 import CanonGraph from './components/CanonGraph';
 import EntityPanel from './components/EntityPanel';
 import EntityDetail from './components/EntityDetail';
 import AIGenerationPanel from './components/AIGenerationPanel';
+import StatsPanel from './components/StatsPanel';
+import { GET_CANON_GRAPH } from './client-graphql/canon-operations';
+import { exportCanonAsJSON, exportAsMarkdown } from './utils/export';
 import './App.css';
 
 // Default project ID — will be driven by auth in future sprint
@@ -20,6 +24,14 @@ const App = () => {
   const [projectId, setProjectId] = useState(DEFAULT_PROJECT_ID);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showStatsPanel, setShowStatsPanel] = useState(false);
+
+  // Fetch graph data for export/stats
+  const { data: graphData } = useQuery(GET_CANON_GRAPH, {
+    variables: { projectId },
+    skip: !showExportMenu && !showStatsPanel, // Only fetch when needed
+  });
 
   const handleAddToCanon = (generatedEntity: any) => {
     // Entity is already persisted by acceptGeneratedEntity mutation
@@ -45,7 +57,11 @@ const App = () => {
 
       // Escape: Close panels/dropdowns
       if (e.key === 'Escape') {
-        if (showProjectSelector) {
+        if (showStatsPanel) {
+          setShowStatsPanel(false);
+        } else if (showExportMenu) {
+          setShowExportMenu(false);
+        } else if (showProjectSelector) {
           setShowProjectSelector(false);
         } else if (showAIPanel) {
           setShowAIPanel(false);
@@ -57,24 +73,27 @@ const App = () => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [showAIPanel, selectedEntity, showProjectSelector]);
+  }, [showAIPanel, selectedEntity, showProjectSelector, showExportMenu, showStatsPanel]);
 
-  // Click outside to close project selector
+  // Click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (showProjectSelector) {
-        const target = e.target as HTMLElement;
-        if (!target.closest('.project-selector-container')) {
-          setShowProjectSelector(false);
-        }
+      const target = e.target as HTMLElement;
+      
+      if (showProjectSelector && !target.closest('.project-selector-container')) {
+        setShowProjectSelector(false);
+      }
+      
+      if (showExportMenu && !target.closest('.export-menu-container')) {
+        setShowExportMenu(false);
       }
     };
 
-    if (showProjectSelector) {
+    if (showProjectSelector || showExportMenu) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [showProjectSelector]);
+  }, [showProjectSelector, showExportMenu]);
 
   return (
     <div className="app">
@@ -197,6 +216,100 @@ const App = () => {
           >
             ✦ Generate with AI
           </button>
+
+          {/* Stats Button */}
+          <button
+            onClick={() => setShowStatsPanel(true)}
+            style={{
+              padding: '6px 12px',
+              fontSize: 12,
+              background: '#1a1a2e',
+              border: '1px solid #2a2a4a',
+              borderRadius: 6,
+              color: '#a0a0b0',
+              cursor: 'pointer',
+            }}
+            title="View canon statistics"
+          >
+            📊 Stats
+          </button>
+
+          {/* Export Menu */}
+          <div className="export-menu-container" style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              style={{
+                padding: '6px 12px',
+                fontSize: 12,
+                background: '#1a1a2e',
+                border: '1px solid #2a2a4a',
+                borderRadius: 6,
+                color: '#a0a0b0',
+                cursor: 'pointer',
+              }}
+              title="Export your canon"
+            >
+              💾 Export
+            </button>
+            
+            {showExportMenu && graphData?.canonGraph && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: 4,
+                  background: '#1a1a2e',
+                  border: '1px solid #2a2a4a',
+                  borderRadius: 6,
+                  padding: 4,
+                  minWidth: 180,
+                  zIndex: 1000,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                }}
+              >
+                <button
+                  onClick={() => {
+                    exportCanonAsJSON(graphData.canonGraph, MOCK_PROJECTS.find(p => p.id === projectId)?.name);
+                    setShowExportMenu(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: 12,
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: 4,
+                    color: '#a0a0b0',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  📄 Export as JSON
+                </button>
+                <button
+                  onClick={() => {
+                    exportAsMarkdown(graphData.canonGraph, MOCK_PROJECTS.find(p => p.id === projectId)?.name);
+                    setShowExportMenu(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: 12,
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: 4,
+                    color: '#a0a0b0',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  📝 Export as Markdown
+                </button>
+              </div>
+            )}
+          </div>
+
           <div 
             className="keyboard-hint"
             style={{ 
@@ -270,6 +383,27 @@ const App = () => {
             setShowAIPanel(false);
           }}
         />
+      )}
+
+      {showStatsPanel && graphData?.canonGraph && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.7)',
+              zIndex: 1999,
+            }}
+            onClick={() => setShowStatsPanel(false)}
+          />
+          <StatsPanel
+            graphData={graphData.canonGraph}
+            onClose={() => setShowStatsPanel(false)}
+          />
+        </>
       )}
     </div>
   );
