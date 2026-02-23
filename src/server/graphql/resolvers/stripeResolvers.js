@@ -7,8 +7,7 @@
  *   CREATOR - 5 projects, 500 entities, 100 AI gen/mo  ($12/mo)
  *   STUDIO  - Unlimited projects, unlimited entities, 1000 AI gen/mo ($49/mo)
  *
- * In production: user sessions are tied to stripe customer IDs.
- * For MVP: we read subscription state from env/session and gate accordingly.
+ * User subscription state is stored in Neo4j User nodes with Stripe integration.
  */
 
 import { GraphQLError } from 'graphql';
@@ -48,24 +47,52 @@ const getStripe = async () => {
   }
 };
 
-// In a real implementation, this reads from DB (user.stripeSubscriptionId)
-// For MVP: returns FREE unless env vars indicate otherwise
+/**
+ * Get subscription data from Neo4j User node
+ */
 const getSubscriptionFromContext = async (context) => {
-  // TODO: replace with real DB lookup when auth is added
-  // const user = context.user;
-  // const subscription = await db.subscriptions.findOne({ userId: user.id });
-  
-  // Mock: check env for dev override
-  const planOverride = process.env.DEV_PLAN_OVERRIDE || 'FREE';
-  const config = PLAN_CONFIG[planOverride] || PLAN_CONFIG.FREE;
+  // If no auth, return FREE tier
+  if (!context.userId) {
+    const config = PLAN_CONFIG.FREE;
+    return {
+      isActive: false,
+      plan: 'FREE',
+      ...config,
+      periodEnd: null,
+      cancelAtPeriodEnd: false,
+    };
+  }
 
-  return {
-    isActive: planOverride !== 'FREE',
-    plan: planOverride,
-    ...config,
-    periodEnd: null,
-    cancelAtPeriodEnd: false,
-  };
+  // Load user from Neo4j
+  const { getDriver } = await import('../neo4j-driver.js');
+  const driver = getDriver();
+  const session = driver.session();
+  
+  try {
+    const result = await session.run(
+      'MATCH (u:User {id: $userId}) RETURN u',
+      { userId: context.userId }
+    );
+
+    if (result.records.length === 0) {
+      throw new Error('User not found');
+    }
+
+    const user = result.records[0].get('u').properties;
+    const tier = user.subscriptionTier || 'FREE';
+    const status = user.subscriptionStatus || 'inactive';
+    const config = PLAN_CONFIG[tier] || PLAN_CONFIG.FREE;
+
+    return {
+      isActive: status === 'active',
+      plan: tier,
+      ...config,
+      periodEnd: user.subscriptionPeriodEnd || null,
+      cancelAtPeriodEnd: user.cancelAtPeriodEnd === true,
+    };
+  } finally {
+    await session.close();
+  }
 };
 
 const stripeResolvers = {
@@ -77,6 +104,13 @@ const stripeResolvers = {
 
   Mutation: {
     createCheckoutSession: async (_, { plan }, context) => {
+      // Require authentication
+      if (!context.userId) {
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+
       const stripe = await getStripe();
 
       if (!stripe) {
@@ -94,9 +128,52 @@ const stripeResolvers = {
         });
       }
 
+      // Load user to get/create Stripe customer
+      const { getDriver } = await import('../neo4j-driver.js');
+      const driver = getDriver();
+      const session = driver.session();
+      
       try {
-        const session = await stripe.checkout.sessions.create({
+        const result = await session.run(
+          'MATCH (u:User {id: $userId}) RETURN u',
+          { userId: context.userId }
+        );
+
+        if (result.records.length === 0) {
+          throw new GraphQLError('User not found', {
+            extensions: { code: 'USER_NOT_FOUND' },
+          });
+        }
+
+        const user = result.records[0].get('u').properties;
+        let stripeCustomerId = user.stripeCustomerId;
+
+        // Create Stripe customer if doesn't exist
+        if (!stripeCustomerId) {
+          const customer = await stripe.customers.create({
+            email: user.email,
+            metadata: {
+              userId: user.id,
+              displayName: user.displayName,
+            },
+          });
+          stripeCustomerId = customer.id;
+
+          // Store customer ID in Neo4j
+          await session.run(
+            'MATCH (u:User {id: $userId}) SET u.stripeCustomerId = $stripeCustomerId, u.updatedAt = $updatedAt',
+            {
+              userId: user.id,
+              stripeCustomerId,
+              updatedAt: new Date().toISOString(),
+            }
+          );
+        }
+
+        // Create checkout session
+        const checkoutSession = await stripe.checkout.sessions.create({
           mode: 'subscription',
+          customer: stripeCustomerId,
           payment_method_types: ['card'],
           line_items: [
             {
@@ -106,26 +183,33 @@ const stripeResolvers = {
           ],
           success_url: `${APP_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${APP_URL}/pricing`,
-          // In production: include customer ID if user already has a Stripe customer
-          // customer: context.user?.stripeCustomerId,
           metadata: {
             plan,
-            // userId: context.user?.id,
+            userId: user.id,
           },
         });
 
         return {
-          url: session.url,
-          sessionId: session.id,
+          url: checkoutSession.url,
+          sessionId: checkoutSession.id,
         };
       } catch (err) {
         throw new GraphQLError(`Stripe checkout error: ${err.message}`, {
           extensions: { code: 'STRIPE_ERROR' },
         });
+      } finally {
+        await session.close();
       }
     },
 
     createPortalSession: async (_, args, context) => {
+      // Require authentication
+      if (!context.userId) {
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+
       const stripe = await getStripe();
 
       if (!stripe) {
@@ -134,27 +218,46 @@ const stripeResolvers = {
         };
       }
 
-      // In production: get customer ID from user record
-      // const customerId = context.user?.stripeCustomerId;
-      const customerId = process.env.DEV_STRIPE_CUSTOMER_ID;
-
-      if (!customerId) {
-        throw new GraphQLError('No billing account found. Please subscribe first.', {
-          extensions: { code: 'NO_SUBSCRIPTION' },
-        });
-      }
-
+      // Load user to get Stripe customer ID
+      const { getDriver } = await import('../neo4j-driver.js');
+      const driver = getDriver();
+      const session = driver.session();
+      
       try {
-        const session = await stripe.billingPortal.sessions.create({
+        const result = await session.run(
+          'MATCH (u:User {id: $userId}) RETURN u',
+          { userId: context.userId }
+        );
+
+        if (result.records.length === 0) {
+          throw new GraphQLError('User not found', {
+            extensions: { code: 'USER_NOT_FOUND' },
+          });
+        }
+
+        const user = result.records[0].get('u').properties;
+        const customerId = user.stripeCustomerId;
+
+        if (!customerId) {
+          throw new GraphQLError('No billing account found. Please subscribe first.', {
+            extensions: { code: 'NO_SUBSCRIPTION' },
+          });
+        }
+
+        const portalSession = await stripe.billingPortal.sessions.create({
           customer: customerId,
           return_url: `${APP_URL}/settings`,
         });
 
-        return { url: session.url };
+        return {
+          url: portalSession.url,
+        };
       } catch (err) {
         throw new GraphQLError(`Stripe portal error: ${err.message}`, {
           extensions: { code: 'STRIPE_ERROR' },
         });
+      } finally {
+        await session.close();
       }
     },
   },
@@ -201,8 +304,11 @@ export const checkGenerationCredits = async (context) => {
   const status = await getSubscriptionFromContext(context);
   if (status.generationCredits === 0) {
     throw new GraphQLError(
-      'AI generation requires the CREATOR plan or higher. Upgrade at /pricing.',
-      { extensions: { code: 'GENERATION_LOCKED', requiredPlan: 'CREATOR' } }
+      'Your plan does not include AI generation. Upgrade to CREATOR or STUDIO.',
+      { extensions: { code: 'NO_GENERATION_CREDITS' } }
     );
   }
+  // In production: track monthly usage and decrement credits
+  // For MVP: just check plan tier
+  return status;
 };

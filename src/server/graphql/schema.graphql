@@ -546,6 +546,10 @@ type User {
   createdAt: String!
   updatedAt: String!
   lastLogin: String
+  stripeCustomerId: String
+  subscriptionTier: String
+  subscriptionStatus: String
+  subscriptionPeriodEnd: String
 }
 
 type PublicUser {
