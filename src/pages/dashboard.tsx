@@ -3,7 +3,7 @@ import { useQuery, gql } from '@apollo/client';
 import { Link } from 'react-router-dom';
 import { useBreadcrumbs } from '@/context/breadcrumb-context';
 import { UserMenu } from '@/components/user-menu';
-import { Plus, Sparkles } from 'lucide-react';
+import { Plus, Sparkles, Network } from 'lucide-react';
 import { getEntityImage, getPlaceholderImage } from '@/media/util';
 
 // Strip HTML tags and decode entities for plain text preview
@@ -166,7 +166,16 @@ export default function DashboardPage() {
             className="h-8 w-auto"
           />
         </Link>
-        <UserMenu />
+        <div className="flex items-center gap-4">
+          <Link 
+            to="/graph" 
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-ck-gold/10 text-ck-gold border border-ck-gold/20 hover:bg-ck-gold/20 transition-colors"
+          >
+            <Network className="h-4 w-4" />
+            <span className="font-semibold text-sm">Graph View</span>
+          </Link>
+          <UserMenu />
+        </div>
       </header>
 
       {renderContent()}

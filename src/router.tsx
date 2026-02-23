@@ -3,6 +3,7 @@ import App from "./App"
 import HomePage from "@/pages/home"
 import EditEntityPage from "@/pages/edit-entity"
 import EditProductPage from "@/pages/edit-product"
+import GraphViewPage from "@/pages/graph-view"
 import LoginPage from "@/pages/login"
 import AccountPage from "@/pages/account"
 import { ProtectedRoute } from "@/components/protected-route"
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
       {
         path: "edit/product/:id",
         element: <EditProductPage />,
+      },
+      {
+        path: "graph",
+        element: <GraphViewPage />,
       },
     ],
   },
