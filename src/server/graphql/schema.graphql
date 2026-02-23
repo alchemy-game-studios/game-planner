@@ -56,6 +56,9 @@ type Query {
     contextCount: Int
     tagCount: Int
   ): SubgraphCostEstimate!
+
+  # Graph visualization query
+  entityGraph(entityId: String, universeId: String, depth: Int): GraphData!
 }
 
 # Mutation type for modifying data
@@ -835,4 +838,32 @@ input DuplicateEntityInput {
 type DuplicateEntityResponse {
   entity: Entity!
   message: String!
+}
+
+# ============================================
+# Graph Visualization Types
+# ============================================
+
+# Graph data for visualization
+type GraphData {
+  nodes: [GraphNode!]!
+  edges: [GraphEdge!]!
+}
+
+# Node in the graph
+type GraphNode {
+  id: String!
+  label: String!
+  type: String!
+  description: String
+  imageUrl: String
+}
+
+# Edge in the graph
+type GraphEdge {
+  id: String!
+  source: String!
+  target: String!
+  label: String!
+  relationshipType: String!
 }

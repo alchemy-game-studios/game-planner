@@ -2286,6 +2286,135 @@ export default {
         breakdown: estimate.items,
         summary: estimate.summary
       };
+    },
+
+    // Graph visualization query
+    entityGraph: async (_, { entityId, universeId, depth = 2 }) => {
+      let cypher;
+      let params = { depth: neo4j.int(depth) };
+
+      if (entityId) {
+        // Start from a specific entity and traverse relationships
+        cypher = `
+          MATCH (start {id: $entityId})
+          CALL {
+            WITH start
+            MATCH path = (start)-[r*0..${depth}]-(connected)
+            WHERE 
+              NOT (connected:Image) AND
+              NOT type(r[0]) IN ['HAS_IMAGE'] AND
+              all(rel IN relationships(path) WHERE type(rel) <> 'HAS_IMAGE')
+            RETURN DISTINCT connected, relationships(path) as rels
+          }
+          WITH collect(DISTINCT start) + collect(DISTINCT connected) as allNodes,
+               collect(DISTINCT rels) as allRels
+          UNWIND allNodes as node
+          WITH DISTINCT node, allRels
+          OPTIONAL MATCH (node)-[imgRel:HAS_IMAGE]->(img:Image)
+          WHERE imgRel.rank = 0
+          WITH node, 
+               head(collect(img.key)) as imageKey,
+               allRels
+          RETURN collect(DISTINCT {
+            id: node.id,
+            label: node.name,
+            type: toLower(labels(node)[0]),
+            description: node.description,
+            imageUrl: CASE WHEN imageKey IS NOT NULL THEN imageKey ELSE null END
+          }) as nodes,
+          reduce(edges = [], rels IN allRels |
+            edges + [rel IN rels WHERE type(rel) <> 'HAS_IMAGE' | {
+              id: toString(id(rel)),
+              source: startNode(rel).id,
+              target: endNode(rel).id,
+              label: type(rel),
+              relationshipType: type(rel)
+            }]
+          ) as edges
+        `;
+        params.entityId = entityId;
+      } else if (universeId) {
+        // Get all entities in a universe
+        cypher = `
+          MATCH (u:Universe {id: $universeId})
+          OPTIONAL MATCH (e)-[:LOCATED_IN|LIVES_IN|HELD_BY|PART_OF*0..]->(u)
+          WHERE NOT (e:Image)
+          WITH collect(DISTINCT u) + collect(DISTINCT e) as allNodes, u
+          UNWIND allNodes as node
+          WITH DISTINCT node, u
+          OPTIONAL MATCH (node)-[imgRel:HAS_IMAGE]->(img:Image)
+          WHERE imgRel.rank = 0
+          WITH node, u,
+               head(collect(img.key)) as imageKey
+          WITH collect({
+            id: node.id,
+            label: node.name,
+            type: toLower(labels(node)[0]),
+            description: node.description,
+            imageUrl: CASE WHEN imageKey IS NOT NULL THEN imageKey ELSE null END
+          }) as nodes
+          MATCH (source)-[r]-(target)
+          WHERE 
+            source.id IN [n IN nodes | n.id] AND
+            target.id IN [n IN nodes | n.id] AND
+            type(r) <> 'HAS_IMAGE' AND
+            NOT (source:Image OR target:Image)
+          RETURN nodes,
+                 collect(DISTINCT {
+                   id: toString(id(r)),
+                   source: source.id,
+                   target: target.id,
+                   label: type(r),
+                   relationshipType: type(r)
+                 }) as edges
+        `;
+        params.universeId = universeId;
+      } else {
+        // Return all entities and relationships
+        cypher = `
+          MATCH (n)
+          WHERE NOT (n:Image)
+          OPTIONAL MATCH (n)-[imgRel:HAS_IMAGE]->(img:Image)
+          WHERE imgRel.rank = 0
+          WITH n, head(collect(img.key)) as imageKey
+          WITH collect({
+            id: n.id,
+            label: n.name,
+            type: toLower(labels(n)[0]),
+            description: n.description,
+            imageUrl: CASE WHEN imageKey IS NOT NULL THEN imageKey ELSE null END
+          }) as nodes
+          MATCH (source)-[r]-(target)
+          WHERE 
+            source.id IN [n IN nodes | n.id] AND
+            target.id IN [n IN nodes | n.id] AND
+            type(r) <> 'HAS_IMAGE' AND
+            NOT (source:Image OR target:Image)
+          RETURN nodes,
+                 collect(DISTINCT {
+                   id: toString(id(r)),
+                   source: source.id,
+                   target: target.id,
+                   label: type(r),
+                   relationshipType: type(r)
+                 }) as edges
+        `;
+      }
+
+      const result = await runQuery(cypher, params);
+      
+      if (result.records.length === 0) {
+        return { nodes: [], edges: [] };
+      }
+
+      const record = result.records[0];
+      const nodes = record.get('nodes').map(node => ({
+        ...node,
+        imageUrl: node.imageUrl ? getImageUrl(node.imageUrl) : null
+      }));
+      const edges = record.get('edges');
+
+      return { nodes, edges };
     }
   },
 
