@@ -20,7 +20,7 @@
     "db:reset": "npm run db:stop && docker volume rm game-planner_neo4j_data game-planner_neo4j_logs game-planner_minio_data 2>/dev/null; npm run db:start && npm run db:wait && npm run db:seed",
     "setup": "npm install && npm run db:start && npm run db:wait && npm run db:seed",
     "start": "npm run dev",
-    "stripe:listen": "stripe listen --forward-to localhost:3000/webhooks/stripe"
+    "stripe:listen": "stripe listen --forward-to localhost:3000/api/stripe/webhook"
   },
   "repository": {
     "type": "git",
@@ -98,6 +98,7 @@
     "react-refresh": "^0.16.0",
     "react-test-renderer": "^18.3.1",
     "style-loader": "^4.0.0",
+    "supertest": "^7.2.2",
     "ts-jest": "^29.1.4",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5",
