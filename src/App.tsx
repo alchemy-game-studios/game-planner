@@ -1,16 +1,40 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useQuery } from '@apollo/client';
-import CanonGraph from './components/CanonGraph';
-import EntityPanel from './components/EntityPanel';
-import EntityDetail from './components/EntityDetail';
-import AIGenerationPanel from './components/AIGenerationPanel';
-import StatsPanel from './components/StatsPanel';
-import OnboardingModal from './components/OnboardingModal';
-import HelpPanel from './components/HelpPanel';
-import UserMenu from './components/UserMenu';
 import { GET_CANON_GRAPH } from './client-graphql/canon-operations';
 import { exportCanonAsJSON, exportAsMarkdown } from './utils/export';
 import './App.css';
+
+// Core components (load immediately)
+import EntityPanel from './components/EntityPanel';
+import CanonGraph from './components/CanonGraph';
+import UserMenu from './components/UserMenu';
+
+// Lazy-load heavy/optional components (only load when needed)
+const EntityDetail = lazy(() => import('./components/EntityDetail'));
+const AIGenerationPanel = lazy(() => import('./components/AIGenerationPanel'));
+const StatsPanel = lazy(() => import('./components/StatsPanel'));
+const OnboardingModal = lazy(() => import('./components/OnboardingModal'));
+const HelpPanel = lazy(() => import('./components/HelpPanel'));
+
+// Loading spinner component
+const Spinner = () => (
+  <div style={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    padding: '20px',
+    color: '#6a6a8a'
+  }}>
+    <div style={{ 
+      width: '24px', 
+      height: '24px', 
+      border: '3px solid #2a2a4a', 
+      borderTop: '3px solid #6a3aff', 
+      borderRadius: '50%', 
+      animation: 'spin 1s linear infinite' 
+    }} />
+  </div>
+);
 
 // Default project ID — will be driven by auth in future sprint
 const DEFAULT_PROJECT_ID = 'default';
@@ -420,24 +444,28 @@ const App = () => {
           />
 
           {selectedEntity && (
-            <EntityDetail
-              entity={selectedEntity}
-              projectId={projectId}
-              onClose={() => setSelectedEntity(null)}
-            />
+            <Suspense fallback={<Spinner />}>
+              <EntityDetail
+                entity={selectedEntity}
+                projectId={projectId}
+                onClose={() => setSelectedEntity(null)}
+              />
+            </Suspense>
           )}
         </main>
       </div>
 
       {showAIPanel && (
-        <AIGenerationPanel
-          projectId={projectId}
-          onClose={() => setShowAIPanel(false)}
-          onAddToCanon={(entity: any) => {
-            handleAddToCanon(entity);
-            setShowAIPanel(false);
-          }}
-        />
+        <Suspense fallback={<Spinner />}>
+          <AIGenerationPanel
+            projectId={projectId}
+            onClose={() => setShowAIPanel(false)}
+            onAddToCanon={(entity: any) => {
+              handleAddToCanon(entity);
+              setShowAIPanel(false);
+            }}
+          />
+        </Suspense>
       )}
 
       {showStatsPanel && graphData?.canonGraph && (
@@ -454,22 +482,28 @@ const App = () => {
             }}
             onClick={() => setShowStatsPanel(false)}
           />
-          <StatsPanel
-            graphData={graphData.canonGraph}
-            onClose={() => setShowStatsPanel(false)}
-          />
+          <Suspense fallback={<Spinner />}>
+            <StatsPanel
+              graphData={graphData.canonGraph}
+              onClose={() => setShowStatsPanel(false)}
+            />
+          </Suspense>
         </>
       )}
 
       {showOnboarding && (
-        <OnboardingModal
-          onClose={handleCloseOnboarding}
-          onSkip={handleSkipOnboarding}
-        />
+        <Suspense fallback={<Spinner />}>
+          <OnboardingModal
+            onClose={handleCloseOnboarding}
+            onSkip={handleSkipOnboarding}
+          />
+        </Suspense>
       )}
 
       {showHelp && (
-        <HelpPanel onClose={() => setShowHelp(false)} />
+        <Suspense fallback={<Spinner />}>
+          <HelpPanel onClose={() => setShowHelp(false)} />
+        </Suspense>
       )}
     </div>
   );
