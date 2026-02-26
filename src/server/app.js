@@ -1,5 +1,6 @@
 import indexRouter from "./routes/index.js";
 import testApiRouter from "./routes/testApi.js";
+import stripeWebhookRouter from "./routes/stripeWebhook.js";
 import express from "express";
 import session from "express-session";
 import cors  from "cors";
@@ -19,6 +20,9 @@ const port = 3000;
 
 const app = express();
 const __dirname = import.meta.dirname;
+
+// Stripe webhook must come BEFORE express.json() to preserve raw body
+app.use("/api/stripe/webhook", stripeWebhookRouter);
 
 // Networking & Session
 app.use(session({
