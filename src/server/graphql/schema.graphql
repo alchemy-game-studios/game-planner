@@ -37,6 +37,10 @@ type Query {
 
   # ── Subscription / billing ──
   subscriptionStatus: SubscriptionStatus!
+
+  # ── Usage tracking ──
+  usageStats: UsageStats!
+  generationHistory(limit: Int, offset: Int): [GenerationRecord!]!
 }
 
 # ─── Core Mutations ───────────────────────────────────────────────────────────
@@ -362,6 +366,23 @@ type CheckoutSession {
 
 type PortalSession {
   url: String!
+}
+
+# ─── Usage Tracking ────────────────────────────────────────────────────────────
+type UsageStats {
+  tier: SubscriptionPlan!
+  limit: Int!
+  used: Int!
+  remaining: Int!
+  periodStart: String!
+  periodEnd: String!
+}
+
+type GenerationRecord {
+  id: ID!
+  projectId: ID!
+  entityType: EntityType!
+  createdAt: String!
 }
 
 # ─── Entity Enums ─────────────────────────────────────────────────────────────

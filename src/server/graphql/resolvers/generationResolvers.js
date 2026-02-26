@@ -300,21 +300,25 @@ const generationResolvers = {
   },
 
   Mutation: {
-    generateEntity: async (_, { input }) => {
+    generateEntity: async (_, { input }, context) => {
       const { projectId, entityType, prompt, constrainedByEntityIds, style } = input;
 
+      // Check usage limits and authenticate
+      const { checkGenerationCredits, recordGeneration } = await import('./usageResolvers.js');
+      await checkGenerationCredits(context);
+
       // Build graph context — this is the "constrained by graph relationships" differentiator
-      const context = await buildGenerationContext(projectId, entityType, null);
+      const graphContext = await buildGenerationContext(projectId, entityType, null);
 
       // If specific entities are requested as constraints, fetch them
       if (constrainedByEntityIds?.length) {
-        const constrained = context.existingEntities.filter((e) =>
+        const constrained = graphContext.existingEntities.filter((e) =>
           constrainedByEntityIds.includes(e.id)
         );
-        context.focusEntity = constrained[0] || null;
+        graphContext.focusEntity = constrained[0] || null;
       }
 
-      const result = await runGeneration(projectId, entityType, prompt, constrainedByEntityIds, style, context);
+      const result = await runGeneration(projectId, entityType, prompt, constrainedByEntityIds, style, graphContext);
 
       const generationId = uuidv4();
       const generated = {
@@ -324,14 +328,21 @@ const generationResolvers = {
         raw: result.raw || JSON.stringify(result),
       };
 
+      // Record usage in Neo4j
+      await recordGeneration(context.userId, projectId, entityType, generationId);
+
       // Cache for refinement / acceptance
-      generationCache.set(generationId, { generated, context, projectId, entityType });
+      generationCache.set(generationId, { generated, context: graphContext, projectId, entityType });
 
       return generated;
     },
 
-    refineGeneration: async (_, { input }) => {
+    refineGeneration: async (_, { input }, context) => {
       const { generationId, feedback, projectId } = input;
+
+      // Check usage limits and authenticate (refinement also counts as a generation)
+      const { checkGenerationCredits, recordGeneration } = await import('./usageResolvers.js');
+      await checkGenerationCredits(context);
 
       const cached = generationCache.get(generationId);
       if (!cached) {
@@ -340,7 +351,7 @@ const generationResolvers = {
         });
       }
 
-      const { context, entityType } = cached;
+      const { context: graphContext, entityType } = cached;
 
       // Build a refinement prompt that includes the previous result
       const refinementPrompt = `Previous generation:
@@ -351,7 +362,7 @@ User feedback: ${feedback}
 
 Please revise the entity based on this feedback while maintaining canon consistency.`;
 
-      const result = await runGeneration(projectId, entityType, refinementPrompt, [], null, context);
+      const result = await runGeneration(projectId, entityType, refinementPrompt, [], null, graphContext);
 
       const newGenerationId = uuidv4();
       const refined = {
@@ -361,7 +372,10 @@ Please revise the entity based on this feedback while maintaining canon consiste
         raw: result.raw || JSON.stringify(result),
       };
 
-      generationCache.set(newGenerationId, { generated: refined, context, projectId, entityType });
+      // Record usage in Neo4j
+      await recordGeneration(context.userId, projectId, entityType, newGenerationId);
+
+      generationCache.set(newGenerationId, { generated: refined, context: graphContext, projectId, entityType });
 
       return refined;
     },

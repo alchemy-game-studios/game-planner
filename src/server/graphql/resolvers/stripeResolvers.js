@@ -300,6 +300,10 @@ export const checkEntityLimit = async (context, projectId, runQuery) => {
   }
 };
 
+/**
+ * @deprecated Use checkGenerationCredits from usageResolvers.js instead.
+ * This version only checks plan tier, not actual usage.
+ */
 export const checkGenerationCredits = async (context) => {
   const status = await getSubscriptionFromContext(context);
   if (status.generationCredits === 0) {
@@ -308,7 +312,6 @@ export const checkGenerationCredits = async (context) => {
       { extensions: { code: 'NO_GENERATION_CREDITS' } }
     );
   }
-  // In production: track monthly usage and decrement credits
-  // For MVP: just check plan tier
+  // NOTE: This doesn't track actual usage. Use usageResolvers.checkGenerationCredits for real tracking.
   return status;
 };
